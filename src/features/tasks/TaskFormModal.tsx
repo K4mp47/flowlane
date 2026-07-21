@@ -87,14 +87,14 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
         <div className="modal-header">
           <div>
             <p className="eyebrow">{isEditing ? `FL-${task?.task_number}` : 'New task'}</p>
-            <h2>{isEditing ? 'Edit task' : 'Create a standardized task'}</h2>
+            <h2>{isEditing ? 'Edit task' : 'Create task'}</h2>
           </div>
           <button className="icon-plain" type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
         </div>
 
         <TextInput
           label="Title"
-          description="Use an action-oriented title: Fix, Add, Update, Investigate, Test…"
+          description="A title is the only required field. Everything else can be added later."
           value={title}
           onChange={setTitle}
           placeholder="Fix WebSocket synchronization on MondoT"
@@ -147,8 +147,8 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
         </div>
 
         <div className="definition-callout">
-          <strong>Definition of Ready</strong>
-          <p>Backlog tasks can be incomplete. Before moving outside Backlog, FlowLane requires Context, Expected result, Type, Priority and at least one assignee.</p>
+          <strong>Flexible workflow</strong>
+          <p>Tasks can move between columns even when optional fields are empty. Add details only when they are useful to your team.</p>
         </div>
 
         {error ? <div className="inline-alert error-alert">{error}</div> : null}
