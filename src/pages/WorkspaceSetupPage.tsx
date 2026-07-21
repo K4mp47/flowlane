@@ -4,6 +4,7 @@ import { TextInput } from '@astryxdesign/core/TextInput'
 import { Building2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
+import { FloatingThemeToggle } from '../components/FloatingThemeToggle'
 
 export function WorkspaceSetupPage() {
   const { user, refreshMembership, signOut } = useAuth()
@@ -31,7 +32,9 @@ export function WorkspaceSetupPage() {
   }
 
   return (
-    <main className="centered-page">
+    <>
+      <FloatingThemeToggle />
+      <main className="centered-page">
       <form className="surface-card compact-form" onSubmit={createWorkspace}>
         <div className="brand-mark"><Building2 size={20} /></div>
         <div>
@@ -45,5 +48,6 @@ export function WorkspaceSetupPage() {
         <button className="text-button" type="button" onClick={() => void signOut()}>Sign out</button>
       </form>
     </main>
+    </>
   )
 }

@@ -4,6 +4,7 @@ import { LoadingPage } from './pages/LoadingPage'
 import { LoginPage } from './pages/LoginPage'
 import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage'
 import { WorkspaceSetupPage } from './pages/WorkspaceSetupPage'
+import { ThemeProvider } from './theme'
 
 const BoardPage = lazy(() => import('./pages/BoardPage').then((module) => ({ default: module.BoardPage })))
 
@@ -20,8 +21,10 @@ function AppGate() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppGate />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppGate />
+      </AuthProvider>
+    </ThemeProvider>
   )
 }

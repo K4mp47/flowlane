@@ -10,7 +10,7 @@ import { Button } from '@astryxdesign/core/Button'
 import { Badge } from '@astryxdesign/core/Badge'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { ChevronDown, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { can } from '../auth/permissions'
 import { AppSidebar } from '../components/AppSidebar'
@@ -21,6 +21,7 @@ import { TaskFormModal } from '../features/tasks/TaskFormModal'
 import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
 import { NotificationsPanel } from '../features/notifications/NotificationsPanel'
 import { TeamPanel } from '../features/tasks/TeamPanel'
+import { ProjectsPanel } from '../features/board/ProjectsPanel'
 import { boardQueryKey, type BoardData, useBoardData } from '../features/board/useBoardData'
 
 const priorityOptions: Array<TaskPriority | 'ALL'> = ['ALL', 'URGENT', 'HIGH', 'MEDIUM', 'LOW']
@@ -28,9 +29,10 @@ const priorityOptions: Array<TaskPriority | 'ALL'> = ['ALL', 'URGENT', 'HIGH', '
 export function BoardPage() {
   const { membership, role, user } = useAuth()
   const workspaceId = membership!.workspace_id
-  const boardQuery = useBoardData(workspaceId, role)
+  const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => window.localStorage.getItem(`flowlane-board-${workspaceId}`))
+  const boardQuery = useBoardData(workspaceId, role, selectedBoardId)
   const queryClient = useQueryClient()
-  const [view, setView] = useState<'board' | 'mine' | 'team'>('board')
+  const [view, setView] = useState<'board' | 'mine' | 'projects' | 'team'>('board')
   const [search, setSearch] = useState('')
   const [priority, setPriority] = useState<TaskPriority | 'ALL'>('ALL')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -43,13 +45,19 @@ export function BoardPage() {
   const isReadOnly = !can(role, 'task:move')
 
   useEffect(() => {
+    if (!boardQuery.data?.board.id) return
+    window.localStorage.setItem(`flowlane-board-${workspaceId}`, boardQuery.data.board.id)
+    if (selectedBoardId !== boardQuery.data.board.id) setSelectedBoardId(boardQuery.data.board.id)
+  }, [boardQuery.data?.board.id, selectedBoardId, workspaceId])
+
+  useEffect(() => {
     const channel = supabase
       .channel(`flowlane-board-${workspaceId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
-        void queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) })
+        void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'task_assignees' }, () => {
-        void queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) })
+        void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
       })
       .subscribe()
 
@@ -124,7 +132,7 @@ export function BoardPage() {
       ? { ...task, column_id: columnId, position: nextPosition }
       : task)
 
-    queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId), { ...previousData, tasks: optimisticTasks })
+    queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId, boardQuery.data.board.id), { ...previousData, tasks: optimisticTasks })
     setBoardError(null)
 
     const { error } = await supabase
@@ -133,12 +141,12 @@ export function BoardPage() {
       .eq('id', activeId)
 
     if (error) {
-      queryClient.setQueryData(boardQueryKey(workspaceId), previousData)
+      queryClient.setQueryData(boardQueryKey(workspaceId, boardQuery.data.board.id), previousData)
       setBoardError(error.message)
       return
     }
 
-    void queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) })
+    void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
   }
 
   if (boardQuery.isLoading) return <main className="board-loading">Loading board…</main>
@@ -160,9 +168,17 @@ export function BoardPage() {
               <h1>{boardQuery.data.board.name}</h1>
               <Badge label={role ?? 'MEMBER'} variant={role === 'VIEWER' ? 'neutral' : 'blue'} />
             </div>
-            <p>{view === 'mine' ? 'Tasks assigned to you' : view === 'team' ? 'Workspace members and access' : 'Department workflow'}</p>
+            <p>{view === 'mine' ? 'Tasks assigned to you' : view === 'projects' ? 'Project boards and workflow spaces' : view === 'team' ? 'Workspace members and access' : 'Department workflow'}</p>
           </div>
-          {view !== 'team' ? <div className="toolbar-actions">
+          {view !== 'team' && view !== 'projects' ? <div className="toolbar-actions">
+            {boardQuery.data.boards.length > 1 ? (
+              <div className="board-switcher">
+                <select value={boardQuery.data.board.id} onChange={(event) => { setSelectedBoardId(event.target.value); setView('board') }}>
+                  {boardQuery.data.boards.map((board) => <option key={board.id} value={board.id}>{board.name}</option>)}
+                </select>
+                <ChevronDown size={15} />
+              </div>
+            ) : null}
             <div className="search-control">
               <TextInput
                 label="Search tasks"
@@ -195,7 +211,17 @@ export function BoardPage() {
               workspaceId={workspaceId}
               profiles={boardQuery.data.profiles}
               members={boardQuery.data.members}
-              onInvited={async () => { await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) }) }}
+              onInvited={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }}
+            />
+          </div>
+        ) : view === 'projects' && role === 'ADMIN' ? (
+          <div className="kanban-scroll">
+            <ProjectsPanel
+              workspaceId={workspaceId}
+              boards={boardQuery.data.boards}
+              activeBoardId={boardQuery.data.board.id}
+              onSelectBoard={(boardId) => { setSelectedBoardId(boardId); setView('board') }}
+              onChanged={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }}
             />
           </div>
         ) : (
@@ -231,8 +257,8 @@ export function BoardPage() {
             onClose={() => setSelectedTask(null)}
             onEdit={() => { setEditingTask(selectedTask); setSelectedTask(null); setIsTaskFormOpen(true) }}
             onChanged={async () => {
-              await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) })
-              const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId))
+              await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
+              const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId, boardQuery.data?.board.id))
               if (fresh) setSelectedTask(fresh.tasks.find((task) => task.id === selectedTask.id) ?? null)
             }}
           />
@@ -247,7 +273,7 @@ export function BoardPage() {
             taskTypes={boardQuery.data.taskTypes}
             task={editingTask}
             onClose={() => { setIsTaskFormOpen(false); setEditingTask(null) }}
-            onSaved={async () => { await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) }) }}
+            onSaved={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }}
           />
         ) : null}
 

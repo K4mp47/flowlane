@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { KeyRound } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
+import { FloatingThemeToggle } from '../components/FloatingThemeToggle'
 
 export function PasswordRecoveryPage() {
   const { completePasswordRecovery } = useAuth()
@@ -27,7 +28,9 @@ export function PasswordRecoveryPage() {
   }
 
   return (
-    <main className="centered-page">
+    <>
+      <FloatingThemeToggle />
+      <main className="centered-page">
       <form className="surface-card compact-form" onSubmit={handleSubmit}>
         <div className="brand-mark"><KeyRound size={20} /></div>
         <div>
@@ -40,5 +43,6 @@ export function PasswordRecoveryPage() {
         <Button label="Update password" variant="primary" type="submit" width="100%" isLoading={isLoading} />
       </form>
     </main>
+    </>
   )
 }

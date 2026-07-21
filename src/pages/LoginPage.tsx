@@ -3,6 +3,7 @@ import { Button } from '@astryxdesign/core/Button'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { LockKeyhole, Mail, Workflow } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { FloatingThemeToggle } from '../components/FloatingThemeToggle'
 
 export function LoginPage() {
   const [email, setEmail] = useState('')
@@ -35,7 +36,9 @@ export function LoginPage() {
   }
 
   return (
-    <main className="auth-shell">
+    <>
+      <FloatingThemeToggle />
+      <main className="auth-shell">
       <section className="auth-panel auth-brand-panel">
         <div className="brand-mark"><Workflow size={22} /></div>
         <div>
@@ -83,5 +86,6 @@ export function LoginPage() {
         </form>
       </section>
     </main>
+    </>
   )
 }
