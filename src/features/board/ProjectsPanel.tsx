@@ -1,7 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Button } from '@astryxdesign/core/Button'
+import { IconButton } from '@astryxdesign/core/IconButton'
 import { TextInput } from '@astryxdesign/core/TextInput'
-import { Check, FolderKanban, Pencil, Plus, Star, Trash2 } from 'lucide-react'
+import { Check, FolderKanban, Pencil, Plus, Star, Trash2, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Board } from '../../types/domain'
 
@@ -113,36 +114,42 @@ export function ProjectsPanel({ workspaceId, boards, activeBoardId, onSelectBoar
           const isEditing = editingId === board.id
           return (
             <article className={isActive ? 'project-row active' : 'project-row'} key={board.id}>
-              <button className="project-open" type="button" onClick={() => onSelectBoard(board.id)}>
-                <span className="project-board-icon"><FolderKanban size={18} /></span>
-                <span className="project-row-copy">
-                  {isEditing ? (
-                    <input
-                      className="project-name-input"
+              {isEditing ? (
+                <div className="project-open project-open-editing">
+                  <span className="project-board-icon"><FolderKanban size={18} /></span>
+                  <div className="project-row-copy project-rename-field">
+                    <TextInput
+                      label="Project name"
+                      isLabelHidden
                       value={editingName}
-                      onChange={(event) => setEditingName(event.target.value)}
-                      onClick={(event) => event.stopPropagation()}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter') { event.preventDefault(); void saveRename(board.id) }
-                        if (event.key === 'Escape') setEditingId(null)
-                      }}
-                      autoFocus
+                      onChange={setEditingName}
+                      placeholder="Project name"
                     />
-                  ) : <strong>{board.name}</strong>}
-                  <span>{board.is_default ? 'Default project board' : isActive ? 'Currently open' : 'Project board'}</span>
-                </span>
-              </button>
+                  </div>
+                </div>
+              ) : (
+                <button className="project-open" type="button" onClick={() => onSelectBoard(board.id)}>
+                  <span className="project-board-icon"><FolderKanban size={18} /></span>
+                  <span className="project-row-copy">
+                    <strong>{board.name}</strong>
+                    <span>{board.is_default ? 'Default project board' : isActive ? 'Currently open' : 'Project board'}</span>
+                  </span>
+                </button>
+              )}
 
               <div className="project-row-actions">
                 {board.is_default ? <span className="default-board-pill"><Star size={13} /> Default</span> : (
-                  <button className="project-action" type="button" disabled={busyId === board.id} onClick={() => void setDefault(board.id)} title="Make default"><Star size={16} /></button>
+                  <IconButton label="Make default" icon={<Star size={16} />} variant="ghost" size="sm" isDisabled={busyId === board.id} onClick={() => void setDefault(board.id)} />
                 )}
                 {isEditing ? (
-                  <button className="project-action" type="button" onClick={() => void saveRename(board.id)} title="Save name"><Check size={16} /></button>
+                  <>
+                    <IconButton label="Save project name" icon={<Check size={16} />} variant="ghost" size="sm" isDisabled={!editingName.trim() || busyId === board.id} onClick={() => void saveRename(board.id)} />
+                    <IconButton label="Cancel rename" icon={<X size={16} />} variant="ghost" size="sm" onClick={() => setEditingId(null)} />
+                  </>
                 ) : (
-                  <button className="project-action" type="button" onClick={() => { setEditingId(board.id); setEditingName(board.name) }} title="Rename board"><Pencil size={16} /></button>
+                  <IconButton label="Rename board" icon={<Pencil size={16} />} variant="ghost" size="sm" onClick={() => { setEditingId(board.id); setEditingName(board.name) }} />
                 )}
-                <button className="project-action danger" type="button" disabled={boards.length <= 1 || busyId === board.id} onClick={() => void deleteBoard(board.id, board.name)} title="Delete empty board"><Trash2 size={16} /></button>
+                <IconButton label="Delete empty board" icon={<Trash2 size={16} />} variant="ghost" size="sm" isDisabled={boards.length <= 1 || busyId === board.id} onClick={() => void deleteBoard(board.id, board.name)} />
               </div>
             </article>
           )
