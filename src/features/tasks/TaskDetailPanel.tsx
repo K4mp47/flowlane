@@ -14,12 +14,13 @@ interface TaskDetailPanelProps {
   taskType?: TaskType
   assignees: TaskAssignee[]
   profiles: Profile[]
+  members: Array<{ user_id: string; role: WorkspaceRole }>
   onClose: () => void
   onEdit: () => void
   onChanged: () => Promise<void> | void
 }
 
-export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees, profiles, onClose, onEdit, onChanged }: TaskDetailPanelProps) {
+export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees, profiles, members, onClose, onEdit, onChanged }: TaskDetailPanelProps) {
   const [comments, setComments] = useState<Comment[]>([])
   const [checklist, setChecklist] = useState<ChecklistItem[]>([])
   const [commentText, setCommentText] = useState('')
@@ -33,7 +34,9 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
     .map((item) => profiles.find((profile) => profile.id === item.user_id))
     .filter(Boolean) as Profile[], [assignees, profiles, task.id])
 
-  const availableProfiles = useMemo(() => profiles.filter((profile) => !assignedProfiles.some((assigned) => assigned.id === profile.id)), [assignedProfiles, profiles])
+  const assignableUserIds = useMemo(() => new Set(members.filter((member) => member.role !== 'VIEWER').map((member) => member.user_id)), [members])
+
+  const availableProfiles = useMemo(() => profiles.filter((profile) => assignableUserIds.has(profile.id) && !assignedProfiles.some((assigned) => assigned.id === profile.id)), [assignableUserIds, assignedProfiles, profiles])
 
   useEffect(() => {
     let active = true
