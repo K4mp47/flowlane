@@ -3,6 +3,7 @@ import { LoadingPage } from './pages/LoadingPage'
 import { LoginPage } from './pages/LoginPage'
 import { PasswordRecoveryPage } from './pages/PasswordRecoveryPage'
 import { WorkspaceSetupPage } from './pages/WorkspaceSetupPage'
+import { BoardPage } from './pages/BoardPage'
 
 function AppGate() {
   const { user, membership, isLoading, isPasswordRecovery } = useAuth()
@@ -12,15 +13,7 @@ function AppGate() {
   if (!user) return <LoginPage />
   if (!membership) return <WorkspaceSetupPage />
 
-  return (
-    <main className="centered-page">
-      <div className="surface-card">
-        <p className="eyebrow">{membership.workspace.name}</p>
-        <h1>Authenticated as {membership.role}</h1>
-        <p className="muted">The live Kanban board is the next feature branch.</p>
-      </div>
-    </main>
-  )
+  return <BoardPage />
 }
 
 export default function App() {
