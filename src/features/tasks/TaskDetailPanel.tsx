@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Badge } from '@astryxdesign/core/Badge'
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput'
+import { IconButton } from '@astryxdesign/core/IconButton'
+import { Selector } from '@astryxdesign/core/Selector'
 import { TextArea } from '@astryxdesign/core/TextArea'
-import { Check, Edit3, LockKeyhole, Plus, UserPlus, X } from 'lucide-react'
+import { TextInput } from '@astryxdesign/core/TextInput'
+import { Edit3, LockKeyhole, Plus, UserPlus, X } from 'lucide-react'
 import { can } from '../../auth/permissions'
 import { supabase } from '../../lib/supabase'
 import type { ChecklistItem, Comment, Profile, Task, TaskAssignee, TaskType, WorkspaceRole } from '../../types/domain'
@@ -37,6 +41,10 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
   const assignableUserIds = useMemo(() => new Set(members.filter((member) => member.role !== 'VIEWER').map((member) => member.user_id)), [members])
 
   const availableProfiles = useMemo(() => profiles.filter((profile) => assignableUserIds.has(profile.id) && !assignedProfiles.some((assigned) => assigned.id === profile.id)), [assignableUserIds, assignedProfiles, profiles])
+  const assigneeOptions = useMemo(() => availableProfiles.map((profile) => ({
+    value: profile.id,
+    label: profile.display_name || profile.email,
+  })), [availableProfiles])
 
   useEffect(() => {
     let active = true
@@ -108,7 +116,9 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
   return (
     <div className="task-peek-backdrop" onMouseDown={onClose}>
       <aside className="task-peek task-detail-panel" onMouseDown={(event) => event.stopPropagation()}>
-        <button className="peek-close" onClick={onClose}>×</button>
+        <div className="task-detail-close">
+          <IconButton label="Close task details" icon={<X size={18} />} variant="ghost" size="sm" onClick={onClose} />
+        </div>
         <div className="task-detail-kicker">
           <span className="task-reference">FL-{task.task_number}</span>
           {taskType ? <Badge label={taskType.name} variant="neutral" /> : null}
@@ -132,35 +142,60 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
               <div className="assignee-chip" key={profile.id}>
                 <span className="mini-avatar">{(profile.display_name || profile.email).slice(0, 1).toUpperCase()}</span>
                 <span>{profile.display_name || profile.email}</span>
-                {can(role, 'task:assign') ? <button type="button" onClick={() => void removeAssignee(profile.id)}><X size={12} /></button> : null}
+                {can(role, 'task:assign') ? (
+                  <IconButton
+                    label={`Remove ${profile.display_name || profile.email}`}
+                    icon={<X size={12} />}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void removeAssignee(profile.id)}
+                  />
+                ) : null}
               </div>
             )) : <p className="muted small-copy">No assignees.</p>}
           </div>
           {can(role, 'task:assign') && availableProfiles.length ? (
-            <div className="inline-editor-row">
-              <select value={selectedAssigneeId} onChange={(event) => setSelectedAssigneeId(event.target.value)}>
-                <option value="">Choose member…</option>
-                {availableProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.display_name || profile.email}</option>)}
-              </select>
-              <Button label="Assign" size="sm" variant="secondary" icon={<UserPlus size={14} />} onClick={() => void addAssignee()} />
+            <div className="inline-editor-row astryx-inline-editor">
+              <Selector
+                label="Add assignee"
+                isLabelHidden
+                options={assigneeOptions}
+                value={selectedAssigneeId}
+                onChange={setSelectedAssigneeId}
+                placeholder="Choose member…"
+                width="100%"
+              />
+              <Button label="Assign" size="sm" variant="secondary" icon={<UserPlus size={14} />} onClick={() => void addAssignee()} isDisabled={!selectedAssigneeId} />
             </div>
           ) : null}
         </div>
 
         <div className="peek-section">
           <span>Checklist</span>
-          <div className="checklist-list">
+          <div className="checklist-list astryx-checklist-list">
             {checklist.map((item) => (
-              <button className={item.is_completed ? 'checklist-item completed' : 'checklist-item'} key={item.id} disabled={isReadOnly} onClick={() => void toggleChecklist(item)}>
-                <span className="check-box">{item.is_completed ? <Check size={13} /> : null}</span>
-                <span>{item.content}</span>
-              </button>
+              <div className={item.is_completed ? 'astryx-checklist-item completed' : 'astryx-checklist-item'} key={item.id}>
+                <CheckboxInput
+                  label={item.content}
+                  value={item.is_completed}
+                  isReadOnly={isReadOnly}
+                  size="sm"
+                  width="100%"
+                  onChange={() => void toggleChecklist(item)}
+                />
+              </div>
             ))}
           </div>
           {can(role, 'checklist:edit') ? (
-            <div className="inline-editor-row">
-              <input value={checklistText} onChange={(event) => setChecklistText(event.target.value)} placeholder="Add checklist item…" />
-              <Button label="Add" size="sm" variant="secondary" icon={<Plus size={14} />} onClick={() => void addChecklistItem()} />
+            <div className="inline-editor-row astryx-inline-editor">
+              <TextInput
+                label="Checklist item"
+                isLabelHidden
+                value={checklistText}
+                onChange={setChecklistText}
+                placeholder="Add checklist item…"
+              />
+              <Button label="Add" size="sm" variant="secondary" icon={<Plus size={14} />} onClick={() => void addChecklistItem()} isDisabled={!checklistText.trim()} />
             </div>
           ) : null}
         </div>
@@ -182,7 +217,7 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
           {can(role, 'comment:create') ? (
             <div className="comment-composer">
               <TextArea label="Comment" isLabelHidden value={commentText} onChange={setCommentText} rows={3} placeholder="Share an update, decision or test result…" />
-              <Button label="Add comment" variant="secondary" size="sm" onClick={() => void addComment()} />
+              <Button label="Add comment" variant="secondary" size="sm" onClick={() => void addComment()} isDisabled={!commentText.trim()} />
             </div>
           ) : null}
         </div>
