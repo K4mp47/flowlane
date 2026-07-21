@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import '@astryxdesign/core/reset.css'
 import '@astryxdesign/core/astryx.css'
 import './index.css'
+import './kanban-fixes.css'
 import App from './App'
 
 const queryClient = new QueryClient({
