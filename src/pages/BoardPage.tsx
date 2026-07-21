@@ -215,6 +215,7 @@ export function BoardPage() {
             taskType={boardQuery.data.taskTypes.find((type) => type.id === selectedTask.task_type_id)}
             assignees={boardQuery.data.assignees}
             profiles={boardQuery.data.profiles}
+            members={boardQuery.data.members}
             onClose={() => setSelectedTask(null)}
             onEdit={() => { setEditingTask(selectedTask); setSelectedTask(null); setIsTaskFormOpen(true) }}
             onChanged={async () => {

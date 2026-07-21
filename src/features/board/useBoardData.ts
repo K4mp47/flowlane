@@ -17,6 +17,7 @@ export interface BoardData {
   taskTypes: TaskType[]
   assignees: TaskAssignee[]
   profiles: Profile[]
+  members: Array<{ user_id: string; role: WorkspaceRole }>
 }
 
 export const boardQueryKey = (workspaceId: string) => ['boardData', workspaceId] as const
@@ -92,6 +93,7 @@ async function fetchBoardData(workspaceId: string): Promise<BoardData> {
     taskTypes: (taskTypesResult.data ?? []) as TaskType[],
     assignees,
     profiles,
+    members: (memberRows ?? []).map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
   }
 }
 
