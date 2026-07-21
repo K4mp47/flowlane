@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   TouchSensor,
   closestCorners,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import { Button } from '@astryxdesign/core/Button'
 import { Badge } from '@astryxdesign/core/Badge'
@@ -19,6 +22,7 @@ import { AppSidebar } from '../components/AppSidebar'
 import { supabase } from '../lib/supabase'
 import type { Task, TaskPriority } from '../types/domain'
 import { KanbanColumn } from '../features/board/KanbanColumn'
+import { TaskCardOverlay } from '../features/board/TaskCard'
 import { TaskFormModal } from '../features/tasks/TaskFormModal'
 import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
 import { NotificationsPanel } from '../features/notifications/NotificationsPanel'
@@ -43,9 +47,12 @@ export function BoardPage() {
   const [boardError, setBoardError] = useState<string | null>(null)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
+  const [dragTasks, setDragTasks] = useState<Task[] | null>(null)
+
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 140, tolerance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 10 } }),
   )
   const isReadOnly = !can(role, 'task:move')
 
@@ -71,21 +78,22 @@ export function BoardPage() {
     }
   }, [queryClient, workspaceId])
 
-  const filteredTasks = useMemo(() => {
+  const visibleTasks = useMemo(() => {
     const data = boardQuery.data
     if (!data) return []
+    const tasks = dragTasks ?? data.tasks
     const normalizedSearch = search.trim().toLowerCase()
     const myTaskIds = new Set(
       data.assignees.filter((entry) => entry.user_id === user?.id).map((entry) => entry.task_id),
     )
 
-    return data.tasks.filter((task) => {
+    return tasks.filter((task) => {
       if (view === 'mine' && !myTaskIds.has(task.id)) return false
       if (priority !== 'ALL' && task.priority !== priority) return false
       if (normalizedSearch && !`${task.title} ${task.context ?? ''} FL-${task.task_number}`.toLowerCase().includes(normalizedSearch)) return false
       return true
     })
-  }, [boardQuery.data, priority, search, user?.id, view])
+  }, [boardQuery.data, dragTasks, priority, search, user?.id, view])
 
   useEffect(() => {
     if (role === 'VIEWER') return
@@ -105,48 +113,94 @@ export function BoardPage() {
     return () => { void supabase.removeChannel(channel) }
   }, [role, user])
 
-  async function handleDragEnd(event: DragEndEvent) {
-    if (isReadOnly || !boardQuery.data || !event.over) return
+  function resolvePreviewPosition(tasks: Task[], activeId: string, overId: string, activeTop?: number, overTop?: number, overHeight?: number) {
+    if (!boardQuery.data) return null
+    const targetTask = tasks.find((task) => task.id === overId)
+    const targetColumn = boardQuery.data.columns.find((column) => column.id === overId)
+    const columnId = targetTask?.column_id ?? targetColumn?.id
+    if (!columnId) return null
+
+    const columnTasks = tasks
+      .filter((task) => task.column_id === columnId && task.id !== activeId)
+      .sort((a, b) => a.position - b.position)
+
+    if (!targetTask) {
+      return {
+        columnId,
+        position: columnTasks.length ? columnTasks[columnTasks.length - 1].position + 1000 : 1000,
+      }
+    }
+
+    const targetIndex = columnTasks.findIndex((task) => task.id === targetTask.id)
+    const isAfter = activeTop !== undefined && overTop !== undefined && overHeight !== undefined
+      ? activeTop > overTop + overHeight / 2
+      : false
+    const previous = isAfter ? targetTask : targetIndex > 0 ? columnTasks[targetIndex - 1] : null
+    const next = isAfter ? columnTasks[targetIndex + 1] ?? null : targetTask
+
+    if (previous && next) return { columnId, position: (previous.position + next.position) / 2 }
+    if (previous) return { columnId, position: previous.position + 1000 }
+    if (next) return { columnId, position: next.position / 2 }
+    return { columnId, position: 1000 }
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    if (isReadOnly || !boardQuery.data) return
+    setActiveTaskId(String(event.active.id))
+    setDragTasks(boardQuery.data.tasks)
+    setBoardError(null)
+  }
+
+  function handleDragOver(event: DragOverEvent) {
+    if (isReadOnly || !event.over) return
     const activeId = String(event.active.id)
     const overId = String(event.over.id)
     if (activeId === overId) return
 
-    const sourceTask = boardQuery.data.tasks.find((task) => task.id === activeId)
-    if (!sourceTask) return
+    setDragTasks((current) => {
+      if (!current) return current
+      const activeTop = event.active.rect.current.translated?.top
+      const resolved = resolvePreviewPosition(current, activeId, overId, activeTop, event.over?.rect.top, event.over?.rect.height)
+      if (!resolved) return current
+      return current.map((task) => task.id === activeId
+        ? { ...task, column_id: resolved.columnId, position: resolved.position }
+        : task)
+    })
+  }
 
-    const targetTask = boardQuery.data.tasks.find((task) => task.id === overId)
-    const targetColumn = boardQuery.data.columns.find((column) => column.id === overId)
-    const columnId = targetTask?.column_id ?? targetColumn?.id
-    if (!columnId) return
+  function resetDrag() {
+    setActiveTaskId(null)
+    setDragTasks(null)
+  }
 
-    const targetTasks = boardQuery.data.tasks
-      .filter((task) => task.column_id === columnId && task.id !== activeId)
-      .sort((a, b) => a.position - b.position)
+  async function handleDragEnd(event: DragEndEvent) {
+    if (isReadOnly || !boardQuery.data || !event.over) {
+      resetDrag()
+      return
+    }
 
-    let nextPosition = 1000
-    if (targetTask) {
-      const index = targetTasks.findIndex((task) => task.id === targetTask.id)
-      const previous = index > 0 ? targetTasks[index - 1] : null
-      nextPosition = previous ? (previous.position + targetTask.position) / 2 : targetTask.position / 2
-    } else if (targetTasks.length > 0) {
-      nextPosition = targetTasks[targetTasks.length - 1].position + 1000
+    const activeId = String(event.active.id)
+    const originalTask = boardQuery.data.tasks.find((task) => task.id === activeId)
+    const previewTask = dragTasks?.find((task) => task.id === activeId)
+    if (!originalTask || !previewTask) {
+      resetDrag()
+      return
     }
 
     const previousData = boardQuery.data
-    const optimisticTasks = previousData.tasks.map((task) => task.id === activeId
-      ? { ...task, column_id: columnId, position: nextPosition }
-      : task)
+    const nextTasks = previousData.tasks.map((task) => task.id === activeId ? previewTask : task)
+    queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId, previousData.board.id), { ...previousData, tasks: nextTasks })
+    resetDrag()
 
-    queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId, boardQuery.data.board.id), { ...previousData, tasks: optimisticTasks })
-    setBoardError(null)
+    if (originalTask.column_id === previewTask.column_id && originalTask.position === previewTask.position) return
 
     const { error } = await supabase
       .from('tasks')
-      .update({ column_id: columnId, position: nextPosition })
+      .update({ column_id: previewTask.column_id, position: previewTask.position })
       .eq('id', activeId)
 
     if (error) {
-      queryClient.setQueryData(boardQueryKey(workspaceId, boardQuery.data.board.id), previousData)
+      queryClient.setQueryData(boardQueryKey(workspaceId, previousData.board.id), previousData)
       setBoardError(error.message)
       return
     }
@@ -162,6 +216,8 @@ export function BoardPage() {
     setSelectedTask(task)
     setIsNotificationsOpen(false)
   }
+
+  const activeTask = activeTaskId ? (dragTasks ?? boardQuery.data.tasks).find((task) => task.id === activeTaskId) ?? null : null
 
   return (
     <div className="app-frame">
@@ -230,14 +286,21 @@ export function BoardPage() {
             />
           </div>
         ) : (
-          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragCancel={resetDrag}
+            onDragEnd={handleDragEnd}
+          >
             <div className="kanban-scroll">
               <div className="kanban-grid">
                 {boardQuery.data.columns.map((column) => (
                   <KanbanColumn
                     key={column.id}
                     column={column}
-                    tasks={filteredTasks.filter((task) => task.column_id === column.id).sort((a, b) => a.position - b.position)}
+                    tasks={visibleTasks.filter((task) => task.column_id === column.id).sort((a, b) => a.position - b.position)}
                     taskTypes={boardQuery.data.taskTypes}
                     assignees={boardQuery.data.assignees}
                     profiles={boardQuery.data.profiles}
@@ -247,6 +310,16 @@ export function BoardPage() {
                 ))}
               </div>
             </div>
+            <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' }}>
+              {activeTask ? (
+                <TaskCardOverlay
+                  task={activeTask}
+                  taskType={boardQuery.data.taskTypes.find((type) => type.id === activeTask.task_type_id)}
+                  assignees={boardQuery.data.assignees}
+                  profiles={boardQuery.data.profiles}
+                />
+              ) : null}
+            </DragOverlay>
           </DndContext>
         )}
 
