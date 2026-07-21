@@ -6,6 +6,8 @@ import '@astryxdesign/core/astryx.css'
 import './index.css'
 import './kanban-fixes.css'
 import './astryx-controls.css'
+import './ui-polish.css'
+import './sidebar-polish.css'
 import App from './App'
 
 const queryClient = new QueryClient({

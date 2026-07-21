@@ -1,0 +1,320 @@
+/* Final UI polish layer: theme correctness, card geometry, sidebar rhythm and workflow feedback. */
+
+:root {
+  --fl-stage-backlog: #8b929a;
+  --fl-stage-todo: #6d8dff;
+  --fl-stage-progress: #a87bf0;
+  --fl-stage-review: #e7ad3a;
+  --fl-stage-done: #48b881;
+}
+
+/* Theme-correct overlays and details. */
+.task-peek,
+.task-detail-panel,
+.task-form-modal,
+.modal-backdrop,
+.task-peek-backdrop {
+  color: var(--fl-text);
+}
+
+.task-peek,
+.task-detail-panel {
+  background: var(--fl-surface) !important;
+  border-color: var(--fl-border) !important;
+  box-shadow: -18px 0 48px rgba(0, 0, 0, .12);
+}
+
+.task-detail-panel h2,
+.task-detail-panel strong,
+.task-detail-panel .peek-section > span,
+.task-detail-panel .task-reference {
+  color: var(--fl-text) !important;
+}
+
+.task-detail-panel p,
+.task-detail-panel .muted,
+.task-detail-panel .small-copy,
+.task-detail-panel .comment-meta span {
+  color: var(--fl-text-muted) !important;
+}
+
+.task-detail-panel .peek-section,
+.task-detail-panel .comment-card {
+  border-color: var(--fl-border) !important;
+}
+
+:root[data-theme='dark'] .task-peek-backdrop,
+:root[data-theme='dark'] .modal-backdrop {
+  background: rgba(0, 0, 0, .56) !important;
+  backdrop-filter: blur(5px) saturate(90%);
+}
+
+:root[data-theme='dark'] .task-peek,
+:root[data-theme='dark'] .task-detail-panel,
+:root[data-theme='dark'] .task-form-modal {
+  background: #111311 !important;
+}
+
+:root[data-theme='dark'] .task-detail-panel textarea,
+:root[data-theme='dark'] .task-detail-panel input {
+  color-scheme: dark;
+}
+
+/* Task card footer: restore proper card radius, breathing room and alignment. */
+.task-card {
+  overflow: hidden;
+}
+
+.task-card-footer {
+  min-height: 34px;
+  margin: 12px -13px -12px;
+  padding: 8px 11px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 1px solid var(--fl-border);
+  border-radius: 0 0 10px 10px;
+  background: color-mix(in srgb, var(--fl-surface-soft) 82%, transparent);
+}
+
+.task-card-footer .avatar-stack,
+.task-card-footer .task-due {
+  min-width: 0;
+}
+
+.task-card-footer .task-due {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.task-card-footer .mini-avatar {
+  margin: 0;
+}
+
+/* Sidebar: make the compact rail feel intentionally centered, not squeezed. */
+.flowlane-side-nav {
+  --sidebar-item-gap: 5px;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav {
+  padding-inline: 0 !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav > * {
+  width: 100%;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-logo {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-avatar {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav button[aria-label],
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav a[aria-label] {
+  margin-inline: auto;
+}
+
+.sidebar-hover-shell .flowlane-side-nav {
+  padding-bottom: 8px;
+}
+
+.sidebar-hover-shell .flowlane-side-nav [class*='stickyBottom'] {
+  gap: 6px !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='footerIcons'] {
+  width: 100%;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+}
+
+.sidebar-hover-shell.expanded .flowlane-side-nav [class*='footerIcons'] {
+  justify-content: flex-start !important;
+}
+
+.sidebar-notification-action {
+  align-items: center;
+  justify-content: center;
+}
+
+/* Projects: replace the bright blue outline with a quiet, premium selected state. */
+.project-row {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--fl-border) !important;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.project-row:hover {
+  border-color: var(--fl-border-strong) !important;
+  transform: translateY(-1px);
+}
+
+.project-row.active {
+  border-color: color-mix(in srgb, var(--fl-stage-todo) 30%, var(--fl-border)) !important;
+  background: color-mix(in srgb, var(--fl-stage-todo) 5%, var(--fl-surface)) !important;
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--fl-stage-todo) 70%, transparent);
+}
+
+.project-row.active::after {
+  content: 'Current';
+  position: absolute;
+  top: 10px;
+  right: 112px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fl-stage-todo) 13%, var(--fl-surface));
+  color: color-mix(in srgb, var(--fl-stage-todo) 82%, var(--fl-text));
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* Role labels: compact identity chips instead of oversized horizontal bars. */
+.role-chip {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 4px 8px;
+  border: 1px solid var(--fl-border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: .01em;
+}
+
+.role-admin {
+  color: #8fc8ff;
+  border-color: rgba(71, 158, 230, .24);
+  background: rgba(71, 158, 230, .10);
+}
+
+.role-member {
+  color: #73d8c9;
+  border-color: rgba(52, 184, 162, .24);
+  background: rgba(52, 184, 162, .10);
+}
+
+.role-viewer {
+  color: var(--fl-text-muted);
+  background: var(--fl-surface-soft);
+}
+
+.team-row > .role-chip {
+  justify-self: start;
+}
+
+/* Column identity and drag/drop feedback. */
+.column-stage-icon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  color: var(--stage-color);
+  background: color-mix(in srgb, var(--stage-color) 10%, transparent);
+  transition: transform .18s cubic-bezier(.2,.8,.2,1), background .18s ease, color .18s ease;
+}
+
+.kanban-column.stage-backlog { --stage-color: var(--fl-stage-backlog); }
+.kanban-column.stage-todo { --stage-color: var(--fl-stage-todo); }
+.kanban-column.stage-in-progress { --stage-color: var(--fl-stage-progress); }
+.kanban-column.stage-review { --stage-color: var(--fl-stage-review); }
+.kanban-column.stage-done { --stage-color: var(--fl-stage-done); }
+
+.kanban-column .column-rule {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--stage-color) 32%, var(--fl-border)), var(--fl-border) 42%, transparent 100%);
+}
+
+.kanban-column.over {
+  border-color: color-mix(in srgb, var(--stage-color) 48%, var(--fl-border)) !important;
+  background: color-mix(in srgb, var(--stage-color) 7%, var(--fl-surface-soft)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--stage-color) 12%, transparent);
+}
+
+.kanban-column.over .column-stage-icon {
+  transform: scale(1.12) rotate(-5deg);
+  color: var(--stage-color);
+  background: color-mix(in srgb, var(--stage-color) 18%, transparent);
+  animation: column-icon-pulse .85s ease-in-out infinite alternate;
+}
+
+.kanban-column.over .empty-column {
+  border-color: color-mix(in srgb, var(--stage-color) 58%, var(--fl-border)) !important;
+  background: color-mix(in srgb, var(--stage-color) 6%, var(--fl-surface)) !important;
+}
+
+.empty-column-icon {
+  width: 30px;
+  height: 30px;
+  margin: 0 auto 5px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--stage-color);
+  background: color-mix(in srgb, var(--stage-color) 9%, transparent);
+}
+
+.kanban-column.over .empty-column-icon {
+  transform: translateY(-2px) scale(1.05);
+}
+
+@keyframes column-icon-pulse {
+  from { transform: scale(1.05) rotate(-3deg); }
+  to { transform: scale(1.16) rotate(3deg); }
+}
+
+/* Completed column gets a subtle positive signal without becoming noisy. */
+.kanban-column.stage-done .task-card {
+  border-color: color-mix(in srgb, var(--fl-stage-done) 18%, var(--fl-border));
+}
+
+.kanban-column.stage-review .task-card {
+  border-color: color-mix(in srgb, var(--fl-stage-review) 14%, var(--fl-border));
+}
+
+@media (max-width: 620px) {
+  .task-card-footer {
+    margin: 11px -13px -13px;
+    border-radius: 0 0 9px 9px;
+  }
+
+  .project-row.active::after {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban-column.over .column-stage-icon,
+  .project-row {
+    animation: none !important;
+    transition: none !important;
+  }
+}

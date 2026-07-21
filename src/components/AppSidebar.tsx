@@ -49,31 +49,31 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
           </div>
         )}
         footer={(
-          <div className="sidebar-astryx-user">
-            <span className="sidebar-astryx-avatar">{initial}</span>
-            <div className="sidebar-astryx-user-copy">
-              <strong>{displayName}</strong>
-              <span>{membership?.role}</span>
+          <div className="sidebar-footer-stack">
+            <div className="sidebar-utility-row">
+              {!isViewer ? (
+                <div className="sidebar-notification-action">
+                  <IconButton label="Notifications" icon={<Bell size={17} />} variant="ghost" size="sm" onClick={onOpenNotifications} />
+                  {unreadCount > 0 ? <Badge label={String(unreadCount)} variant="red" /> : null}
+                </div>
+              ) : null}
+              <IconButton
+                label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}
+                icon={theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+                variant="ghost"
+                size="sm"
+                onClick={toggleTheme}
+              />
             </div>
-            <IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} />
-          </div>
-        )}
-        footerIcons={(
-          <>
-            <IconButton
-              label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'}
-              icon={theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-            />
-            {!isViewer ? (
-              <div className="sidebar-notification-action">
-                <IconButton label="Notifications" icon={<Bell size={17} />} variant="ghost" size="sm" onClick={onOpenNotifications} />
-                {unreadCount > 0 ? <Badge label={String(unreadCount)} variant="red" /> : null}
+            <div className="sidebar-astryx-user">
+              <span className="sidebar-astryx-avatar">{initial}</span>
+              <div className="sidebar-astryx-user-copy">
+                <strong>{displayName}</strong>
+                <span>{membership?.role}</span>
               </div>
-            ) : null}
-          </>
+              <IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} />
+            </div>
+          </div>
         )}
       >
         <SideNavItem label="Board" icon={<KanbanSquare size={18} />} isSelected={view === 'board'} onClick={() => onViewChange('board')} />
