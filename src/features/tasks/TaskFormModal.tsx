@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Button } from '@astryxdesign/core/Button'
+import { DateInput } from '@astryxdesign/core/DateInput'
+import { IconButton } from '@astryxdesign/core/IconButton'
+import { Selector } from '@astryxdesign/core/Selector'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { TextArea } from '@astryxdesign/core/TextArea'
+import type { ISODateString } from '@astryxdesign/core/Calendar'
 import { X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { BoardColumn, Task, TaskPriority, TaskType } from '../../types/domain'
@@ -26,7 +30,7 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
   const [additionalInformation, setAdditionalInformation] = useState('')
   const [taskTypeId, setTaskTypeId] = useState('')
   const [priority, setPriority] = useState<TaskPriority | ''>('')
-  const [dueDate, setDueDate] = useState('')
+  const [dueDate, setDueDate] = useState<ISODateString | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -37,11 +41,19 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
     setAdditionalInformation(task?.additional_information ?? '')
     setTaskTypeId(task?.task_type_id ?? '')
     setPriority(task?.priority ?? '')
-    setDueDate(task?.due_date ? task.due_date.slice(0, 10) : '')
+    setDueDate(task?.due_date ? task.due_date.slice(0, 10) as ISODateString : undefined)
   }, [task])
 
   const isEditing = Boolean(task)
   const canSave = useMemo(() => title.trim().length > 0, [title])
+  const typeOptions = useMemo(() => [
+    { value: '', label: 'Not set' },
+    ...taskTypes.map((type) => ({ value: type.id, label: type.name })),
+  ], [taskTypes])
+  const priorityOptions = useMemo(() => [
+    { value: '', label: 'Not set' },
+    ...priorities.map((value) => ({ value, label: value.charAt(0) + value.slice(1).toLowerCase() })),
+  ], [])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -89,7 +101,7 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
             <p className="eyebrow">{isEditing ? `FL-${task?.task_number}` : 'New task'}</p>
             <h2>{isEditing ? 'Edit task' : 'Create task'}</h2>
           </div>
-          <button className="icon-plain" type="button" onClick={onClose} aria-label="Close"><X size={18} /></button>
+          <IconButton label="Close task form" icon={<X size={18} />} variant="ghost" size="sm" onClick={onClose} />
         </div>
 
         <TextInput
@@ -125,25 +137,30 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
           isOptional
         />
 
-        <div className="form-grid-3">
-          <label className="native-field">
-            <span>Type</span>
-            <select value={taskTypeId} onChange={(event) => setTaskTypeId(event.target.value)}>
-              <option value="">Not set</option>
-              {taskTypes.map((type) => <option key={type.id} value={type.id}>{type.name}</option>)}
-            </select>
-          </label>
-          <label className="native-field">
-            <span>Priority</span>
-            <select value={priority} onChange={(event) => setPriority(event.target.value as TaskPriority | '')}>
-              <option value="">Not set</option>
-              {priorities.map((value) => <option key={value} value={value}>{value}</option>)}
-            </select>
-          </label>
-          <label className="native-field">
-            <span>Due date</span>
-            <input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
-          </label>
+        <div className="form-grid-3 astryx-form-grid">
+          <Selector
+            label="Type"
+            options={typeOptions}
+            value={taskTypeId}
+            onChange={(value) => setTaskTypeId(value)}
+            size="md"
+            width="100%"
+          />
+          <Selector
+            label="Priority"
+            options={priorityOptions}
+            value={priority}
+            onChange={(value) => setPriority(value as TaskPriority | '')}
+            size="md"
+            width="100%"
+          />
+          <DateInput
+            label="Due date"
+            value={dueDate}
+            onChange={setDueDate}
+            hasClear
+            width="100%"
+          />
         </div>
 
         <div className="definition-callout">

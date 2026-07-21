@@ -1,0 +1,313 @@
+/* Astryx controls + hover-expanding navigation rail. Loaded after the legacy app CSS. */
+
+:root {
+  --fl-sidebar-rail: 48px;
+  --fl-sidebar-expanded: 260px;
+  --fl-sidebar-ease: cubic-bezier(.2,.8,.2,1);
+}
+
+.app-frame {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--fl-sidebar-rail) minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.sidebar-hover-shell {
+  position: relative;
+  z-index: 100;
+  width: var(--fl-sidebar-rail);
+  min-width: var(--fl-sidebar-rail);
+  height: 100dvh;
+  overflow: visible;
+}
+
+.flowlane-side-nav {
+  position: fixed !important;
+  inset: 0 auto 0 0;
+  z-index: 100;
+  height: 100dvh !important;
+  border-right: 1px solid var(--fl-border);
+  background: color-mix(in srgb, var(--fl-surface) 98%, transparent) !important;
+  box-shadow: none;
+  transition:
+    width .24s var(--fl-sidebar-ease),
+    box-shadow .24s var(--fl-sidebar-ease),
+    background-color .18s ease;
+  will-change: width;
+}
+
+.sidebar-hover-shell.expanded .flowlane-side-nav {
+  box-shadow:
+    16px 0 36px rgba(0,0,0,.08),
+    3px 0 10px rgba(0,0,0,.035);
+}
+
+:root[data-theme='dark'] .flowlane-side-nav {
+  background: color-mix(in srgb, #111311 98%, transparent) !important;
+  box-shadow: none;
+}
+
+:root[data-theme='dark'] .sidebar-hover-shell.expanded .flowlane-side-nav {
+  box-shadow:
+    18px 0 46px rgba(0,0,0,.34),
+    3px 0 12px rgba(0,0,0,.2);
+}
+
+.sidebar-astryx-brand {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.sidebar-astryx-logo {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--fl-surface);
+  background: var(--fl-text);
+  transition: transform .2s var(--fl-sidebar-ease), border-radius .2s ease;
+}
+
+.sidebar-hover-shell.expanded .sidebar-astryx-logo {
+  transform: rotate(-4deg) scale(1.02);
+}
+
+.sidebar-astryx-brand-copy,
+.sidebar-astryx-user-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity .16s ease .05s,
+    transform .22s var(--fl-sidebar-ease),
+    max-width .24s var(--fl-sidebar-ease);
+}
+
+.sidebar-astryx-brand-copy { max-width: 180px; }
+.sidebar-astryx-user-copy { max-width: 150px; flex: 1; }
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand-copy,
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user-copy {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-7px);
+  pointer-events: none;
+}
+
+.sidebar-astryx-brand-copy strong,
+.sidebar-astryx-user-copy strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fl-text);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.sidebar-astryx-brand-copy span,
+.sidebar-astryx-user-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fl-text-muted);
+  font-size: 9px;
+  line-height: 1.25;
+}
+
+.sidebar-astryx-user {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-astryx-avatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--fl-border);
+  border-radius: 999px;
+  background: var(--fl-surface-soft);
+  color: var(--fl-text);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user > button {
+  display: none;
+}
+
+.sidebar-notification-action {
+  position: relative;
+  display: inline-flex;
+}
+
+.sidebar-notification-action > :last-child:not(:first-child) {
+  position: absolute;
+  top: -6px;
+  right: -7px;
+  pointer-events: none;
+}
+
+/* Remove visual shells that existed only to make native select elements look acceptable. */
+.board-switcher.astryx-toolbar-control,
+.priority-selector.astryx-toolbar-control {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.board-switcher.astryx-toolbar-control {
+  width: 176px;
+  min-width: 152px;
+  max-width: 220px;
+}
+
+.priority-selector.astryx-toolbar-control {
+  width: 156px;
+  min-width: 142px;
+}
+
+.astryx-toolbar-control > * {
+  width: 100%;
+}
+
+.astryx-form-grid > * {
+  min-width: 0;
+}
+
+.invite-role-selector {
+  min-width: 132px;
+  width: 100%;
+}
+
+.inline-editor-row.astryx-inline-editor {
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.inline-editor-row.astryx-inline-editor > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.task-detail-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+}
+
+.astryx-checklist-list {
+  gap: 4px;
+}
+
+.astryx-checklist-item {
+  padding: 2px 0;
+  border-radius: 8px;
+  transition: background .14s ease, opacity .14s ease;
+}
+
+.astryx-checklist-item:hover {
+  background: var(--fl-surface-soft);
+}
+
+.astryx-checklist-item.completed {
+  opacity: .64;
+}
+
+.astryx-checklist-item.completed label {
+  text-decoration: line-through;
+}
+
+/* The Astryx field surfaces should remain visually consistent in the dark app theme. */
+.task-form-modal,
+.task-detail-panel,
+.team-page,
+.board-toolbar {
+  color: var(--fl-text);
+}
+
+@media (max-width: 900px) {
+  .board-switcher.astryx-toolbar-control,
+  .priority-selector.astryx-toolbar-control,
+  .search-control {
+    width: 100%;
+    max-width: none;
+  }
+
+  .toolbar-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(150px, .55fr) auto;
+  }
+}
+
+@media (max-width: 620px) {
+  :root { --fl-sidebar-rail: 48px; }
+
+  .app-frame {
+    display: grid;
+    grid-template-columns: var(--fl-sidebar-rail) minmax(0, 1fr);
+  }
+
+  .sidebar-hover-shell {
+    width: var(--fl-sidebar-rail);
+    height: 100dvh;
+  }
+
+  .flowlane-side-nav {
+    height: 100dvh !important;
+  }
+
+  .board-main {
+    min-height: 100dvh;
+    height: 100dvh;
+    padding-bottom: 0;
+  }
+
+  .toolbar-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .toolbar-actions > .board-switcher,
+  .toolbar-actions > .priority-selector {
+    grid-column: 1 / -1;
+  }
+
+  .toolbar-actions > .search-control { grid-column: 1; }
+  .toolbar-actions > .astryx-button { grid-column: 2; }
+
+  .kanban-grid {
+    grid-template-columns: repeat(5, calc(100vw - var(--fl-sidebar-rail) - 28px));
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .sidebar-hover-shell.expanded .flowlane-side-nav {
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowlane-side-nav,
+  .sidebar-astryx-logo,
+  .sidebar-astryx-brand-copy,
+  .sidebar-astryx-user-copy {
+    transition: none !important;
+  }
+}
