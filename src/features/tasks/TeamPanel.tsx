@@ -1,9 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Button } from '@astryxdesign/core/Button'
-import { Badge } from '@astryxdesign/core/Badge'
 import { Selector } from '@astryxdesign/core/Selector'
 import { TextInput } from '@astryxdesign/core/TextInput'
-import { MailPlus, ShieldCheck, Users } from 'lucide-react'
+import { Eye, MailPlus, ShieldCheck, UserRoundCheck, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Profile, WorkspaceRole } from '../../types/domain'
 
@@ -14,17 +13,17 @@ interface TeamPanelProps {
   onInvited: () => Promise<void> | void
 }
 
-const roleVariant: Record<WorkspaceRole, 'blue' | 'teal' | 'neutral'> = {
-  ADMIN: 'blue',
-  MEMBER: 'teal',
-  VIEWER: 'neutral',
-}
-
 const roleOptions = [
   { value: 'ADMIN', label: 'Admin' },
   { value: 'MEMBER', label: 'Member' },
   { value: 'VIEWER', label: 'Viewer' },
 ]
+
+const roleIcon = {
+  ADMIN: ShieldCheck,
+  MEMBER: UserRoundCheck,
+  VIEWER: Eye,
+} as const
 
 export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPanelProps) {
   const [email, setEmail] = useState('')
@@ -119,23 +118,26 @@ export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPan
       {error ? <div className="inline-alert error-alert">{error}</div> : null}
 
       <div className="role-explainer">
-        <div><Badge label="ADMIN" variant="blue" /><span>Full workspace, board and member management.</span></div>
-        <div><Badge label="MEMBER" variant="teal" /><span>Create, edit, assign and move tasks.</span></div>
-        <div><Badge label="VIEWER" variant="neutral" /><span>Live Kanban visibility only; no workflow changes.</span></div>
+        <div><span className="role-chip role-admin"><ShieldCheck size={12} />Admin</span><span>Full workspace, board and member management.</span></div>
+        <div><span className="role-chip role-member"><UserRoundCheck size={12} />Member</span><span>Create, edit, assign and move tasks.</span></div>
+        <div><span className="role-chip role-viewer"><Eye size={12} />Viewer</span><span>Live Kanban visibility only; no workflow changes.</span></div>
       </div>
 
       <div className="team-table-shell">
         <div className="team-table-header"><span>Person</span><span>Role</span><span>Access</span></div>
-        {rows.map(({ user_id, role: memberRole, profile }) => (
-          <div className="team-row" key={user_id}>
-            <div className="team-person">
-              <span className="avatar-circle">{(profile?.display_name || profile?.email || '?').slice(0, 1).toUpperCase()}</span>
-              <div><strong>{profile?.display_name || profile?.email?.split('@')[0] || 'Invited user'}</strong><span>{profile?.email || 'Invitation pending'}</span></div>
+        {rows.map(({ user_id, role: memberRole, profile }) => {
+          const RoleIcon = roleIcon[memberRole]
+          return (
+            <div className="team-row" key={user_id}>
+              <div className="team-person">
+                <span className="avatar-circle">{(profile?.display_name || profile?.email || '?').slice(0, 1).toUpperCase()}</span>
+                <div><strong>{profile?.display_name || profile?.email?.split('@')[0] || 'Invited user'}</strong><span>{profile?.email || 'Invitation pending'}</span></div>
+              </div>
+              <span className={`role-chip role-${memberRole.toLowerCase()}`}><RoleIcon size={13} />{memberRole.charAt(0) + memberRole.slice(1).toLowerCase()}</span>
+              <span className="team-access"><ShieldCheck size={14} />{memberRole === 'VIEWER' ? 'Read only' : memberRole === 'ADMIN' ? 'Full access' : 'Workflow access'}</span>
             </div>
-            <Badge label={memberRole} variant={roleVariant[memberRole]} />
-            <span className="team-access"><ShieldCheck size={14} />{memberRole === 'VIEWER' ? 'Read only' : memberRole === 'ADMIN' ? 'Full access' : 'Workflow access'}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </section>
   )
