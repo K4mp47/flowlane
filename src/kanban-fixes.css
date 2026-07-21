@@ -1,0 +1,83 @@
+/* Kanban interaction and responsive layout refinements. */
+
+.drag-handle-button {
+  width: 32px;
+  height: 32px;
+  margin: -8px -8px -8px 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  cursor: grab;
+  touch-action: none;
+}
+
+.drag-handle-button:hover { background: var(--fl-surface-soft); }
+.drag-handle-button:active { cursor: grabbing; }
+
+.task-card {
+  min-width: 0;
+  padding: 15px;
+  touch-action: pan-x pan-y;
+}
+.task-card.dragging { cursor: grabbing; opacity: .62; transform-origin: center; }
+.task-card h3 { overflow-wrap: anywhere; }
+.column-tasks { min-height: 160px; padding: 2px; }
+.kanban-column { padding-inline: 6px; }
+.board-toolbar { min-height: 78px; }
+.toolbar-actions { min-width: 0; }
+.modal-backdrop, .task-form-modal { overscroll-behavior: contain; }
+
+:root[data-theme='dark'] .task-form-modal .modal-actions { background: var(--fl-surface); }
+:root[data-theme='dark'] .task-form-modal,
+:root[data-theme='dark'] .task-form-modal label,
+:root[data-theme='dark'] .task-form-modal h2,
+:root[data-theme='dark'] .task-form-modal strong { color: var(--fl-text); }
+:root[data-theme='dark'] .task-form-modal p,
+:root[data-theme='dark'] .task-form-modal [class*='description'] { color: var(--fl-text-muted); }
+
+@media (max-width: 1100px) {
+  .board-toolbar { padding: 16px 18px 14px; gap: 16px; }
+  .toolbar-actions { gap: 8px; }
+  .search-control { width: min(270px, 25vw); }
+  .kanban-scroll { padding: 16px 18px 26px; }
+  .kanban-grid { grid-template-columns: repeat(5, minmax(250px, 1fr)); gap: 12px; }
+  .kanban-column { min-width: 250px; }
+}
+
+@media (max-width: 900px) {
+  .board-main { min-height: 100vh; height: auto; }
+  .board-toolbar { gap: 12px; }
+  .toolbar-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .board-switcher, .search-control { width: 100%; max-width: none; }
+  .search-control { min-width: 0; }
+  .select-shell { min-width: 150px; }
+  .kanban-grid { grid-template-columns: repeat(5, minmax(300px, 72vw)); gap: 14px; }
+  .kanban-column { min-width: 300px; }
+}
+
+@media (max-width: 620px) {
+  .board-main { height: calc(100dvh - 62px); min-height: 0; padding-bottom: 0; }
+  .board-toolbar { position: relative; padding: 12px 12px 10px; }
+  .board-title-line { flex-wrap: wrap; }
+  .board-heading h1 { max-width: 72vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 20px; }
+  .toolbar-actions { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+  .toolbar-actions > .board-switcher { grid-column: 1 / -1; }
+  .toolbar-actions > .search-control { grid-column: 1; }
+  .toolbar-actions > .astryx-button { grid-column: 2; }
+  .kanban-scroll { padding: 10px 10px 18px; scroll-padding-inline: 10px; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .kanban-grid { grid-template-columns: repeat(5, minmax(0, calc(100vw - 34px))); gap: 10px; scroll-snap-type: x proximity; }
+  .kanban-column { min-width: 0; min-height: calc(100dvh - 230px); padding-inline: 3px; scroll-snap-align: start; }
+  .column-header { height: 38px; padding-inline: 4px; }
+  .column-tasks { gap: 9px; }
+  .task-card { padding: 14px; border-radius: 12px; }
+  .task-card h3 { margin-top: 7px; font-size: 15px; }
+  .drag-handle-button { width: 36px; height: 36px; margin-top: -10px; margin-right: -10px; }
+  .modal-backdrop { height: 100dvh; overflow: hidden; }
+  .task-form-modal { min-height: 100dvh; height: 100dvh; max-height: 100dvh; overflow-y: auto; padding: 18px 14px 82px; gap: 16px; }
+  .task-form-modal .modal-header { position: sticky; top: -18px; z-index: 2; margin: -18px -14px 0; padding: 18px 14px 12px; background: var(--fl-surface); border-bottom: 1px solid var(--fl-border); }
+  .task-form-modal .modal-header h2 { font-size: 23px; }
+  .task-form-modal .modal-actions { position: sticky; bottom: -82px; z-index: 2; margin: 0 -14px -82px; padding: 12px 14px calc(14px + env(safe-area-inset-bottom)); background: var(--fl-surface); border-top: 1px solid var(--fl-border); }
+}
