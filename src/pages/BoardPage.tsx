@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   DndContext,
   PointerSensor,
+  TouchSensor,
+  closestCorners,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -41,7 +43,10 @@ export function BoardPage() {
   const [boardError, setBoardError] = useState<string | null>(null)
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 140, tolerance: 8 } }),
+  )
   const isReadOnly = !can(role, 'task:move')
 
   useEffect(() => {
@@ -225,7 +230,7 @@ export function BoardPage() {
             />
           </div>
         ) : (
-          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
             <div className="kanban-scroll">
               <div className="kanban-grid">
                 {boardQuery.data.columns.map((column) => (

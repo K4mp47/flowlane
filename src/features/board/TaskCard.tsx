@@ -46,31 +46,46 @@ export function TaskCard({ task, taskType, assignees, profiles, isReadOnly, onOp
       ref={setNodeRef}
       style={style}
       className={isDragging ? 'task-card dragging' : 'task-card'}
-      onClick={() => onOpen(task)}
+      onClick={() => {
+        if (!isDragging) onOpen(task)
+      }}
       {...attributes}
-      {...listeners}
     >
       <div className="task-card-topline">
         <span className="task-reference">FL-{task.task_number}</span>
-        {!isReadOnly ? <GripVertical className="drag-handle" size={16} /> : null}
+        {!isReadOnly ? (
+          <button
+            type="button"
+            className="drag-handle-button"
+            aria-label={`Move task ${task.title}`}
+            onClick={(event) => event.stopPropagation()}
+            {...listeners}
+          >
+            <GripVertical className="drag-handle" size={16} />
+          </button>
+        ) : null}
       </div>
       <h3>{task.title}</h3>
-      {task.context ? <p className="task-context">{task.context}</p> : <p className="task-context empty-copy">No context yet</p>}
-      <div className="task-badges">
-        {taskType ? <Badge label={taskType.name} variant="neutral" /> : null}
-        {task.priority ? <Badge label={task.priority} variant={priorityVariant[task.priority]} /> : null}
-        {task.is_blocked ? <Badge label="Blocked" variant="error" icon={<LockKeyhole size={12} />} /> : null}
-      </div>
-      <div className="task-card-footer">
-        <div className="avatar-stack" aria-label="Assignees">
-          {taskProfiles.length > 0 ? taskProfiles.slice(0, 3).map((profile) => (
-            <span className="mini-avatar" key={profile.id} title={profile.display_name || profile.email}>
-              {(profile.display_name || profile.email).slice(0, 1).toUpperCase()}
-            </span>
-          )) : <span className="unassigned-label">Unassigned</span>}
+      {task.context ? <p className="task-context">{task.context}</p> : null}
+      {(taskType || task.priority || task.is_blocked) ? (
+        <div className="task-badges">
+          {taskType ? <Badge label={taskType.name} variant="neutral" /> : null}
+          {task.priority ? <Badge label={task.priority} variant={priorityVariant[task.priority]} /> : null}
+          {task.is_blocked ? <Badge label="Blocked" variant="error" icon={<LockKeyhole size={12} />} /> : null}
         </div>
-        {dueLabel ? <span className="task-due"><CalendarDays size={14} />{dueLabel}</span> : null}
-      </div>
+      ) : null}
+      {(taskProfiles.length > 0 || dueLabel) ? (
+        <div className="task-card-footer">
+          <div className="avatar-stack" aria-label="Assignees">
+            {taskProfiles.slice(0, 3).map((profile) => (
+              <span className="mini-avatar" key={profile.id} title={profile.display_name || profile.email}>
+                {(profile.display_name || profile.email).slice(0, 1).toUpperCase()}
+              </span>
+            ))}
+          </div>
+          {dueLabel ? <span className="task-due"><CalendarDays size={14} />{dueLabel}</span> : null}
+        </div>
+      ) : null}
     </article>
   )
 }
