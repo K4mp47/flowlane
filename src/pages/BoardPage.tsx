@@ -17,6 +17,8 @@ import { AppSidebar } from '../components/AppSidebar'
 import { supabase } from '../lib/supabase'
 import type { Task, TaskPriority } from '../types/domain'
 import { KanbanColumn } from '../features/board/KanbanColumn'
+import { TaskFormModal } from '../features/tasks/TaskFormModal'
+import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
 import { boardQueryKey, type BoardData, useBoardData } from '../features/board/useBoardData'
 
 const priorityOptions: Array<TaskPriority | 'ALL'> = ['ALL', 'URGENT', 'HIGH', 'MEDIUM', 'LOW']
@@ -30,6 +32,8 @@ export function BoardPage() {
   const [search, setSearch] = useState('')
   const [priority, setPriority] = useState<TaskPriority | 'ALL'>('ALL')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [isTaskFormOpen, setIsTaskFormOpen] = useState(false)
   const [boardError, setBoardError] = useState<string | null>(null)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const isReadOnly = !can(role, 'task:move')
@@ -150,7 +154,7 @@ export function BoardPage() {
                 {priorityOptions.map((option) => <option key={option} value={option}>{option === 'ALL' ? 'All priorities' : option}</option>)}
               </select>
             </div>
-            {can(role, 'task:create') ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => window.dispatchEvent(new CustomEvent('flowlane:new-task'))} /> : null}
+            {can(role, 'task:create') ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}
           </div>
         </header>
 
@@ -179,18 +183,34 @@ export function BoardPage() {
         </DndContext>
 
         {selectedTask ? (
-          <div className="task-peek-backdrop" onMouseDown={() => setSelectedTask(null)}>
-            <aside className="task-peek" onMouseDown={(event) => event.stopPropagation()}>
-              <button className="peek-close" onClick={() => setSelectedTask(null)}>×</button>
-              <span className="task-reference">FL-{selectedTask.task_number}</span>
-              <h2>{selectedTask.title}</h2>
-              <div className="peek-section"><span>Context</span><p>{selectedTask.context || 'No context added yet.'}</p></div>
-              <div className="peek-section"><span>Expected result</span><p>{selectedTask.expected_result || 'No expected result added yet.'}</p></div>
-              <div className="peek-section"><span>Additional information</span><p>{selectedTask.additional_information || 'No additional information.'}</p></div>
-              {selectedTask.is_blocked ? <div className="blocked-callout"><strong>Blocked</strong><p>{selectedTask.blocked_reason}</p></div> : null}
-              {isReadOnly ? <p className="read-only-note">Viewer access is read-only.</p> : null}
-            </aside>
-          </div>
+          <TaskDetailPanel
+            task={selectedTask}
+            role={role}
+            currentUserId={user!.id}
+            taskType={boardQuery.data.taskTypes.find((type) => type.id === selectedTask.task_type_id)}
+            assignees={boardQuery.data.assignees}
+            profiles={boardQuery.data.profiles}
+            onClose={() => setSelectedTask(null)}
+            onEdit={() => { setEditingTask(selectedTask); setSelectedTask(null); setIsTaskFormOpen(true) }}
+            onChanged={async () => {
+              await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) })
+              const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId))
+              if (fresh) setSelectedTask(fresh.tasks.find((task) => task.id === selectedTask.id) ?? null)
+            }}
+          />
+        ) : null}
+
+        {isTaskFormOpen ? (
+          <TaskFormModal
+            workspaceId={workspaceId}
+            boardId={boardQuery.data.board.id}
+            creatorId={user!.id}
+            backlogColumn={boardQuery.data.columns.find((column) => column.workflow_stage === 'BACKLOG')!}
+            taskTypes={boardQuery.data.taskTypes}
+            task={editingTask}
+            onClose={() => { setIsTaskFormOpen(false); setEditingTask(null) }}
+            onSaved={async () => { await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) }) }}
+          />
         ) : null}
       </main>
     </div>
