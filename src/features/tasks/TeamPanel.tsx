@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Badge } from '@astryxdesign/core/Badge'
+import { Selector } from '@astryxdesign/core/Selector'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { MailPlus, ShieldCheck, Users } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -18,6 +19,12 @@ const roleVariant: Record<WorkspaceRole, 'blue' | 'teal' | 'neutral'> = {
   MEMBER: 'teal',
   VIEWER: 'neutral',
 }
+
+const roleOptions = [
+  { value: 'ADMIN', label: 'Admin' },
+  { value: 'MEMBER', label: 'Member' },
+  { value: 'VIEWER', label: 'Viewer' },
+]
 
 export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPanelProps) {
   const [email, setEmail] = useState('')
@@ -95,11 +102,16 @@ export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPan
             isRequired
           />
         </div>
-        <select className="role-select" value={role} onChange={(event) => setRole(event.target.value as WorkspaceRole)}>
-          <option value="ADMIN">Admin</option>
-          <option value="MEMBER">Member</option>
-          <option value="VIEWER">Viewer</option>
-        </select>
+        <div className="invite-role-selector">
+          <Selector
+            label="Role"
+            isLabelHidden
+            options={roleOptions}
+            value={role}
+            onChange={(value) => setRole(value as WorkspaceRole)}
+            width="100%"
+          />
+        </div>
         <Button label="Send invite" variant="primary" type="submit" isLoading={isLoading} />
       </form>
 
