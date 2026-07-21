@@ -1,0 +1,55 @@
+.sidebar-footer-stack {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+}
+
+.sidebar-utility-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--fl-border);
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-footer-stack {
+  justify-items: center;
+  gap: 8px;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row {
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding-bottom: 7px;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+  display: grid;
+  place-items: center;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user-copy,
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user > button {
+  display: none;
+}
+
+.sidebar-hover-shell.expanded .sidebar-utility-row {
+  justify-content: flex-start;
+}
+
+.sidebar-hover-shell.expanded .sidebar-astryx-user {
+  padding-top: 2px;
+}
+
+.sidebar-hover-shell .sidebar-notification-action > :last-child:not(:first-child) {
+  top: -4px;
+  right: -5px;
+  transform: scale(.82);
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [role='button'],
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav button {
+  flex-shrink: 0;
+}
