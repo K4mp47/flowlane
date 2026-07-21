@@ -1,0 +1,13 @@
+create index if not exists activity_events_actor_idx on public.activity_events(actor_id);
+create index if not exists attachments_uploaded_by_idx on public.attachments(uploaded_by);
+create index if not exists checklist_created_by_idx on public.checklist_items(created_by);
+create index if not exists comments_author_idx on public.comments(author_id);
+create index if not exists notifications_task_idx on public.notifications(task_id);
+create index if not exists notifications_workspace_idx on public.notifications(workspace_id);
+create index if not exists task_assignees_assigned_by_idx on public.task_assignees(assigned_by);
+create index if not exists tasks_blocked_by_task_idx on public.tasks(blocked_by_task_id);
+create index if not exists tasks_board_workspace_idx on public.tasks(board_id, workspace_id);
+create index if not exists tasks_column_board_idx on public.tasks(column_id, board_id);
+create index if not exists tasks_type_workspace_idx on public.tasks(task_type_id, workspace_id);
+create index if not exists workspace_members_added_by_idx on public.workspace_members(added_by);
+create index if not exists workspaces_created_by_idx on public.workspaces(created_by);
