@@ -13,9 +13,10 @@ import {
 } from '@dnd-kit/core'
 import { Button } from '@astryxdesign/core/Button'
 import { Badge } from '@astryxdesign/core/Badge'
+import { Selector } from '@astryxdesign/core/Selector'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { FolderKanban, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { can } from '../auth/permissions'
 import { AppSidebar } from '../components/AppSidebar'
@@ -30,7 +31,13 @@ import { TeamPanel } from '../features/tasks/TeamPanel'
 import { ProjectsPanel } from '../features/board/ProjectsPanel'
 import { boardQueryKey, type BoardData, useBoardData } from '../features/board/useBoardData'
 
-const priorityOptions: Array<TaskPriority | 'ALL'> = ['ALL', 'URGENT', 'HIGH', 'MEDIUM', 'LOW']
+const priorityOptions = [
+  { value: 'ALL', label: 'All priorities' },
+  { value: 'URGENT', label: 'Urgent' },
+  { value: 'HIGH', label: 'High' },
+  { value: 'MEDIUM', label: 'Medium' },
+  { value: 'LOW', label: 'Low' },
+]
 
 export function BoardPage() {
   const { membership, role, user } = useAuth()
@@ -218,6 +225,7 @@ export function BoardPage() {
   }
 
   const activeTask = activeTaskId ? (dragTasks ?? boardQuery.data.tasks).find((task) => task.id === activeTaskId) ?? null : null
+  const boardOptions = boardQuery.data.boards.map((board) => ({ value: board.id, label: board.name }))
 
   return (
     <div className="app-frame">
@@ -233,11 +241,16 @@ export function BoardPage() {
           </div>
           {view !== 'team' && view !== 'projects' ? <div className="toolbar-actions">
             {boardQuery.data.boards.length > 1 ? (
-              <div className="board-switcher">
-                <select value={boardQuery.data.board.id} onChange={(event) => { setSelectedBoardId(event.target.value); setView('board') }}>
-                  {boardQuery.data.boards.map((board) => <option key={board.id} value={board.id}>{board.name}</option>)}
-                </select>
-                <ChevronDown size={15} />
+              <div className="board-switcher astryx-toolbar-control">
+                <Selector
+                  label="Project board"
+                  isLabelHidden
+                  options={boardOptions}
+                  value={boardQuery.data.board.id}
+                  onChange={(value) => { setSelectedBoardId(value); setView('board') }}
+                  startIcon={<FolderKanban size={15} />}
+                  width="100%"
+                />
               </div>
             ) : null}
             <div className="search-control">
@@ -251,11 +264,16 @@ export function BoardPage() {
                 hasClear
               />
             </div>
-            <div className="select-shell">
-              <SlidersHorizontal size={16} />
-              <select value={priority} onChange={(event) => setPriority(event.target.value as TaskPriority | 'ALL')}>
-                {priorityOptions.map((option) => <option key={option} value={option}>{option === 'ALL' ? 'All priorities' : option}</option>)}
-              </select>
+            <div className="priority-selector astryx-toolbar-control">
+              <Selector
+                label="Priority"
+                isLabelHidden
+                options={priorityOptions}
+                value={priority}
+                onChange={(value) => setPriority(value as TaskPriority | 'ALL')}
+                startIcon={<SlidersHorizontal size={15} />}
+                width="100%"
+              />
             </div>
             {can(role, 'task:create') ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}
           </div> : null}
