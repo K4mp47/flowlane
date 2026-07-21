@@ -20,6 +20,7 @@ import { KanbanColumn } from '../features/board/KanbanColumn'
 import { TaskFormModal } from '../features/tasks/TaskFormModal'
 import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
 import { NotificationsPanel } from '../features/notifications/NotificationsPanel'
+import { TeamPanel } from '../features/tasks/TeamPanel'
 import { boardQueryKey, type BoardData, useBoardData } from '../features/board/useBoardData'
 
 const priorityOptions: Array<TaskPriority | 'ALL'> = ['ALL', 'URGENT', 'HIGH', 'MEDIUM', 'LOW']
@@ -29,7 +30,7 @@ export function BoardPage() {
   const workspaceId = membership!.workspace_id
   const boardQuery = useBoardData(workspaceId, role)
   const queryClient = useQueryClient()
-  const [view, setView] = useState<'board' | 'mine'>('board')
+  const [view, setView] = useState<'board' | 'mine' | 'team'>('board')
   const [search, setSearch] = useState('')
   const [priority, setPriority] = useState<TaskPriority | 'ALL'>('ALL')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -159,9 +160,9 @@ export function BoardPage() {
               <h1>{boardQuery.data.board.name}</h1>
               <Badge label={role ?? 'MEMBER'} variant={role === 'VIEWER' ? 'neutral' : 'blue'} />
             </div>
-            <p>{view === 'mine' ? 'Tasks assigned to you' : 'Department workflow'}</p>
+            <p>{view === 'mine' ? 'Tasks assigned to you' : view === 'team' ? 'Workspace members and access' : 'Department workflow'}</p>
           </div>
-          <div className="toolbar-actions">
+          {view !== 'team' ? <div className="toolbar-actions">
             <div className="search-control">
               <TextInput
                 label="Search tasks"
@@ -180,7 +181,7 @@ export function BoardPage() {
               </select>
             </div>
             {can(role, 'task:create') ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}
-          </div>
+          </div> : null}
         </header>
 
         {role === 'VIEWER' ? (
@@ -188,24 +189,35 @@ export function BoardPage() {
         ) : null}
         {boardError ? <div className="board-error">{boardError}</div> : null}
 
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        {view === 'team' && role === 'ADMIN' ? (
           <div className="kanban-scroll">
-            <div className="kanban-grid">
-              {boardQuery.data.columns.map((column) => (
-                <KanbanColumn
-                  key={column.id}
-                  column={column}
-                  tasks={filteredTasks.filter((task) => task.column_id === column.id).sort((a, b) => a.position - b.position)}
-                  taskTypes={boardQuery.data.taskTypes}
-                  assignees={boardQuery.data.assignees}
-                  profiles={boardQuery.data.profiles}
-                  isReadOnly={isReadOnly}
-                  onOpenTask={setSelectedTask}
-                />
-              ))}
-            </div>
+            <TeamPanel
+              workspaceId={workspaceId}
+              profiles={boardQuery.data.profiles}
+              members={boardQuery.data.members}
+              onInvited={async () => { await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) }) }}
+            />
           </div>
-        </DndContext>
+        ) : (
+          <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+            <div className="kanban-scroll">
+              <div className="kanban-grid">
+                {boardQuery.data.columns.map((column) => (
+                  <KanbanColumn
+                    key={column.id}
+                    column={column}
+                    tasks={filteredTasks.filter((task) => task.column_id === column.id).sort((a, b) => a.position - b.position)}
+                    taskTypes={boardQuery.data.taskTypes}
+                    assignees={boardQuery.data.assignees}
+                    profiles={boardQuery.data.profiles}
+                    isReadOnly={isReadOnly}
+                    onOpenTask={setSelectedTask}
+                  />
+                ))}
+              </div>
+            </div>
+          </DndContext>
+        )}
 
         {selectedTask ? (
           <TaskDetailPanel

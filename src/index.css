@@ -249,3 +249,37 @@ button, input, textarea, select { font: inherit; }
 .notification-copy small { color: #a0a09a; font-size: 9px; }
 .unread-dot { width: 7px; height: 7px; margin-top: 4px; border-radius: 999px; background: #657de4; }
 .notification-empty { padding: 36px 12px; text-align: center; color: #8c8c86; font-size: 12px; }
+
+.team-page { max-width: 1080px; margin: 0 auto; padding: 4px 0 40px; }
+.team-page-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.team-page-heading h2 { margin: 5px 0 5px; font-size: 30px; letter-spacing: -.045em; }
+.team-page-heading p { margin: 0; }
+.team-count { display: flex; align-items: center; gap: 6px; color: #6f6f69; font-size: 12px; }
+.team-count strong { color: #22231f; font-size: 17px; }
+.team-count span { color: #999992; }
+.invite-card { display: grid; grid-template-columns: auto minmax(180px, 1fr) minmax(220px, 1.2fr) 130px auto; gap: 12px; align-items: center; padding: 15px; border: 1px solid #dcdcd6; border-radius: 14px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+.invite-card-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: #f1f1ed; color: #44443f; }
+.invite-copy { min-width: 0; display: grid; gap: 3px; }
+.invite-copy strong { font-size: 13px; }
+.invite-copy span { color: #85857f; font-size: 11px; line-height: 1.4; }
+.invite-email { min-width: 0; }
+.role-select { height: 36px; border: 1px solid #d7d7d2; border-radius: 9px; padding: 0 10px; background: #fff; color: #454541; font-size: 12px; }
+.role-explainer { margin: 14px 0; display: flex; flex-wrap: wrap; gap: 9px; }
+.role-explainer > div { display: flex; align-items: center; gap: 7px; color: #777771; font-size: 10px; }
+.team-table-shell { overflow: hidden; border: 1px solid #dcdcd6; border-radius: 14px; background: #fff; }
+.team-table-header, .team-row { display: grid; grid-template-columns: minmax(260px, 1fr) 150px 150px; gap: 16px; align-items: center; padding: 12px 16px; }
+.team-table-header { background: #f3f3ef; color: #8d8d86; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.team-row { border-top: 1px solid #ecece7; }
+.team-person { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.team-person > div { min-width: 0; display: grid; gap: 2px; }
+.team-person strong, .team-person span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team-person strong { font-size: 12px; }
+.team-person span { color: #8a8a84; font-size: 10px; }
+.team-access { display: inline-flex; align-items: center; gap: 5px; color: #73736d; font-size: 11px; }
+
+@media (max-width: 850px) {
+  .invite-card { grid-template-columns: auto 1fr; }
+  .invite-email, .role-select, .invite-card > .astryx-button { grid-column: 1 / -1; width: 100%; }
+  .team-table-header, .team-row { grid-template-columns: minmax(180px, 1fr) 100px; }
+  .team-table-header span:last-child, .team-access { display: none; }
+}
