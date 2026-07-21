@@ -186,3 +186,48 @@ button, input, textarea, select { font: inherit; }
   .viewer-banner, .board-error { margin-inline: 14px; }
   .task-peek { width: 100%; padding: 26px 20px 90px; }
 }
+
+.modal-backdrop { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px; overflow: auto; background: rgba(14,15,14,.36); backdrop-filter: blur(3px); }
+.task-form-modal { width: min(760px, 100%); max-height: calc(100vh - 48px); overflow: auto; padding: 26px; display: grid; gap: 18px; border: 1px solid #d8d8d3; border-radius: 18px; background: #fff; box-shadow: 0 30px 90px rgba(20,20,18,.22); }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.modal-header h2 { margin: 6px 0 0; font-size: 27px; letter-spacing: -.04em; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.native-field { display: grid; gap: 7px; color: #474743; font-size: 12px; }
+.native-field > span { font-weight: 600; }
+.native-field select, .native-field input, .inline-editor-row select, .inline-editor-row input { width: 100%; height: 38px; padding: 0 10px; border: 1px solid #d7d7d2; border-radius: 9px; outline: none; background: #fff; color: #3f3f3b; }
+.native-field select:focus, .native-field input:focus, .inline-editor-row select:focus, .inline-editor-row input:focus { border-color: #979791; box-shadow: 0 0 0 3px rgba(80,80,76,.08); }
+.definition-callout { padding: 13px 14px; border: 1px solid #dcdcd7; border-radius: 11px; background: #f7f7f4; }
+.definition-callout strong { font-size: 12px; }
+.definition-callout p { margin: 5px 0 0; color: #70706b; font-size: 11px; line-height: 1.5; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.task-detail-panel { width: min(560px, 100%); }
+.task-detail-kicker { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+.task-detail-heading-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin: 10px 44px 24px 0; }
+.task-detail-heading-row h2 { margin: 0; }
+.blocked-callout strong { display: flex; align-items: center; gap: 6px; }
+.assignee-row { display: flex; flex-wrap: wrap; gap: 7px; }
+.assignee-chip { min-height: 31px; padding: 3px 6px 3px 3px; display: flex; align-items: center; gap: 6px; border: 1px solid #deded9; border-radius: 999px; background: #fafaf8; font-size: 11px; }
+.assignee-chip button { width: 22px; height: 22px; display: grid; place-items: center; border: 0; border-radius: 999px; background: transparent; color: #777; cursor: pointer; }
+.assignee-chip button:hover { background: #ededE8; }
+.inline-editor-row { margin-top: 10px; display: flex; gap: 8px; }
+.inline-editor-row select, .inline-editor-row input { flex: 1; min-width: 0; height: 34px; font-size: 11px; }
+.checklist-list { display: grid; gap: 6px; }
+.checklist-item { width: 100%; padding: 6px 4px; display: flex; align-items: center; gap: 9px; border: 0; background: transparent; text-align: left; color: #42423f; cursor: pointer; }
+.checklist-item:disabled { cursor: default; }
+.checklist-item.completed { color: #888882; text-decoration: line-through; }
+.check-box { width: 18px; height: 18px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #c9c9c3; border-radius: 5px; background: #fff; }
+.checklist-item.completed .check-box { border-color: #6d9177; background: #eaf5ed; color: #326044; }
+.comment-list { display: grid; gap: 8px; }
+.comment-card { padding: 10px 11px; border: 1px solid #e3e3de; border-radius: 10px; background: #fafaf8; }
+.comment-meta { display: flex; justify-content: space-between; gap: 12px; color: #8b8b86; font-size: 10px; }
+.comment-meta strong { color: #474743; font-size: 11px; }
+.comment-card p { margin: 6px 0 0; color: #555550; font-size: 12px; line-height: 1.55; white-space: pre-wrap; }
+.comment-composer { margin-top: 10px; display: grid; gap: 8px; }
+.small-copy { font-size: 11px; }
+
+@media (max-width: 700px) {
+  .modal-backdrop { padding: 0; align-items: stretch; }
+  .task-form-modal { width: 100%; max-height: none; min-height: 100vh; border: 0; border-radius: 0; padding: 20px 16px 88px; }
+  .form-grid-3 { grid-template-columns: 1fr; }
+  .modal-actions { position: sticky; bottom: 0; padding-top: 12px; background: #fff; }
+}
