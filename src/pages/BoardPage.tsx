@@ -73,6 +73,24 @@ export function BoardPage() {
     })
   }, [boardQuery.data, priority, search, user?.id, view])
 
+  useEffect(() => {
+    if (role === 'VIEWER') return
+    async function loadUnreadCount() {
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .is('read_at', null)
+      setUnreadCount(count ?? 0)
+    }
+    void loadUnreadCount()
+    const channel = supabase
+      .channel(`notification-count-${user!.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user!.id}` }, () => void loadUnreadCount())
+      .subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [role, user])
+
   async function handleDragEnd(event: DragEndEvent) {
     if (isReadOnly || !boardQuery.data || !event.over) return
     const activeId = String(event.active.id)
@@ -124,24 +142,6 @@ export function BoardPage() {
 
   if (boardQuery.isLoading) return <main className="board-loading">Loading board…</main>
   if (boardQuery.error || !boardQuery.data) return <main className="board-loading">Unable to load the board.</main>
-
-  useEffect(() => {
-    if (role === 'VIEWER') return
-    async function loadUnreadCount() {
-      const { count } = await supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user!.id)
-        .is('read_at', null)
-      setUnreadCount(count ?? 0)
-    }
-    void loadUnreadCount()
-    const channel = supabase
-      .channel(`notification-count-${user!.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user!.id}` }, () => void loadUnreadCount())
-      .subscribe()
-    return () => { void supabase.removeChannel(channel) }
-  }, [role, user])
 
   function openTaskFromNotification(taskId: string) {
     const task = boardQuery.data?.tasks.find((entry) => entry.id === taskId) ?? null

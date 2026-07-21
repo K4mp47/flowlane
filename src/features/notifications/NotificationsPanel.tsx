@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Bell, CheckCheck, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -16,7 +16,7 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  async function loadNotifications() {
+  const loadNotifications = useCallback(async () => {
     const { data, error: queryError } = await supabase
       .from('notifications')
       .select('*')
@@ -33,7 +33,7 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
     const rows = (data ?? []) as Notification[]
     setNotifications(rows)
     onUnreadCountChange(rows.filter((notification) => !notification.read_at).length)
-  }
+  }, [onUnreadCountChange, userId, workspaceId])
 
   useEffect(() => {
     void loadNotifications()
@@ -45,7 +45,7 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
       .subscribe()
 
     return () => { void supabase.removeChannel(channel) }
-  }, [userId, workspaceId])
+  }, [loadNotifications, userId])
 
   async function markRead(notification: Notification) {
     if (notification.read_at) {
