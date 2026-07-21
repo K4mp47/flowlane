@@ -1,32 +1,54 @@
-# React + TypeScript + Vite
+# FlowLane
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+FlowLane is an internal, invite-only Kanban task manager for a work department.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React + Vite + TypeScript
+- Astryx UI
+- dnd-kit
+- TanStack Query
+- Supabase Free plan: Auth, PostgreSQL, Realtime, Storage
+- Netlify Free plan for hosting
 
-## React Compiler
+## Roles
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `ADMIN`: full workspace and workflow management
+- `MEMBER`: create/edit/move/assign tasks, comments and checklists
+- `VIEWER`: strictly read-only access to the live Kanban board
 
-## Expanding the Oxlint configuration
+Authorization is enforced in Supabase RLS, not only in the frontend.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Workflow
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+`BACKLOG -> TO DO -> IN PROGRESS -> REVIEW -> DONE`
+
+Tasks may be incomplete in Backlog. Before leaving Backlog they require context, expected result, task type, priority and at least one Admin/Member assignee.
+
+## Local development
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Required environment variables:
+
+```text
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+```
+
+Never expose a Supabase service-role key in the frontend.
+
+## Validation
+
+```bash
+npm run lint
+npm run build
+```
+
+## Hosting
+
+`netlify.toml` configures Vite builds and SPA fallback routing.
