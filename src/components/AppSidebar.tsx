@@ -1,16 +1,18 @@
 import { Badge } from '@astryxdesign/core/Badge'
-import { Bell, KanbanSquare, LogOut, UserRoundCheck, Users, Workflow } from 'lucide-react'
+import { Bell, FolderKanban, KanbanSquare, LogOut, Moon, Sun, UserRoundCheck, Users, Workflow } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
+import { useTheme } from '../theme'
 
 interface AppSidebarProps {
-  view: 'board' | 'mine' | 'team'
-  onViewChange: (view: 'board' | 'mine' | 'team') => void
+  view: 'board' | 'mine' | 'projects' | 'team'
+  onViewChange: (view: 'board' | 'mine' | 'projects' | 'team') => void
   unreadCount: number
   onOpenNotifications: () => void
 }
 
 export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotifications }: AppSidebarProps) {
   const { membership, profile, signOut } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const isViewer = membership?.role === 'VIEWER'
   const isAdmin = membership?.role === 'ADMIN'
 
@@ -36,14 +38,24 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
           </button>
         ) : null}
         {isAdmin ? (
-          <button className={view === 'team' ? 'nav-item active' : 'nav-item'} onClick={() => onViewChange('team')}>
-            <Users size={18} />
-            <span>Team</span>
-          </button>
+          <>
+            <button className={view === 'projects' ? 'nav-item active' : 'nav-item'} onClick={() => onViewChange('projects')}>
+              <FolderKanban size={18} />
+              <span>Projects</span>
+            </button>
+            <button className={view === 'team' ? 'nav-item active' : 'nav-item'} onClick={() => onViewChange('team')}>
+              <Users size={18} />
+              <span>Team</span>
+            </button>
+          </>
         ) : null}
       </nav>
 
       <div className="sidebar-footer">
+        <button className="sidebar-stat sidebar-stat-button" onClick={toggleTheme}>
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          <span>{theme === 'dark' ? 'Light theme' : 'Dark theme'}</span>
+        </button>
         {!isViewer ? (
           <button className="sidebar-stat sidebar-stat-button" onClick={onOpenNotifications}>
             <Bell size={16} />

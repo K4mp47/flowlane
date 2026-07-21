@@ -12,6 +12,7 @@ import type {
 
 export interface BoardData {
   board: Board
+  boards: Board[]
   columns: BoardColumn[]
   tasks: Task[]
   taskTypes: TaskType[]
@@ -20,18 +21,22 @@ export interface BoardData {
   members: Array<{ user_id: string; role: WorkspaceRole }>
 }
 
-export const boardQueryKey = (workspaceId: string) => ['boardData', workspaceId] as const
+export const boardQueryKey = (workspaceId: string, boardId?: string | null) => ['boardData', workspaceId, boardId ?? 'default'] as const
 
-async function fetchBoardData(workspaceId: string): Promise<BoardData> {
-  const { data: boardData, error: boardError } = await supabase
+async function fetchBoardData(workspaceId: string, requestedBoardId?: string | null): Promise<BoardData> {
+  const { data: boardRows, error: boardsError } = await supabase
     .from('boards')
     .select('id,workspace_id,name,is_default')
     .eq('workspace_id', workspaceId)
-    .eq('is_default', true)
-    .single()
+    .order('created_at', { ascending: true })
 
-  if (boardError) throw boardError
-  const board = boardData as Board
+  if (boardsError) throw boardsError
+  const boards = (boardRows ?? []) as Board[]
+  const board = boards.find((entry) => entry.id === requestedBoardId)
+    ?? boards.find((entry) => entry.is_default)
+    ?? boards[0]
+
+  if (!board) throw new Error('This workspace does not have a board yet.')
 
   const [columnsResult, tasksResult, taskTypesResult] = await Promise.all([
     supabase
@@ -88,6 +93,7 @@ async function fetchBoardData(workspaceId: string): Promise<BoardData> {
 
   return {
     board,
+    boards,
     columns: (columnsResult.data ?? []) as BoardColumn[],
     tasks,
     taskTypes: (taskTypesResult.data ?? []) as TaskType[],
@@ -97,10 +103,10 @@ async function fetchBoardData(workspaceId: string): Promise<BoardData> {
   }
 }
 
-export function useBoardData(workspaceId: string, _role: WorkspaceRole | null) {
+export function useBoardData(workspaceId: string, _role: WorkspaceRole | null, boardId?: string | null) {
   return useQuery({
-    queryKey: boardQueryKey(workspaceId),
-    queryFn: () => fetchBoardData(workspaceId),
+    queryKey: boardQueryKey(workspaceId, boardId),
+    queryFn: () => fetchBoardData(workspaceId, boardId),
     enabled: Boolean(workspaceId),
   })
 }

@@ -15,18 +15,14 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@hookform/resolvers": "^5.4.0",
     "@supabase/supabase-js": "^2.110.7",
     "@tanstack/react-query": "^5.101.3",
     "lucide-react": "^1.25.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
-    "react-hook-form": "^7.82.0",
-    "react-router-dom": "^7.18.1",
-    "zod": "^4.4.3"
+    "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
-    "@astryxdesign/cli": "^0.1.7",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
