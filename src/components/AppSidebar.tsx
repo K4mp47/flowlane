@@ -1,10 +1,10 @@
 import { Badge } from '@astryxdesign/core/Badge'
-import { Bell, KanbanSquare, LogOut, UserRoundCheck, Workflow } from 'lucide-react'
+import { Bell, KanbanSquare, LogOut, UserRoundCheck, Users, Workflow } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 
 interface AppSidebarProps {
-  view: 'board' | 'mine'
-  onViewChange: (view: 'board' | 'mine') => void
+  view: 'board' | 'mine' | 'team'
+  onViewChange: (view: 'board' | 'mine' | 'team') => void
   unreadCount: number
   onOpenNotifications: () => void
 }
@@ -12,6 +12,7 @@ interface AppSidebarProps {
 export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotifications }: AppSidebarProps) {
   const { membership, profile, signOut } = useAuth()
   const isViewer = membership?.role === 'VIEWER'
+  const isAdmin = membership?.role === 'ADMIN'
 
   return (
     <aside className="app-sidebar">
@@ -32,6 +33,12 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
           <button className={view === 'mine' ? 'nav-item active' : 'nav-item'} onClick={() => onViewChange('mine')}>
             <UserRoundCheck size={18} />
             <span>My tasks</span>
+          </button>
+        ) : null}
+        {isAdmin ? (
+          <button className={view === 'team' ? 'nav-item active' : 'nav-item'} onClick={() => onViewChange('team')}>
+            <Users size={18} />
+            <span>Team</span>
           </button>
         ) : null}
       </nav>
