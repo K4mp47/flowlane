@@ -19,6 +19,7 @@ import type { Task, TaskPriority } from '../types/domain'
 import { KanbanColumn } from '../features/board/KanbanColumn'
 import { TaskFormModal } from '../features/tasks/TaskFormModal'
 import { TaskDetailPanel } from '../features/tasks/TaskDetailPanel'
+import { NotificationsPanel } from '../features/notifications/NotificationsPanel'
 import { boardQueryKey, type BoardData, useBoardData } from '../features/board/useBoardData'
 
 const priorityOptions: Array<TaskPriority | 'ALL'> = ['ALL', 'URGENT', 'HIGH', 'MEDIUM', 'LOW']
@@ -35,6 +36,8 @@ export function BoardPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false)
   const [boardError, setBoardError] = useState<string | null>(null)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const isReadOnly = !can(role, 'task:move')
 
@@ -122,11 +125,33 @@ export function BoardPage() {
   if (boardQuery.isLoading) return <main className="board-loading">Loading board…</main>
   if (boardQuery.error || !boardQuery.data) return <main className="board-loading">Unable to load the board.</main>
 
-  const unreadCount = 0
+  useEffect(() => {
+    if (role === 'VIEWER') return
+    async function loadUnreadCount() {
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id)
+        .is('read_at', null)
+      setUnreadCount(count ?? 0)
+    }
+    void loadUnreadCount()
+    const channel = supabase
+      .channel(`notification-count-${user!.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user!.id}` }, () => void loadUnreadCount())
+      .subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [role, user])
+
+  function openTaskFromNotification(taskId: string) {
+    const task = boardQuery.data?.tasks.find((entry) => entry.id === taskId) ?? null
+    setSelectedTask(task)
+    setIsNotificationsOpen(false)
+  }
 
   return (
     <div className="app-frame">
-      <AppSidebar view={view} onViewChange={setView} unreadCount={unreadCount} />
+      <AppSidebar view={view} onViewChange={setView} unreadCount={unreadCount} onOpenNotifications={() => setIsNotificationsOpen(true)} />
       <main className="board-main">
         <header className="board-toolbar">
           <div className="board-heading">
@@ -210,6 +235,16 @@ export function BoardPage() {
             task={editingTask}
             onClose={() => { setIsTaskFormOpen(false); setEditingTask(null) }}
             onSaved={async () => { await queryClient.invalidateQueries({ queryKey: boardQueryKey(workspaceId) }) }}
+          />
+        ) : null}
+
+        {isNotificationsOpen && role !== 'VIEWER' ? (
+          <NotificationsPanel
+            userId={user!.id}
+            workspaceId={workspaceId}
+            onClose={() => setIsNotificationsOpen(false)}
+            onOpenTask={openTaskFromNotification}
+            onUnreadCountChange={setUnreadCount}
           />
         ) : null}
       </main>

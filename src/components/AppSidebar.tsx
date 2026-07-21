@@ -6,9 +6,10 @@ interface AppSidebarProps {
   view: 'board' | 'mine'
   onViewChange: (view: 'board' | 'mine') => void
   unreadCount: number
+  onOpenNotifications: () => void
 }
 
-export function AppSidebar({ view, onViewChange, unreadCount }: AppSidebarProps) {
+export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotifications }: AppSidebarProps) {
   const { membership, profile, signOut } = useAuth()
   const isViewer = membership?.role === 'VIEWER'
 
@@ -37,11 +38,11 @@ export function AppSidebar({ view, onViewChange, unreadCount }: AppSidebarProps)
 
       <div className="sidebar-footer">
         {!isViewer ? (
-          <div className="sidebar-stat">
+          <button className="sidebar-stat sidebar-stat-button" onClick={onOpenNotifications}>
             <Bell size={16} />
             <span>Notifications</span>
             {unreadCount > 0 ? <Badge label={String(unreadCount)} variant="neutral" /> : null}
-          </div>
+          </button>
         ) : null}
         <div className="sidebar-user">
           <div className="avatar-circle">{(profile?.display_name || profile?.email || 'U').slice(0, 1).toUpperCase()}</div>

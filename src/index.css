@@ -231,3 +231,21 @@ button, input, textarea, select { font: inherit; }
   .form-grid-3 { grid-template-columns: 1fr; }
   .modal-actions { position: sticky; bottom: 0; padding-top: 12px; background: #fff; }
 }
+
+.sidebar-stat-button { width: 100%; border: 0; background: transparent; cursor: pointer; text-align: left; }
+.sidebar-stat-button:hover { border-radius: 9px; background: #e8e8e4; }
+.notification-panel { width: min(440px, 100%); height: 100%; overflow-y: auto; padding: 24px; background: #fff; box-shadow: -20px 0 60px rgba(20,20,18,.12); }
+.notification-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.notification-header h2 { margin: 6px 0 0; font-size: 26px; letter-spacing: -.04em; }
+.notification-actions { margin: 18px 0 12px; display: flex; justify-content: flex-end; }
+.notification-list { display: grid; gap: 6px; }
+.notification-row { width: 100%; padding: 12px; display: grid; grid-template-columns: 34px minmax(0,1fr) 10px; gap: 10px; align-items: start; border: 1px solid #e4e4df; border-radius: 11px; background: #fff; text-align: left; cursor: pointer; }
+.notification-row:hover { border-color: #ccccC6; background: #fafaf8; }
+.notification-row.unread { background: #f5f7ff; border-color: #d9def7; }
+.notification-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: #f0f0ec; color: #555550; }
+.notification-copy { min-width: 0; display: grid; gap: 3px; }
+.notification-copy strong { color: #333330; font-size: 12px; }
+.notification-copy span { color: #6f6f69; font-size: 11px; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; }
+.notification-copy small { color: #a0a09a; font-size: 9px; }
+.unread-dot { width: 7px; height: 7px; margin-top: 4px; border-radius: 999px; background: #657de4; }
+.notification-empty { padding: 36px 12px; text-align: center; color: #8c8c86; font-size: 12px; }
