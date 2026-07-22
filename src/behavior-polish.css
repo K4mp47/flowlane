@@ -86,6 +86,7 @@
 .team-row{grid-template-columns:minmax(260px,1.6fr) 140px 170px 38px!important}
 .team-row>.fl-icon-button{justify-self:end;color:var(--fl-text-muted)}
 .team-row>.fl-icon-button:hover{color:var(--destructive);background:color-mix(in oklch,var(--destructive) 9%,transparent)}
+.team-self-label{justify-self:end;align-self:center;color:var(--fl-text-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 
 /* Analytics: clearer information density and semantic workflow colors. */
 .analytics-page{max-width:1280px;margin:0 auto;padding:28px 22px 44px}
