@@ -14,6 +14,7 @@ import './palette.css'
 import './product-v2.css'
 import './design-system.css'
 import './phase6-compat.css'
+import './theme-ui-polish.css'
 import App from './App'
 
 const queryClient = new QueryClient({
