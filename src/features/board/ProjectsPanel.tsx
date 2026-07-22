@@ -102,7 +102,7 @@ export function ProjectsPanel({ workspaceId, boards, activeBoardId, onSelectBoar
           <strong>Create a project board</strong>
           <span>FlowLane creates Backlog, To Do, In Progress, Review and Done automatically.</span>
         </div>
-        <TextInput label="Project name" isLabelHidden value={newName} onChange={setNewName} placeholder="e.g. MondoT mobile redesign" />
+        <TextInput label="Project name" isLabelHidden value={newName} onChange={setNewName} placeholder="e.g. MondoT mobile redesign" width="100%" />
         <Button label="Create board" variant="primary" type="submit" isLoading={busyId === 'new'} isDisabled={!newName.trim()} />
       </form>
 
@@ -112,6 +112,8 @@ export function ProjectsPanel({ workspaceId, boards, activeBoardId, onSelectBoar
         {sortedBoards.map((board) => {
           const isActive = board.id === activeBoardId
           const isEditing = editingId === board.id
+          const statusLabel = isActive ? 'Currently open' : board.is_default ? 'Default project board' : 'Project board'
+
           return (
             <article className={isActive ? 'project-row active' : 'project-row'} key={board.id}>
               {isEditing ? (
@@ -124,6 +126,9 @@ export function ProjectsPanel({ workspaceId, boards, activeBoardId, onSelectBoar
                       value={editingName}
                       onChange={setEditingName}
                       placeholder="Project name"
+                      width="100%"
+                      hasAutoFocus
+                      onEnter={() => void saveRename(board.id)}
                     />
                   </div>
                 </div>
@@ -132,7 +137,7 @@ export function ProjectsPanel({ workspaceId, boards, activeBoardId, onSelectBoar
                   <span className="project-board-icon"><FolderKanban size={18} /></span>
                   <span className="project-row-copy">
                     <strong>{board.name}</strong>
-                    <span>{board.is_default ? 'Default project board' : isActive ? 'Currently open' : 'Project board'}</span>
+                    <span>{statusLabel}</span>
                   </span>
                 </button>
               )}
