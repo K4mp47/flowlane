@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { Badge } from '@astryxdesign/core/Badge'
 import { IconButton } from '@astryxdesign/core/IconButton'
 import { SideNav, SideNavItem } from '@astryxdesign/core/SideNav'
-import { BarChart3, Bell, FolderKanban, KanbanSquare, LogOut, Moon, PocketKnife, Sun, UserRoundCheck, Users } from 'lucide-react'
+import { BarChart3, Bell, Check, FolderKanban, KanbanSquare, LogOut, Moon, Palette as PaletteIcon, PocketKnife, Sun, UserRoundCheck, Users } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
-import { useTheme } from '../theme'
+import { useTheme, type Palette } from '../theme'
 
 export type AppView = 'board' | 'mine' | 'analytics' | 'projects' | 'team'
 
@@ -15,22 +15,45 @@ interface AppSidebarProps {
   onOpenNotifications: () => void
 }
 
+const paletteOptions: Array<{ value: Palette; label: string }> = [
+  { value: 'red', label: 'Red' },
+  { value: 'green', label: 'Green' },
+  { value: 'blue', label: 'Blue' },
+  { value: 'orange', label: 'Orange' },
+  { value: 'purple', label: 'Purple' },
+  { value: 'yellow', label: 'Yellow' },
+  { value: 'cyan', label: 'Cyan' },
+  { value: 'teal', label: 'Teal' },
+  { value: 'lime', label: 'Lime' },
+  { value: 'pink', label: 'Pink' },
+  { value: 'indigo', label: 'Indigo' },
+  { value: 'rose', label: 'Rose' },
+]
+
 export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotifications }: AppSidebarProps) {
   const { membership, profile, signOut } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, palette, toggleTheme, setPalette } = useTheme()
   const [isHovered, setIsHovered] = useState(false)
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false)
   const isViewer = membership?.role === 'VIEWER'
   const isAdmin = membership?.role === 'ADMIN'
   const displayName = profile?.display_name || profile?.email?.split('@')[0] || 'User'
   const initial = (profile?.display_name || profile?.email || 'U').slice(0, 1).toUpperCase()
 
+  function collapseSidebar() {
+    setIsHovered(false)
+    setIsPaletteOpen(false)
+  }
+
   return (
     <aside
       className={isHovered ? 'sidebar-hover-shell expanded' : 'sidebar-hover-shell'}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={collapseSidebar}
       onFocusCapture={() => setIsHovered(true)}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsHovered(false) }}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) collapseSidebar()
+      }}
     >
       <SideNav
         className="flowlane-side-nav"
@@ -51,6 +74,38 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
                 </div>
               ) : null}
               <IconButton label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'} icon={theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />} variant="ghost" size="sm" onClick={toggleTheme} />
+              <div className="sidebar-palette-control">
+                <IconButton label="Choose color palette" icon={<PaletteIcon size={17} />} variant="ghost" size="sm" onClick={() => setIsPaletteOpen((current) => !current)} />
+                {isPaletteOpen ? (
+                  <div className="palette-popover" role="dialog" aria-label="Choose color palette">
+                    <div className="palette-popover-heading">
+                      <strong>Color palette</strong>
+                      <span>Choose the accent used across FlowLane.</span>
+                    </div>
+                    <div className="palette-grid">
+                      {paletteOptions.map((option) => (
+                        <button
+                          type="button"
+                          key={option.value}
+                          className={palette === option.value ? 'palette-option active' : 'palette-option'}
+                          data-palette-value={option.value}
+                          onClick={() => {
+                            setPalette(option.value)
+                            setIsPaletteOpen(false)
+                          }}
+                          aria-label={`Use ${option.label} palette`}
+                          aria-pressed={palette === option.value}
+                          title={option.label}
+                        >
+                          <span className="palette-swatch" />
+                          <span>{option.label}</span>
+                          {palette === option.value ? <Check size={13} /> : null}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
             <div className="sidebar-astryx-user">
               <span className="sidebar-astryx-avatar">{initial}</span>
