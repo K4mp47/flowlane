@@ -4,6 +4,7 @@ import { IconButton } from '@/components/ui/IconButton'
 import { Selector } from '@/components/ui/Selector'
 import { TextInput } from '@/components/ui/TextInput'
 import { Eye, MailPlus, Search, ShieldCheck, Trash2, UserPlus, UserRoundCheck, Users } from 'lucide-react'
+import { useAuth } from '../../auth/AuthContext'
 import { supabase } from '../../lib/supabase'
 import type { Profile, WorkspaceRole } from '../../types/domain'
 
@@ -20,6 +21,7 @@ const roleOptions = [{ value: 'ADMIN', label: 'Admin' }, { value: 'MEMBER', labe
 const roleIcon = { ADMIN: ShieldCheck, MEMBER: UserRoundCheck, VIEWER: Eye } as const
 
 export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPanelProps) {
+  const { user } = useAuth()
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<WorkspaceRole>('MEMBER')
   const [results, setResults] = useState<DirectoryResult[]>([])
@@ -45,11 +47,11 @@ export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPan
     return () => window.clearTimeout(timer)
   }, [email, workspaceId])
 
-  async function addRegisteredUser(user: DirectoryResult) {
-    setError(null); setMessage(null); setAddingUserId(user.id)
-    const { data, error: addError } = await supabase.functions.invoke('team-directory', { body: { action: 'add', workspaceId, userId: user.id, role } })
+  async function addRegisteredUser(directoryUser: DirectoryResult) {
+    setError(null); setMessage(null); setAddingUserId(directoryUser.id)
+    const { data, error: addError } = await supabase.functions.invoke('team-directory', { body: { action: 'add', workspaceId, userId: directoryUser.id, role } })
     if (addError || data?.error) { setError(addError?.message ?? String(data.error)); setAddingUserId(null); return }
-    setEmail(''); setResults([]); setMessage(`${user.email} was added to this workspace as ${role}.`); await onInvited(); setAddingUserId(null)
+    setEmail(''); setResults([]); setMessage(`${directoryUser.email} was added to this workspace as ${role}.`); await onInvited(); setAddingUserId(null)
   }
 
   async function inviteMember(event: FormEvent) {
@@ -81,6 +83,6 @@ export function TeamPanel({ workspaceId, profiles, members, onInvited }: TeamPan
     </form>
     {message ? <div className="inline-alert success-alert">{message}</div> : null}{error ? <div className="inline-alert error-alert">{error}</div> : null}
     <div className="role-explainer"><div><span className="role-chip role-admin"><ShieldCheck size={12} />Admin</span><span>Full workspace, project and member management.</span></div><div><span className="role-chip role-member"><UserRoundCheck size={12} />Member</span><span>Create, edit, assign and move tasks.</span></div><div><span className="role-chip role-viewer"><Eye size={12} />Viewer</span><span>Read-only workspace visibility.</span></div></div>
-    <div className="team-table-shell"><div className="team-table-header"><span>Person</span><span>Role</span><span>Access</span><span /></div>{rows.map(({ user_id, role: memberRole, profile }) => { const RoleIcon = roleIcon[memberRole]; const label = profile?.display_name || profile?.email || 'Invited user'; return <div className="team-row" key={user_id}><div className="team-person"><span className="avatar-circle">{label.slice(0, 1).toUpperCase()}</span><div><strong>{profile?.display_name || profile?.email?.split('@')[0] || 'Invited user'}</strong><span>{profile?.email || 'Invitation pending'}</span></div></div><span className={`role-chip role-${memberRole.toLowerCase()}`}><RoleIcon size={13} />{memberRole.charAt(0) + memberRole.slice(1).toLowerCase()}</span><span className="team-access"><ShieldCheck size={14} />{memberRole === 'VIEWER' ? 'Read only' : memberRole === 'ADMIN' ? 'Full access' : 'Workflow access'}</span><IconButton label={`Remove ${label}`} icon={<Trash2 size={15} />} variant="ghost" size="sm" isDisabled={removingUserId === user_id} onClick={() => void removeMember(user_id, label)} /></div> })}</div>
+    <div className="team-table-shell"><div className="team-table-header"><span>Person</span><span>Role</span><span>Access</span><span /></div>{rows.map(({ user_id, role: memberRole, profile }) => { const RoleIcon = roleIcon[memberRole]; const label = profile?.display_name || profile?.email || 'Invited user'; const isCurrentUser = user_id === user?.id; return <div className="team-row" key={user_id}><div className="team-person"><span className="avatar-circle">{label.slice(0, 1).toUpperCase()}</span><div><strong>{profile?.display_name || profile?.email?.split('@')[0] || 'Invited user'}</strong><span>{profile?.email || 'Invitation pending'}</span></div></div><span className={`role-chip role-${memberRole.toLowerCase()}`}><RoleIcon size={13} />{memberRole.charAt(0) + memberRole.slice(1).toLowerCase()}</span><span className="team-access"><ShieldCheck size={14} />{memberRole === 'VIEWER' ? 'Read only' : memberRole === 'ADMIN' ? 'Full access' : 'Workflow access'}</span>{isCurrentUser ? <span className="team-self-label">You</span> : <IconButton label={`Remove ${label}`} icon={<Trash2 size={15} />} variant="ghost" size="sm" isDisabled={removingUserId === user_id} onClick={() => void removeMember(user_id, label)} />}</div> })}</div>
   </section>
 }
