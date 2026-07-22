@@ -42,6 +42,14 @@ jobs:
           echo "code=$?" >> "$GITHUB_OUTPUT"
           tail -n 120 build.log
           exit 0
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase6-validation-logs
+          path: |
+            lint.log
+            build.log
+          if-no-files-found: ignore
       - name: Publish diagnostics
         if: (steps.lint.outputs.code != '0' || steps.build.outputs.code != '0') && github.event_name == 'pull_request'
         env:
