@@ -83,7 +83,7 @@
   height: 36px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   padding: 0 11px;
   border: 1px solid var(--fl-border);
   border-radius: 10px;
@@ -93,6 +93,13 @@
   white-space: nowrap;
 }
 .presence-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #36a269; box-shadow: 0 0 0 3px color-mix(in srgb, #36a269 14%, transparent); }
+.presence-count { color: var(--fl-text); font-weight: 700; }
+
+/* Idle columns use the same canvas surface as the board. Drag targets remain highlighted by the existing .over rules. */
+.kanban-column,
+:root[data-theme='dark'] .kanban-column {
+  background: transparent !important;
+}
 
 .task-card-meta-left { min-width: 0; display: flex; align-items: center; gap: 8px; }
 .task-checklist-progress { display: inline-flex; align-items: center; gap: 4px; color: var(--fl-text-muted); font-size: 10px; font-weight: 650; }
@@ -210,7 +217,7 @@
   .workspace-switcher { width: min(100%, 260px); }
   .team-directory-results { position: static; margin-top: 8px; }
   .analytics-layout { grid-template-columns: 1fr; }
-  .presence-pill span { display: none; }
+  .presence-label { display: none; }
 }
 
 @media (max-width: 620px) {
