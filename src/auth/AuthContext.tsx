@@ -127,14 +127,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const completeInviteOnboarding = useCallback(async (password: string, displayName: string) => {
     if (!session?.user) throw new Error('Invitation session is no longer available. Open the invitation email again.')
 
-    const nextMetadata = {
-      ...session.user.user_metadata,
-      onboarding_required: false,
-    }
-
-    const { data: updatedAuth, error: authError } = await supabase.auth.updateUser({
+    const { error: authError } = await supabase.auth.updateUser({
       password,
-      data: nextMetadata,
+      data: {
+        ...session.user.user_metadata,
+        onboarding_required: false,
+      },
     })
     if (authError) throw authError
 
@@ -153,7 +151,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
     }
 
-    await hydrateUser(updatedAuth.session ?? { ...session, user: updatedAuth.user })
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError) throw refreshError
+    await hydrateUser(refreshed.session)
   }, [hydrateUser, session])
 
   const isInviteOnboarding = Boolean(
