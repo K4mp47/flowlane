@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Badge } from '@astryxdesign/core/Badge'
 import { IconButton } from '@astryxdesign/core/IconButton'
 import { SideNav, SideNavItem } from '@astryxdesign/core/SideNav'
-import { BarChart3, Bell, FolderKanban, KanbanSquare, LogOut, Moon, Sun, UserRoundCheck, Users, Workflow } from 'lucide-react'
+import { BarChart3, Bell, FolderKanban, KanbanSquare, LogOut, Moon, Sun, UserRoundCheck, Users } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useTheme } from '../theme'
 
@@ -37,7 +37,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
         collapsible={{ isCollapsed: !isHovered, onCollapsedChange: (collapsed) => setIsHovered(!collapsed), hasButton: false }}
         header={(
           <div className="sidebar-astryx-brand">
-            <span className="sidebar-astryx-logo"><Workflow size={18} /></span>
+            <span className="sidebar-astryx-logo" aria-hidden="true"><KanbanSquare size={18} /></span>
             <div className="sidebar-astryx-brand-copy"><strong>FlowLane</strong><span>{membership?.workspace.name}</span></div>
           </div>
         )}
