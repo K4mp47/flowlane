@@ -1,5 +1,5 @@
 export type WorkspaceRole = 'ADMIN' | 'MEMBER' | 'VIEWER'
-export type WorkflowStage = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE'
+export type WorkflowStatusCategory = 'BACKLOG' | 'UNSTARTED' | 'STARTED' | 'COMPLETED' | 'CANCELED'
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
 export type NotificationType = 'ASSIGNMENT' | 'MENTION' | 'DUE_SOON' | 'OVERDUE' | 'STATUS_CHANGE' | 'COMMENT' | 'TASK_CREATED' | 'TASK_UPDATED'
 
@@ -23,9 +23,32 @@ export interface WorkspaceMembership {
   workspace: Workspace
 }
 
-export interface Board {
+export interface Project {
   id: string
   workspace_id: string
+  name: string
+  description: string | null
+  is_default: boolean
+  created_by: string | null
+  created_at: string
+  updated_at: string
+  archived_at: string | null
+}
+
+export interface WorkflowStatus {
+  id: string
+  project_id: string
+  name: string
+  category: WorkflowStatusCategory
+  position: number
+  color: string | null
+  is_terminal: boolean
+  notify_on_enter: boolean
+}
+
+export interface Board {
+  id: string
+  project_id: string
   name: string
   is_default: boolean
 }
@@ -34,7 +57,7 @@ export interface BoardColumn {
   id: string
   board_id: string
   name: string
-  workflow_stage: WorkflowStage
+  status_id: string
   position: number
 }
 
@@ -55,9 +78,8 @@ export interface Label {
 export interface Task {
   id: string
   task_number: number
-  workspace_id: string
-  board_id: string
-  column_id: string
+  project_id: string
+  status_id: string
   title: string
   context: string | null
   expected_result: string | null
@@ -65,6 +87,7 @@ export interface Task {
   task_type_id: string | null
   priority: TaskPriority | null
   creator_id: string
+  start_date: string | null
   due_date: string | null
   is_blocked: boolean
   blocked_reason: string | null

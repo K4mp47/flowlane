@@ -4,144 +4,78 @@ import { IconButton } from '@astryxdesign/core/IconButton'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { Check, FolderKanban, Pencil, Plus, Star, Trash2, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import type { Board } from '../../types/domain'
+import type { Project, WorkspaceRole } from '../../types/domain'
 
 interface ProjectsPanelProps {
   workspaceId: string
-  boards: Board[]
-  activeBoardId?: string | null
-  onSelectBoard: (boardId: string) => void
+  projects: Project[]
+  activeProjectId?: string | null
+  role: WorkspaceRole | null
+  onSelectProject: (projectId: string) => void
   onChanged: () => Promise<void> | void
 }
 
-export function ProjectsPanel({ workspaceId, boards, activeBoardId, onSelectBoard, onChanged }: ProjectsPanelProps) {
+export function ProjectsPanel({ workspaceId, projects, activeProjectId, role, onSelectProject, onChanged }: ProjectsPanelProps) {
   const [newName, setNewName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const isAdmin = role === 'ADMIN'
+  const sortedProjects = useMemo(() => [...projects].sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.name.localeCompare(b.name)), [projects])
 
-  const sortedBoards = useMemo(() => [...boards].sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.name.localeCompare(b.name)), [boards])
-
-  async function createBoard(event: FormEvent) {
+  async function createProject(event: FormEvent) {
     event.preventDefault()
     const name = newName.trim()
-    if (!name) return
-    setError(null)
-    setBusyId('new')
-    const { data, error: createError } = await supabase.rpc('create_project_board', {
-      _workspace_id: workspaceId,
-      _name: name,
-    })
+    if (!name || !isAdmin) return
+    setError(null); setBusyId('new')
+    const { data, error: createError } = await supabase.rpc('create_project', { _workspace_id: workspaceId, _name: name })
     setBusyId(null)
     if (createError) return setError(createError.message)
     setNewName('')
     await onChanged()
-    if (typeof data === 'string') onSelectBoard(data)
+    if (typeof data === 'string') onSelectProject(data)
   }
 
-  async function saveRename(boardId: string) {
+  async function saveRename(projectId: string) {
     const name = editingName.trim()
-    if (!name) return
-    setError(null)
-    setBusyId(boardId)
-    const { error: updateError } = await supabase
-      .from('boards')
-      .update({ name })
-      .eq('id', boardId)
-      .eq('workspace_id', workspaceId)
+    if (!name || !isAdmin) return
+    setError(null); setBusyId(projectId)
+    const { error: updateError } = await supabase.from('projects').update({ name }).eq('id', projectId).eq('workspace_id', workspaceId)
     setBusyId(null)
     if (updateError) return setError(updateError.message)
-    setEditingId(null)
-    await onChanged()
+    setEditingId(null); await onChanged()
   }
 
-  async function setDefault(boardId: string) {
-    setError(null)
-    setBusyId(boardId)
-    const { error: defaultError } = await supabase.rpc('set_default_project_board', {
-      _workspace_id: workspaceId,
-      _board_id: boardId,
-    })
+  async function setDefault(projectId: string) {
+    if (!isAdmin) return
+    setError(null); setBusyId(projectId)
+    const { error: defaultError } = await supabase.rpc('set_default_project', { _workspace_id: workspaceId, _project_id: projectId })
     setBusyId(null)
     if (defaultError) return setError(defaultError.message)
     await onChanged()
   }
 
-  async function deleteBoard(boardId: string, name: string) {
-    if (!window.confirm(`Delete “${name}”? Only empty project boards can be deleted.`)) return
-    setError(null)
-    setBusyId(boardId)
-    const { error: deleteError } = await supabase.rpc('delete_project_board', {
-      _workspace_id: workspaceId,
-      _board_id: boardId,
-    })
+  async function deleteProject(projectId: string, name: string) {
+    if (!isAdmin || !window.confirm(`Delete “${name}”? Projects containing tasks cannot be deleted.`)) return
+    setError(null); setBusyId(projectId)
+    const { error: deleteError } = await supabase.rpc('delete_project', { _workspace_id: workspaceId, _project_id: projectId })
     setBusyId(null)
     if (deleteError) return setError(deleteError.message)
     await onChanged()
   }
 
-  return (
-    <section className="projects-page">
-      <div className="projects-page-heading">
-        <div>
-          <p className="eyebrow">Project boards</p>
-          <h2>Projects</h2>
-          <p className="muted">Keep each project on its own Kanban board while sharing the same FlowLane team.</p>
-        </div>
-        <div className="project-count"><FolderKanban size={17} /><strong>{boards.length}</strong><span>{boards.length === 1 ? 'board' : 'boards'}</span></div>
+  return <section className="projects-page">
+    <div className="projects-page-heading"><div><p className="eyebrow">Workspace projects</p><h2>Projects</h2><p className="muted">Projects own tasks and workflows. Boards are now views inside a project, not the project itself.</p></div><div className="project-count"><FolderKanban size={17} /><strong>{projects.length}</strong><span>{projects.length === 1 ? 'project' : 'projects'}</span></div></div>
+    {isAdmin ? <form className="project-create-card" onSubmit={createProject}><div className="project-create-icon"><Plus size={18} /></div><div className="project-create-copy"><strong>Create a project</strong><span>A configurable workflow and default board view are created automatically.</span></div><TextInput label="Project name" isLabelHidden value={newName} onChange={setNewName} placeholder="e.g. MondoT mobile redesign" width="100%" /><Button label="Create project" variant="primary" type="submit" isLoading={busyId === 'new'} isDisabled={!newName.trim()} /></form> : null}
+    {error ? <div className="inline-alert error-alert projects-error">{error}</div> : null}
+    {!projects.length ? <div className="project-empty-state"><FolderKanban size={24} /><strong>No projects yet</strong><span>{isAdmin ? 'Create a project to start organizing work.' : 'An administrator can create the first project.'}</span></div> : <div className="project-list">{sortedProjects.map((project) => {
+      const isActive = project.id === activeProjectId
+      const isEditing = editingId === project.id
+      return <div className={`project-row${isActive ? ' active' : ''}`} key={project.id}>
+        <button className="project-open" type="button" onClick={() => onSelectProject(project.id)}><span className="project-board-icon"><FolderKanban size={17} /></span><span className="project-row-copy"><strong>{project.name}</strong><span>{isActive ? 'Currently open' : project.is_default ? 'Default project' : 'Project'}</span></span></button>
+        {isAdmin ? <div className="project-row-actions">{project.is_default ? <span className="default-board-pill"><Check size={13} />Default</span> : <IconButton icon={<Star size={16} />} label="Make default" onClick={() => void setDefault(project.id)} />}{isEditing ? <><TextInput label="Project name" isLabelHidden value={editingName} onChange={setEditingName} width="100%" /><IconButton icon={<Check size={16} />} label="Save project name" onClick={() => void saveRename(project.id)} /><IconButton icon={<X size={16} />} label="Cancel rename" onClick={() => setEditingId(null)} /></> : <IconButton icon={<Pencil size={16} />} label="Rename project" onClick={() => { setEditingId(project.id); setEditingName(project.name) }} />}<IconButton icon={<Trash2 size={16} />} label="Delete project" onClick={() => void deleteProject(project.id, project.name)} isDisabled={busyId === project.id} /></div> : null}
       </div>
-
-      <form className="project-create-card" onSubmit={createBoard}>
-        <div className="project-create-icon"><Plus size={18} /></div>
-        <div className="project-create-copy">
-          <strong>Create a project board</strong>
-          <span>Projects are optional. Create one when you are ready to start tracking work.</span>
-        </div>
-        <TextInput label="Project name" isLabelHidden value={newName} onChange={setNewName} placeholder="e.g. MondoT mobile redesign" width="100%" />
-        <Button label="Create board" variant="primary" type="submit" isLoading={busyId === 'new'} isDisabled={!newName.trim()} />
-      </form>
-
-      {error ? <div className="inline-alert error-alert projects-error">{error}</div> : null}
-
-      {boards.length === 0 ? (
-        <div className="project-empty-state">
-          <FolderKanban size={24} />
-          <strong>No projects yet</strong>
-          <span>Your workspace and team are already usable. Create a project only when you need a Kanban board.</span>
-        </div>
-      ) : (
-        <div className="project-list">
-          {sortedBoards.map((board) => {
-            const isActive = board.id === activeBoardId
-            const isEditing = editingId === board.id
-            return (
-              <div className={`project-row${isActive ? ' active' : ''}`} key={board.id}>
-                <button className="project-open" type="button" onClick={() => onSelectBoard(board.id)}>
-                  <span className="project-board-icon"><FolderKanban size={17} /></span>
-                  <span className="project-row-copy">
-                    <strong>{board.name}</strong>
-                    <span>{isActive ? 'Currently open' : board.is_default ? 'Default project board' : 'Project board'}</span>
-                  </span>
-                </button>
-                <div className="project-row-actions">
-                  {board.is_default ? <span className="default-board-pill"><Check size={13} />Default</span> : <IconButton icon={<Star size={16} />} label="Make default" onClick={() => void setDefault(board.id)} />}
-                  {isEditing ? (
-                    <>
-                      <TextInput label="Project name" isLabelHidden value={editingName} onChange={setEditingName} width="100%" />
-                      <IconButton icon={<Check size={16} />} label="Save project name" onClick={() => void saveRename(board.id)} />
-                      <IconButton icon={<X size={16} />} label="Cancel rename" onClick={() => setEditingId(null)} />
-                    </>
-                  ) : (
-                    <IconButton icon={<Pencil size={16} />} label="Rename project" onClick={() => { setEditingId(board.id); setEditingName(board.name) }} />
-                  )}
-                  <IconButton icon={<Trash2 size={16} />} label="Delete project" onClick={() => void deleteBoard(board.id, board.name)} isDisabled={busyId === board.id} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
-    </section>
-  )
+    })}</div>}
+  </section>
 }
