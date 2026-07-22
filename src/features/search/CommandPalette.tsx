@@ -31,7 +31,7 @@ export function CommandPalette({ isOpen, workspaceId, role, onClose, onOpenTask,
   if (!isOpen) return null
 
   const commands = [
-    { label: 'Open today', icon: <ListChecks size={16} />, action: () => onChangeView('today'), visible: true },
+    { label: 'Open board', icon: <KanbanSquare size={16} />, action: () => onChangeView('board'), visible: true },
     { label: 'Open my tasks', icon: <ListChecks size={16} />, action: () => onChangeView('mine'), visible: role !== 'VIEWER' },
     { label: 'Open calendar', icon: <CalendarDays size={16} />, action: () => onChangeView('calendar'), visible: true },
     { label: 'Browse projects', icon: <FolderKanban size={16} />, action: () => onChangeView('projects'), visible: true },

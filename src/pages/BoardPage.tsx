@@ -37,7 +37,7 @@ export function BoardPage() {
   const boardQuery = useBoardData(workspaceId, role, selectedProjectId)
   const queryClient = useQueryClient()
   const boardRealtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
-  const [view, setView] = useState<AppView>('today')
+  const [view, setView] = useState<AppView>('board')
   const [search, setSearch] = useState('')
   const [priority, setPriority] = useState<TaskPriority | 'ALL'>('ALL')
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
@@ -56,7 +56,7 @@ export function BoardPage() {
 
   useEffect(() => {
     setSelectedProjectId(window.localStorage.getItem(`flowlane-project-${workspaceId}`))
-    setSelectedTask(null); setEditingTask(null); setIsTaskFormOpen(false); setView('today')
+    setSelectedTask(null); setEditingTask(null); setIsTaskFormOpen(false); setView('board')
   }, [workspaceId])
 
   useEffect(() => {
@@ -170,7 +170,7 @@ export function BoardPage() {
   const workspaceOptions = memberships.map((entry) => ({ value: entry.workspace_id, label: entry.workspace.name }))
   const hasProject = Boolean(activeProject && boardQuery.data.board)
   const headings: Record<AppView, [string, string]> = {
-    today: ['Today', 'What needs your attention now'], mine: ['My tasks', 'Tasks assigned to you'], calendar: ['Calendar', 'Deadlines across your workspace'],
+    mine: ['My tasks', 'Tasks assigned to you'], calendar: ['Calendar', 'Deadlines across your workspace'],
     projects: ['Projects', 'Project containers and workflow configuration'], all: ['All tasks', 'Every task across this workspace'], board: [activeProject?.name ?? membership!.workspace.name, 'Project board'],
     analytics: ['Project analytics', 'Live delivery health across the workspace'], team: ['Team', 'Workspace members and access'],
   }
@@ -179,11 +179,10 @@ export function BoardPage() {
 
   return <div className="app-frame">
     <AppSidebar view={view} onViewChange={setView} unreadCount={unreadCount} onOpenNotifications={() => setIsNotificationsOpen(true)} />
-    <main className="board-main"><header className="board-toolbar"><div className="board-heading"><div className="board-title-line"><h1>{heading}</h1><Badge label={role ?? 'MEMBER'} variant={role === 'VIEWER' ? 'neutral' : 'blue'} /></div><p>{subtitle}</p></div><div className="toolbar-actions"><button type="button" className="presence-pill" title={`${onlineUserIds.length} online`}><UsersRound size={15} /><span className="presence-count">{onlineUserIds.length}</span><span className="presence-label">online</span></button><Button label="Search" variant="secondary" icon={<Search size={16} />} onClick={() => setIsCommandPaletteOpen(true)} />{memberships.length > 1 ? <div className="workspace-switcher astryx-toolbar-control"><Selector label="Workspace" isLabelHidden options={workspaceOptions} value={workspaceId} onChange={(value) => { selectWorkspace(value); setView('today') }} startIcon={<Building2 size={15} />} width="100%" /></div> : null}{view === 'board' && hasProject ? <>{boardQuery.data.projects.length > 1 ? <div className="board-switcher astryx-toolbar-control"><Selector label="Project" isLabelHidden options={projectOptions} value={activeProject!.id} onChange={(value) => { setSelectedProjectId(value); setView('board') }} startIcon={<FolderKanban size={15} />} width="100%" /></div> : null}<div className="search-control"><TextInput label="Filter current project" isLabelHidden value={search} onChange={setSearch} placeholder="Filter this project…" startIcon={Search} hasClear /></div><div className="priority-selector astryx-toolbar-control"><Selector label="Priority" isLabelHidden options={priorityOptions} value={priority} onChange={(value) => setPriority(value as TaskPriority | 'ALL')} startIcon={<SlidersHorizontal size={15} />} width="100%" /></div>{can(role, 'task:create') && initialStatus ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}</> : null}</div></header>
+    <main className="board-main"><header className="board-toolbar"><div className="board-heading"><div className="board-title-line"><h1>{heading}</h1><Badge label={role ?? 'MEMBER'} variant={role === 'VIEWER' ? 'neutral' : 'blue'} /></div><p>{subtitle}</p></div><div className="toolbar-actions"><button type="button" className="presence-pill" title={`${onlineUserIds.length} online`}><UsersRound size={15} /><span className="presence-count">{onlineUserIds.length}</span><span className="presence-label">online</span></button><Button label="Search" variant="secondary" icon={<Search size={16} />} onClick={() => setIsCommandPaletteOpen(true)} />{memberships.length > 1 ? <div className="workspace-switcher astryx-toolbar-control"><Selector label="Workspace" isLabelHidden options={workspaceOptions} value={workspaceId} onChange={(value) => { selectWorkspace(value); setView('board') }} startIcon={<Building2 size={15} />} width="100%" /></div> : null}{view === 'board' && hasProject ? <>{boardQuery.data.projects.length > 1 ? <div className="board-switcher astryx-toolbar-control"><Selector label="Project" isLabelHidden options={projectOptions} value={activeProject!.id} onChange={(value) => { setSelectedProjectId(value); setView('board') }} startIcon={<FolderKanban size={15} />} width="100%" /></div> : null}<div className="search-control"><TextInput label="Filter current project" isLabelHidden value={search} onChange={setSearch} placeholder="Filter this project…" startIcon={Search} hasClear /></div><div className="priority-selector astryx-toolbar-control"><Selector label="Priority" isLabelHidden options={priorityOptions} value={priority} onChange={(value) => setPriority(value as TaskPriority | 'ALL')} startIcon={<SlidersHorizontal size={15} />} width="100%" /></div>{can(role, 'task:create') && initialStatus ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}</> : null}</div></header>
 
       {boardError ? <div className="board-error">{boardError}</div> : null}
-      {view === 'today' ? <div className="kanban-scroll"><WorkspaceTaskList workspaceId={workspaceId} userId={user!.id} mode="today" onOpenTask={openTask} /></div>
-      : view === 'mine' ? <div className="kanban-scroll"><WorkspaceTaskList workspaceId={workspaceId} userId={user!.id} mode="mine" onOpenTask={openTask} /></div>
+      {view === 'mine' ? <div className="kanban-scroll"><WorkspaceTaskList workspaceId={workspaceId} userId={user!.id} mode="mine" onOpenTask={openTask} /></div>
       : view === 'all' ? <div className="kanban-scroll"><WorkspaceTaskList workspaceId={workspaceId} userId={user!.id} mode="all" onOpenTask={openTask} /></div>
       : view === 'calendar' ? <div className="kanban-scroll"><CalendarView workspaceId={workspaceId} userId={user!.id} role={role} onOpenTask={openTask} /></div>
       : view === 'analytics' ? <div className="kanban-scroll"><ProjectAnalytics workspaceId={workspaceId} /></div>
