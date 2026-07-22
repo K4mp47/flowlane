@@ -1,0 +1,13 @@
+.fl-badge-teal{color:oklch(.66 .14 180);background:oklch(.66 .14 180/.12);border-color:oklch(.66 .14 180/.25)}
+.fl-badge-yellow{color:oklch(.7 .15 85);background:oklch(.78 .17 85/.14);border-color:oklch(.72 .16 85/.28)}
+.fl-checkbox{position:relative;display:flex;align-items:center;gap:9px;min-height:30px;color:var(--fl-text);cursor:pointer}
+.fl-checkbox input{position:absolute;opacity:0;pointer-events:none}
+.fl-checkbox-box{width:17px;height:17px;display:grid;place-items:center;flex:none;border:1px solid var(--fl-border-strong);border-radius:5px;background:var(--fl-input-bg);color:var(--fl-primary-foreground);transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
+.fl-checkbox input:checked+.fl-checkbox-box{background:var(--fl-primary);border-color:var(--fl-primary)}
+.fl-checkbox input:focus-visible+.fl-checkbox-box{outline:2px solid var(--fl-ring);outline-offset:2px}
+.fl-checkbox-label{min-width:0;font-size:12px;line-height:1.35}
+.fl-checkbox.is-readonly{cursor:default;opacity:.7}
+
+/* Keep legacy layout hooks while the old implementation-specific names are retired. */
+.astryx-inline-editor .fl-field,.astryx-form-grid .fl-field{min-width:0}
+.astryx-checklist-item .fl-checkbox{flex:1}
