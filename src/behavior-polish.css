@@ -1,0 +1,109 @@
+/* Behavior + visual polish after Phase 6. Loaded last so semantic tokens win over legacy layers. */
+:root{
+  --task-tone-backlog:#8b929a;
+  --task-tone-unstarted:#6d8dff;
+  --task-tone-started:#a87bf0;
+  --task-tone-review:#e7ad3a;
+  --task-tone-completed:#48b881;
+  --task-tone-canceled:#8b929a;
+}
+
+/* Palette picker must remain above the application content. */
+.sidebar-hover-shell,.flowlane-side-nav{z-index:500!important}
+.sidebar-palette-control{position:relative;z-index:1200!important}
+.palette-popover{z-index:1400!important;left:0!important;bottom:calc(100% + 8px)!important}
+.sidebar-hover-shell.expanded .flowlane-side-nav{overflow:visible!important}
+
+/* Task form: stronger field separation without bright white surfaces. */
+.task-form-modal .fl-input,
+.task-form-modal .fl-textarea,
+.task-form-modal .fl-select-trigger{
+  background:color-mix(in oklch,var(--fl-surface-soft) 72%,var(--fl-surface))!important;
+  border-color:color-mix(in oklch,var(--fl-text) 15%,var(--fl-border))!important;
+}
+.task-form-modal .fl-input:hover,
+.task-form-modal .fl-textarea:hover,
+.task-form-modal .fl-select-trigger:hover{background:color-mix(in oklch,var(--fl-surface-soft) 88%,var(--fl-surface))!important}
+.task-date-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.task-date-grid input[type='date']{padding-right:10px;color-scheme:light dark}
+
+/* Drawer controls. */
+.task-detail-heading-actions{display:flex;align-items:center;gap:7px;flex:none}
+.task-detail-panel{will-change:transform}
+
+/* Workflow tones used consistently outside the board. */
+.tone-backlog{--task-tone:var(--task-tone-backlog)}
+.tone-unstarted{--task-tone:var(--task-tone-unstarted)}
+.tone-started{--task-tone:var(--task-tone-started)}
+.tone-review{--task-tone:var(--task-tone-review)}
+.tone-completed{--task-tone:var(--task-tone-completed)}
+.tone-canceled{--task-tone:var(--task-tone-canceled)}
+.tone-neutral{--task-tone:var(--fl-text-muted)}
+.task-status-label{
+  display:inline-flex;align-items:center;min-height:24px;padding:4px 9px;border:0;border-radius:999px;
+  background:color-mix(in oklch,var(--task-tone) 17%,var(--fl-surface));
+  color:color-mix(in oklch,var(--task-tone) 78%,var(--fl-text));font-size:11px;font-weight:700;line-height:1;
+}
+
+/* Calendar: neutral grid, status-filled task labels, no oversized status stripe. */
+.calendar-page{max-width:1560px;padding:22px 26px 30px}
+.calendar-heading{margin-bottom:18px}
+.calendar-filter-bar{padding:10px;border:0;border-radius:12px;background:var(--fl-surface-soft);gap:8px}
+.calendar-period-bar{margin:12px 0 10px;padding:0 2px}
+.calendar-grid{border:1px solid var(--fl-border)!important;border-radius:13px!important;background:var(--fl-surface)!important;box-shadow:0 8px 28px color-mix(in oklch,var(--fl-shadow) 65%,transparent)}
+.calendar-day{min-height:138px!important;padding:8px!important;background:var(--fl-surface)!important;border-color:var(--fl-border)!important}
+.calendar-grid.week .calendar-day{min-height:480px!important}
+.calendar-day.outside{opacity:.42}
+.calendar-day.today{box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--fl-primary) 58%,var(--fl-border))!important;background:color-mix(in oklch,var(--fl-primary) 3%,var(--fl-surface))!important}
+.calendar-day>header{margin-bottom:7px!important;color:var(--fl-text-muted)!important}
+.calendar-day>header strong{color:var(--fl-text)!important}
+.calendar-day-tasks{gap:5px!important}
+.calendar-task{
+  --task-tone:var(--fl-text-muted);
+  min-height:30px;padding:6px 8px!important;display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px!important;
+  border:0!important;border-radius:7px!important;
+  background:color-mix(in oklch,var(--task-tone) 18%,var(--fl-surface))!important;
+  color:var(--fl-text)!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 20%,transparent);
+  transition:transform .14s ease,background .14s ease,box-shadow .14s ease!important;
+}
+.calendar-task:hover{transform:translateY(-1px);background:color-mix(in oklch,var(--task-tone) 25%,var(--fl-surface))!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 34%,transparent),0 4px 12px color-mix(in oklch,var(--task-tone) 10%,transparent)}
+.calendar-task-ref{font-size:9px!important;font-weight:800!important;color:color-mix(in oklch,var(--task-tone) 76%,var(--fl-text))!important}
+.calendar-task-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:650}
+.calendar-task-status{grid-column:1/-1;width:max-content;padding:2px 6px;border-radius:999px;background:color-mix(in oklch,var(--task-tone) 22%,transparent);color:color-mix(in oklch,var(--task-tone) 72%,var(--fl-text));font-size:9px;font-weight:700}
+.calendar-task.complete{opacity:.67}
+
+/* Task lists use status chips rather than low-contrast plain text. */
+.workspace-task-table{border:0!important;box-shadow:inset 0 0 0 1px var(--fl-border)}
+.workspace-task-row{background:var(--fl-surface)!important}
+.workspace-task-row:not(.workspace-task-table-head):hover{background:var(--fl-surface-soft)!important}
+.workspace-task-row>span{color:var(--fl-text-muted)}
+.workspace-task-primary strong{color:var(--fl-text)}
+
+/* Projects/team: hierarchy from spacing and surface contrast rather than heavy borders. */
+.project-create-card,.project-row,.invite-card,.team-table-shell{border-color:color-mix(in oklch,var(--fl-text) 12%,var(--fl-border))!important}
+.project-row:not(.active){box-shadow:none!important}
+.team-table-header{grid-template-columns:minmax(260px,1.6fr) 140px 170px 38px!important}
+.team-row{grid-template-columns:minmax(260px,1.6fr) 140px 170px 38px!important}
+.team-row>.fl-icon-button{justify-self:end;color:var(--fl-text-muted)}
+.team-row>.fl-icon-button:hover{color:var(--destructive);background:color-mix(in oklch,var(--destructive) 9%,transparent)}
+.team-self-label{justify-self:end;align-self:center;color:var(--fl-text-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+
+/* Analytics: clearer information density and semantic workflow colors. */
+.analytics-page{max-width:1280px;margin:0 auto;padding:28px 22px 44px}
+.analytics-heading{display:grid!important;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:28px;margin-bottom:22px!important}
+.analytics-heading h2{font-size:32px!important;letter-spacing:-.045em;margin:4px 0 6px!important}
+.analytics-heading p{max-width:620px;color:var(--fl-text-muted)!important}
+.analytics-completion-ring{width:88px!important;height:88px!important;border:8px solid color-mix(in oklch,var(--task-tone-completed) 32%,var(--fl-surface-soft))!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone-completed) 20%,transparent)}
+.analytics-kpi-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;margin-bottom:14px!important}
+.analytics-metric{min-height:90px!important;padding:15px 16px!important;border:0!important;border-radius:14px!important;background:var(--fl-surface)!important;box-shadow:inset 0 0 0 1px var(--fl-border)}
+.analytics-metric-icon{width:38px!important;height:38px!important;border-radius:11px!important;background:var(--fl-surface-soft)!important;color:var(--fl-text)!important}
+.analytics-metric>div strong{font-size:24px!important}.analytics-metric>div span{color:var(--fl-text-muted)!important}
+.analytics-metric.attention{box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone-review) 35%,var(--fl-border))!important}
+.analytics-layout{display:grid!important;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)!important;gap:14px!important}
+.analytics-card{border:0!important;border-radius:16px!important;background:var(--fl-surface)!important;padding:18px!important;box-shadow:inset 0 0 0 1px var(--fl-border)}
+.stage-bar-track,.project-progress-meter{height:7px!important;background:var(--fl-surface-soft)!important}
+.stage-bar-fill.stage-backlog{background:var(--task-tone-backlog)!important}.stage-bar-fill.stage-unstarted{background:var(--task-tone-unstarted)!important}.stage-bar-fill.stage-started{background:var(--task-tone-started)!important}.stage-bar-fill.stage-completed{background:var(--task-tone-completed)!important}.stage-bar-fill.stage-canceled{background:var(--task-tone-canceled)!important}
+.project-progress-meter>span{background:var(--task-tone-completed)!important}
+
+@media(max-width:900px){.analytics-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.analytics-layout{grid-template-columns:1fr!important}.calendar-page{padding:16px}.team-table-header,.team-row{grid-template-columns:minmax(220px,1.4fr) 120px 140px 36px!important}}
+@media(max-width:620px){.task-date-grid{grid-template-columns:1fr}.analytics-heading{grid-template-columns:1fr}.analytics-completion-ring{justify-self:start}.analytics-kpi-grid{grid-template-columns:1fr 1fr!important}.team-table-shell{overflow-x:auto}.team-table-header,.team-row{min-width:680px}}
