@@ -25,17 +25,38 @@
   padding-inline: 8px !important;
 }
 
+.sidebar-astryx-brand {
+  box-sizing: border-box;
+}
+
+.sidebar-astryx-logo {
+  display: grid;
+  place-items: center;
+  overflow: visible;
+}
+
+.sidebar-astryx-logo svg {
+  display: block;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
 .sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand {
-  width: 40px;
-  margin-inline: auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
   justify-content: center;
+  overflow: visible;
 }
 
 .sidebar-hover-shell:not(.expanded) .sidebar-astryx-logo {
   width: 34px;
   height: 34px;
   flex: 0 0 34px;
-  margin-inline: auto;
+  margin: 0 auto;
 }
 
 .sidebar-hover-shell:not(.expanded) .flowlane-side-nav button[aria-label],
@@ -180,8 +201,8 @@
   min-width: 170px;
 }
 
-/* Remove only FlowLane's custom FolderKanban glyph. Astryx keeps its own caret. */
-.board-switcher .lucide-folder-kanban {
+/* Hide only the custom leading folder glyph; keep Astryx's dropdown affordance. */
+.board-switcher button svg:first-of-type:not(:last-of-type) {
   display: none !important;
 }
 
