@@ -1,0 +1,31 @@
+name: Frontend CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prevent legacy UI dependencies
+        run: |
+          if grep -R "@astryxdesign" --include='*.ts' --include='*.tsx' --include='package.json' src package.json; then
+            echo "Legacy Astryx dependency/import detected."
+            exit 1
+          fi
+      - run: npm run lint
+      - run: npm run build
