@@ -1,18 +1,104 @@
-/* FlowLane accent palettes adapted from the palette tokens supplied by the user. */
+/*
+ * FlowLane theme + accent bridge.
+ *
+ * Neutral surfaces come only from the supplied :root / dark theme tokens.
+ * data-palette changes accent/primary colors only.
+ */
 
+/* -------------------------------------------------------------------------- */
+/* Light theme — supplied :root neutral tokens                                */
+/* -------------------------------------------------------------------------- */
 :root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+
+  --fl-bg: var(--background);
+  --fl-surface: var(--card);
+  --fl-surface-soft: var(--muted);
+  --fl-surface-muted: var(--secondary);
+  --fl-border: var(--border);
+  --fl-border-strong: color-mix(in oklch, var(--foreground) 18%, var(--border));
+  --fl-text: var(--foreground);
+  --fl-text-muted: var(--muted-foreground);
+  --fl-text-subtle: color-mix(in oklch, var(--muted-foreground) 76%, var(--background));
+  --fl-input-bg: var(--card);
+  --fl-input-text: var(--foreground);
+  --fl-input-placeholder: var(--muted-foreground);
+  --fl-shadow: oklch(0.145 0 0 / 10%);
+
+  /* Default red accent from the supplied root theme. */
   --fl-primary: oklch(0.6237 0.2205 29.51);
   --fl-primary-foreground: oklch(0.971 0.013 17.38);
   --fl-ring: oklch(0.708 0 0);
-  --fl-primary-soft: color-mix(in srgb, var(--fl-primary) 10%, transparent);
-  --primary: var(--fl-primary);
-  --primary-foreground: var(--fl-primary-foreground);
-  --ring: var(--fl-ring);
-  --sidebar-primary: var(--fl-primary);
-  --sidebar-primary-foreground: var(--fl-primary-foreground);
-  --sidebar-ring: var(--fl-ring);
 }
 
+/* -------------------------------------------------------------------------- */
+/* Dark theme — supplied .dark neutral tokens                                 */
+/* -------------------------------------------------------------------------- */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+
+  --fl-bg: var(--background);
+  --fl-surface: var(--card);
+  --fl-surface-soft: var(--muted);
+  --fl-surface-muted: var(--secondary);
+  --fl-border: var(--border);
+  --fl-border-strong: color-mix(in oklch, var(--foreground) 22%, var(--border));
+  --fl-text: var(--foreground);
+  --fl-text-muted: var(--muted-foreground);
+  --fl-text-subtle: color-mix(in oklch, var(--muted-foreground) 74%, var(--background));
+  --fl-input-bg: color-mix(in oklch, var(--background) 72%, var(--card));
+  --fl-input-text: var(--foreground);
+  --fl-input-placeholder: var(--muted-foreground);
+  --fl-shadow: oklch(0 0 0 / 38%);
+
+  /* Default red accent from the supplied dark theme. */
+  --fl-primary: oklch(0.6237 0.2205 29.51);
+  --fl-primary-foreground: oklch(0.971 0.013 17.38);
+  --fl-ring: oklch(0.556 0 0);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Accent palettes — these never alter neutral surfaces                       */
+/* -------------------------------------------------------------------------- */
 :root[data-palette='green'] { --fl-primary: oklch(0.64 0.18 145); --fl-primary-foreground: oklch(0.985 0.01 145); --fl-ring: oklch(0.72 0.14 145); }
 :root[data-palette='blue'] { --fl-primary: oklch(0.62 0.19 252); --fl-primary-foreground: oklch(0.985 0.01 252); --fl-ring: oklch(0.7 0.14 252); }
 :root[data-palette='orange'] { --fl-primary: oklch(0.68 0.2 45); --fl-primary-foreground: oklch(0.985 0.012 45); --fl-ring: oklch(0.74 0.14 45); }
@@ -25,7 +111,6 @@
 :root[data-palette='indigo'] { --fl-primary: oklch(0.56 0.2 275); --fl-primary-foreground: oklch(0.985 0.01 275); --fl-ring: oklch(0.66 0.14 275); }
 :root[data-palette='rose'] { --fl-primary: oklch(0.65 0.22 15); --fl-primary-foreground: oklch(0.985 0.012 15); --fl-ring: oklch(0.72 0.14 15); }
 
-:root[data-theme='dark'][data-palette='red'] { --fl-primary: oklch(0.6237 0.2205 29.51); --fl-primary-foreground: oklch(0.971 0.013 17.38); --fl-ring: oklch(0.556 0 0); }
 :root[data-theme='dark'][data-palette='green'] { --fl-primary: oklch(45.722% 0.14212 143.878); --fl-primary-foreground: oklch(0.985 0.01 145); --fl-ring: oklch(0.56 0.13 145); }
 :root[data-theme='dark'][data-palette='blue'] { --fl-primary: oklch(0.68 0.18 252); --fl-primary-foreground: oklch(0.985 0.01 252); --fl-ring: oklch(0.56 0.13 252); }
 :root[data-theme='dark'][data-palette='orange'] { --fl-primary: oklch(0.74 0.19 45); --fl-primary-foreground: oklch(0.18 0.02 45); --fl-ring: oklch(0.6 0.13 45); }
@@ -38,13 +123,65 @@
 :root[data-theme='dark'][data-palette='indigo'] { --fl-primary: oklch(0.68 0.18 275); --fl-primary-foreground: oklch(0.985 0.01 275); --fl-ring: oklch(0.56 0.13 275); }
 :root[data-theme='dark'][data-palette='rose'] { --fl-primary: oklch(0.72 0.2 15); --fl-primary-foreground: oklch(0.985 0.012 15); --fl-ring: oklch(0.59 0.13 15); }
 
-/* Compact sidebar: retain the expanded geometry behind the reveal mask but make
-   every navigation label truly invisible. This prevents partial characters from
-   appearing at the clipping edge. */
+/* Conventional aliases from the supplied palette file. */
+:root {
+  --primary: var(--fl-primary);
+  --primary-foreground: var(--fl-primary-foreground);
+  --ring: var(--fl-ring);
+  --sidebar-primary: var(--fl-primary);
+  --sidebar-primary-foreground: var(--fl-primary-foreground);
+  --sidebar-ring: var(--fl-ring);
+
+  /* Astryx semantic tokens: keep the design-system components in sync. */
+  --color-accent: var(--fl-primary);
+  --color-on-accent: var(--fl-primary-foreground);
+  --color-accent-muted: color-mix(in oklch, var(--fl-primary) 12%, var(--fl-surface));
+  --color-text-accent: var(--fl-primary);
+  --color-icon-accent: var(--fl-primary);
+  --color-background-body: var(--fl-bg);
+  --color-background-surface: var(--fl-surface);
+  --color-background-card: var(--fl-surface);
+  --color-background-popover: var(--fl-surface);
+  --color-background-muted: var(--fl-surface-soft);
+  --color-text-primary: var(--fl-text);
+  --color-text-secondary: var(--fl-text-muted);
+  --color-icon-primary: var(--fl-text);
+  --color-icon-secondary: var(--fl-text-muted);
+  --color-border: var(--fl-border);
+  --color-border-emphasized: var(--fl-border-strong);
+  --color-shadow: var(--fl-shadow);
+}
+
+/* Force old hard-coded dark surfaces back onto the neutral theme tokens. */
+:root[data-theme='dark'] .flowlane-side-nav,
+:root[data-theme='dark'] .task-card,
+:root[data-theme='dark'] .task-card-overlay,
+:root[data-theme='dark'] .task-peek,
+:root[data-theme='dark'] .task-detail-panel,
+:root[data-theme='dark'] .task-form-modal,
+:root[data-theme='dark'] .notification-panel,
+:root[data-theme='dark'] .notification-row,
+:root[data-theme='dark'] .project-row,
+:root[data-theme='dark'] .project-create-card {
+  background: var(--fl-surface) !important;
+  color: var(--fl-text);
+}
+
+:root[data-theme='dark'] .board-toolbar {
+  background: color-mix(in oklch, var(--fl-bg) 94%, transparent) !important;
+}
+
+:root[data-theme='dark'] .task-card:hover {
+  background: color-mix(in oklch, var(--fl-surface) 88%, var(--foreground)) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Compact sidebar — no visual labels exist in the compact render             */
+/* -------------------------------------------------------------------------- */
 .sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] button,
 .sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] [role='button'] {
-  color: transparent !important;
-  text-shadow: none !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
 .sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] button svg,
@@ -54,16 +191,10 @@
   visibility: visible !important;
 }
 
-.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] button[aria-current='page'] svg,
-.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] [aria-selected='true'] svg {
-  color: var(--fl-text) !important;
-}
-
-/* Palette picker ----------------------------------------------------------- */
-.sidebar-palette-control {
-  position: relative;
-  display: inline-flex;
-}
+/* -------------------------------------------------------------------------- */
+/* Palette picker                                                              */
+/* -------------------------------------------------------------------------- */
+.sidebar-palette-control { position: relative; display: inline-flex; }
 
 .palette-popover {
   position: absolute;
@@ -80,20 +211,10 @@
   animation: palette-popover-in 140ms cubic-bezier(.2,.8,.2,1) both;
 }
 
-.palette-popover-heading {
-  display: grid;
-  gap: 2px;
-  padding: 2px 3px 9px;
-}
-
+.palette-popover-heading { display: grid; gap: 2px; padding: 2px 3px 9px; }
 .palette-popover-heading strong { font-size: 11px; }
 .palette-popover-heading span { color: var(--fl-text-muted); font-size: 9px; line-height: 1.35; }
-
-.palette-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-}
+.palette-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
 
 .palette-option {
   min-width: 0;
@@ -112,14 +233,10 @@
   font-size: 9px;
 }
 
-.palette-option:hover {
-  background: var(--fl-surface-soft);
-  color: var(--fl-text);
-}
-
+.palette-option:hover { background: var(--fl-surface-soft); color: var(--fl-text); }
 .palette-option.active {
-  border-color: color-mix(in srgb, var(--fl-primary) 34%, var(--fl-border));
-  background: color-mix(in srgb, var(--fl-primary) 9%, var(--fl-surface));
+  border-color: color-mix(in oklch, var(--fl-primary) 28%, var(--fl-border));
+  background: color-mix(in oklch, var(--fl-primary) 10%, var(--fl-surface));
   color: var(--fl-text);
 }
 
@@ -128,7 +245,7 @@
   height: 12px;
   border-radius: 999px;
   background: var(--palette-preview);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, #000 12%, transparent);
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 12%);
 }
 
 .palette-option[data-palette-value='red'] { --palette-preview: oklch(0.6237 0.2205 29.51); }
@@ -144,11 +261,18 @@
 .palette-option[data-palette-value='indigo'] { --palette-preview: oklch(0.56 0.2 275); }
 .palette-option[data-palette-value='rose'] { --palette-preview: oklch(0.65 0.22 15); }
 
-/* Use the chosen accent in FlowLane-owned interaction surfaces. */
+/* -------------------------------------------------------------------------- */
+/* Accent-owned interaction states                                             */
+/* -------------------------------------------------------------------------- */
 .kanban-column.over {
-  border-color: color-mix(in srgb, var(--fl-primary) 42%, var(--fl-border)) !important;
-  background: color-mix(in srgb, var(--fl-primary) 7%, var(--fl-surface-soft)) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fl-primary) 12%, transparent) !important;
+  border-color: color-mix(in oklch, var(--fl-primary) 42%, var(--fl-border)) !important;
+  background: color-mix(in oklch, var(--fl-primary) 7%, var(--fl-surface-soft)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--fl-primary) 12%, transparent) !important;
+}
+
+.kanban-column.over .empty-column {
+  border-color: color-mix(in oklch, var(--fl-primary) 56%, var(--fl-border)) !important;
+  background: color-mix(in oklch, var(--fl-primary) 7%, var(--fl-surface)) !important;
 }
 
 .task-form-modal input:focus,
@@ -156,18 +280,33 @@
 .task-form-modal select:focus,
 .project-name-input:focus {
   border-color: var(--fl-primary) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fl-primary) 18%, transparent) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--fl-primary) 18%, transparent) !important;
 }
 
+/* Selected project: quiet full-row emphasis, no heavy left stripe. */
 .project-row.active {
-  border-color: color-mix(in srgb, var(--fl-primary) 30%, var(--fl-border)) !important;
-  background: color-mix(in srgb, var(--fl-primary) 5%, var(--fl-surface)) !important;
-  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--fl-primary) 70%, transparent) !important;
+  border-color: color-mix(in oklch, var(--fl-primary) 34%, var(--fl-border)) !important;
+  background: color-mix(in oklch, var(--fl-primary) 6%, var(--fl-surface)) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--fl-primary) 7%, transparent),
+    0 5px 18px color-mix(in oklch, var(--fl-primary) 5%, transparent) !important;
 }
 
-.unread-dot {
-  background: var(--fl-primary) !important;
+.project-row.active:hover {
+  border-color: color-mix(in oklch, var(--fl-primary) 46%, var(--fl-border)) !important;
+  background: color-mix(in oklch, var(--fl-primary) 8%, var(--fl-surface)) !important;
 }
+
+.project-row.active .project-board-icon {
+  background: color-mix(in oklch, var(--fl-primary) 11%, var(--fl-surface-soft));
+  color: var(--fl-primary);
+}
+
+.project-row.active .default-board-pill {
+  background: color-mix(in oklch, var(--fl-primary) 8%, var(--fl-surface-soft));
+}
+
+.unread-dot { background: var(--fl-primary) !important; }
 
 @keyframes palette-popover-in {
   from { opacity: 0; transform: translateY(4px) scale(.98); }

@@ -39,6 +39,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
   const isAdmin = membership?.role === 'ADMIN'
   const displayName = profile?.display_name || profile?.email?.split('@')[0] || 'User'
   const initial = (profile?.display_name || profile?.email || 'U').slice(0, 1).toUpperCase()
+  const navLabel = (label: string) => isHovered ? label : ''
 
   function collapseSidebar() {
     setIsHovered(false)
@@ -61,7 +62,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
         header={(
           <div className="sidebar-astryx-brand">
             <span className="sidebar-astryx-logo" aria-hidden="true"><PocketKnife size={19} strokeWidth={2} /></span>
-            <div className="sidebar-astryx-brand-copy"><strong>FlowLane</strong><span>{membership?.workspace.name}</span></div>
+            {isHovered ? <div className="sidebar-astryx-brand-copy"><strong>FlowLane</strong><span>{membership?.workspace.name}</span></div> : null}
           </div>
         )}
         footer={(
@@ -79,8 +80,8 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
                 {isPaletteOpen ? (
                   <div className="palette-popover" role="dialog" aria-label="Choose color palette">
                     <div className="palette-popover-heading">
-                      <strong>Color palette</strong>
-                      <span>Choose the accent used across FlowLane.</span>
+                      <strong>Accent color</strong>
+                      <span>Changes highlights and primary actions only.</span>
                     </div>
                     <div className="palette-grid">
                       {paletteOptions.map((option) => (
@@ -93,7 +94,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
                             setPalette(option.value)
                             setIsPaletteOpen(false)
                           }}
-                          aria-label={`Use ${option.label} palette`}
+                          aria-label={`Use ${option.label} accent`}
                           aria-pressed={palette === option.value}
                           title={option.label}
                         >
@@ -109,19 +110,19 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
             </div>
             <div className="sidebar-astryx-user">
               <span className="sidebar-astryx-avatar">{initial}</span>
-              <div className="sidebar-astryx-user-copy"><strong>{displayName}</strong><span>{membership?.role}</span></div>
-              <IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} />
+              {isHovered ? <div className="sidebar-astryx-user-copy"><strong>{displayName}</strong><span>{membership?.role}</span></div> : null}
+              {isHovered ? <IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} /> : null}
             </div>
           </div>
         )}
       >
-        <SideNavItem label="Board" icon={<KanbanSquare size={18} />} isSelected={view === 'board'} onClick={() => onViewChange('board')} />
-        {!isViewer ? <SideNavItem label="My tasks" icon={<UserRoundCheck size={18} />} isSelected={view === 'mine'} onClick={() => onViewChange('mine')} /> : null}
-        <SideNavItem label="Analytics" icon={<BarChart3 size={18} />} isSelected={view === 'analytics'} onClick={() => onViewChange('analytics')} />
+        <SideNavItem label={navLabel('Board')} icon={<KanbanSquare size={18} />} isSelected={view === 'board'} onClick={() => onViewChange('board')} />
+        {!isViewer ? <SideNavItem label={navLabel('My tasks')} icon={<UserRoundCheck size={18} />} isSelected={view === 'mine'} onClick={() => onViewChange('mine')} /> : null}
+        <SideNavItem label={navLabel('Analytics')} icon={<BarChart3 size={18} />} isSelected={view === 'analytics'} onClick={() => onViewChange('analytics')} />
         {isAdmin ? (
           <>
-            <SideNavItem label="Projects" icon={<FolderKanban size={18} />} isSelected={view === 'projects'} onClick={() => onViewChange('projects')} />
-            <SideNavItem label="Team" icon={<Users size={18} />} isSelected={view === 'team'} onClick={() => onViewChange('team')} />
+            <SideNavItem label={navLabel('Projects')} icon={<FolderKanban size={18} />} isSelected={view === 'projects'} onClick={() => onViewChange('projects')} />
+            <SideNavItem label={navLabel('Team')} icon={<Users size={18} />} isSelected={view === 'team'} onClick={() => onViewChange('team')} />
           </>
         ) : null}
       </SideNav>
