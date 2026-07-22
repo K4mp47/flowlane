@@ -1,20 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { AlertTriangle, ArrowRightLeft, Bell, CalendarClock, CheckCheck, MessageSquare, Trash2, UserPlus, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Notification, NotificationType } from '../../types/domain'
 
-interface NotificationsPanelProps {
-  userId: string
-  workspaceId: string
-  onClose: () => void
-  onOpenTask: (taskId: string) => void
-  onUnreadCountChange: (count: number) => void
-}
-
+interface NotificationsPanelProps { userId: string; workspaceId: string; onClose: () => void; onOpenTask: (taskId: string) => void; onUnreadCountChange: (count: number) => void }
 type NotificationFilter = 'ALL' | 'UNREAD'
 
-const notificationIcon: Record<NotificationType, React.ReactNode> = {
+const notificationIcon: Record<NotificationType, ReactNode> = {
   ASSIGNMENT: <UserPlus size={15} />,
   MENTION: <MessageSquare size={15} />,
   DUE_SOON: <CalendarClock size={15} />,
@@ -86,24 +79,9 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
     <div className="task-peek-backdrop" onMouseDown={onClose}>
       <aside className="notification-panel" onMouseDown={(event) => event.stopPropagation()}>
         <header className="notification-header"><div><p className="eyebrow">FlowLane</p><h2>Notifications</h2><p>{unreadCount ? `${unreadCount} unread update${unreadCount === 1 ? '' : 's'}` : 'You are all caught up'}</p></div><button className="icon-plain" onClick={onClose} aria-label="Close notifications"><X size={18} /></button></header>
-        <div className="notification-toolbar">
-          <div className="notification-tabs"><button className={filter === 'ALL' ? 'active' : ''} onClick={() => setFilter('ALL')}>All <span>{notifications.length}</span></button><button className={filter === 'UNREAD' ? 'active' : ''} onClick={() => setFilter('UNREAD')}>Unread <span>{unreadCount}</span></button></div>
-          <div className="notification-actions"><Button label="Mark all read" size="sm" variant="secondary" icon={<CheckCheck size={14} />} onClick={() => void markAllRead()} isDisabled={!unreadCount} /><Button label="Clear read" size="sm" variant="secondary" icon={<Trash2 size={14} />} onClick={() => void clearRead()} isDisabled={!notifications.some((notification) => notification.read_at)} /></div>
-        </div>
+        <div className="notification-toolbar"><div className="notification-tabs"><button className={filter === 'ALL' ? 'active' : ''} onClick={() => setFilter('ALL')}>All <span>{notifications.length}</span></button><button className={filter === 'UNREAD' ? 'active' : ''} onClick={() => setFilter('UNREAD')}>Unread <span>{unreadCount}</span></button></div><div className="notification-actions"><Button label="Mark all read" size="sm" variant="secondary" icon={<CheckCheck size={14} />} onClick={() => void markAllRead()} isDisabled={!unreadCount} /><Button label="Clear read" size="sm" variant="secondary" icon={<Trash2 size={14} />} onClick={() => void clearRead()} isDisabled={!notifications.some((notification) => notification.read_at)} /></div></div>
         {error ? <div className="inline-alert error-alert">{error}</div> : null}
-        <div className="notification-list">
-          {visibleNotifications.map((notification) => (
-            <div className={notification.read_at ? 'notification-row' : 'notification-row unread'} key={notification.id}>
-              <button className="notification-main-action" onClick={() => void markRead(notification)}>
-                <span className={`notification-icon type-${notification.type.toLowerCase()}`}>{notificationIcon[notification.type] ?? <Bell size={15} />}</span>
-                <span className="notification-copy"><strong>{notification.title}</strong>{notification.message ? <span>{notification.message}</span> : null}<small>{new Date(notification.created_at).toLocaleString()}</small></span>
-                {!notification.read_at ? <span className="unread-dot" /> : null}
-              </button>
-              <button className="notification-dismiss" onClick={() => void dismiss(notification)} aria-label="Dismiss notification"><X size={13} /></button>
-            </div>
-          ))}
-          {!visibleNotifications.length ? <div className="notification-empty">{filter === 'UNREAD' ? 'No unread notifications.' : 'No notifications yet.'}</div> : null}
-        </div>
+        <div className="notification-list">{visibleNotifications.map((notification) => <div className={notification.read_at ? 'notification-row' : 'notification-row unread'} key={notification.id}><button className="notification-main-action" onClick={() => void markRead(notification)}><span className={`notification-icon type-${notification.type.toLowerCase()}`}>{notificationIcon[notification.type] ?? <Bell size={15} />}</span><span className="notification-copy"><strong>{notification.title}</strong>{notification.message ? <span>{notification.message}</span> : null}<small>{new Date(notification.created_at).toLocaleString()}</small></span>{!notification.read_at ? <span className="unread-dot" /> : null}</button><button className="notification-dismiss" onClick={() => void dismiss(notification)} aria-label="Dismiss notification"><X size={13} /></button></div>)}{!visibleNotifications.length ? <div className="notification-empty">{filter === 'UNREAD' ? 'No unread notifications.' : 'No notifications yet.'}</div> : null}</div>
       </aside>
     </div>
   )
