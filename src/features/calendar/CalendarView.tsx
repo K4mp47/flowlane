@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Button } from '@astryxdesign/core/Button'
-import { Selector } from '@astryxdesign/core/Selector'
+import { Button } from '@/components/ui/Button'
+import { Selector } from '@/components/ui/Selector'
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'

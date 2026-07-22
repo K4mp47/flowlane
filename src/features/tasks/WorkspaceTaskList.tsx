@@ -1,4 +1,4 @@
-import { Badge } from '@astryxdesign/core/Badge'
+import { Badge } from '@/components/ui/Badge'
 import { CalendarDays, CircleAlert, FolderKanban, UserRoundCheck } from 'lucide-react'
 import type { Task } from '../../types/domain'
 import { useWorkspaceTasks } from './useWorkspaceTasks'

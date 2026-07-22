@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { Button } from '@astryxdesign/core/Button'
-import { TextInput } from '@astryxdesign/core/TextInput'
+import { Button } from '@/components/ui/Button'
+import { TextInput } from '@/components/ui/TextInput'
 import { Building2 } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'

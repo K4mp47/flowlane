@@ -1,6 +1,6 @@
 import { useDndContext, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Badge } from '@astryxdesign/core/Badge'
+import { Badge } from '@/components/ui/Badge'
 import { Ban, CircleCheckBig, CircleDotDashed, Clock3, LoaderCircle } from 'lucide-react'
 import type { BoardColumn, ChecklistItem, Profile, Task, TaskAssignee, TaskType, WorkflowStatus } from '../../types/domain'
 import { TaskCard } from './TaskCard'
