@@ -1,12 +1,13 @@
 import { useDndContext, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Badge } from '@astryxdesign/core/Badge'
-import { CircleCheckBig, CircleDotDashed, Clock3, LoaderCircle, ScanSearch } from 'lucide-react'
-import type { BoardColumn, ChecklistItem, Profile, Task, TaskAssignee, TaskType } from '../../types/domain'
+import { Ban, CircleCheckBig, CircleDotDashed, Clock3, LoaderCircle } from 'lucide-react'
+import type { BoardColumn, ChecklistItem, Profile, Task, TaskAssignee, TaskType, WorkflowStatus } from '../../types/domain'
 import { TaskCard } from './TaskCard'
 
 interface KanbanColumnProps {
   column: BoardColumn
+  status: WorkflowStatus
   tasks: Task[]
   taskTypes: TaskType[]
   assignees: TaskAssignee[]
@@ -16,54 +17,29 @@ interface KanbanColumnProps {
   onOpenTask: (task: Task) => void
 }
 
-const stageIcon = {
+const categoryIcon = {
   BACKLOG: CircleDotDashed,
-  TODO: Clock3,
-  IN_PROGRESS: LoaderCircle,
-  REVIEW: ScanSearch,
-  DONE: CircleCheckBig,
+  UNSTARTED: Clock3,
+  STARTED: LoaderCircle,
+  COMPLETED: CircleCheckBig,
+  CANCELED: Ban,
 } as const
 
-export function KanbanColumn({ column, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
-  const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: 'column', columnId: column.id } })
+export function KanbanColumn({ column, status, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
+  const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: 'column', columnId: column.id, statusId: status.id } })
   const { active, over } = useDndContext()
-  const StageIcon = stageIcon[column.workflow_stage]
-  const stageClass = `stage-${column.workflow_stage.toLowerCase().replace('_', '-')}`
-  const overData = over?.data.current as { type?: string; columnId?: string; task?: Task } | undefined
-  const overColumnId = overData?.type === 'task' ? overData.task?.column_id : overData?.columnId
-  const highlighted = Boolean(active) && (isOver || overColumnId === column.id)
+  const StatusIcon = categoryIcon[status.category]
+  const stageClass = `stage-${status.category.toLowerCase()}`
+  const overData = over?.data.current as { type?: string; statusId?: string; task?: Task } | undefined
+  const overStatusId = overData?.type === 'task' ? overData.task?.status_id : overData?.statusId
+  const highlighted = Boolean(active) && (isOver || overStatusId === status.id)
 
-  return (
-    <section className={highlighted ? `kanban-column over ${stageClass}` : `kanban-column ${stageClass}`} data-stage={column.workflow_stage} ref={setNodeRef}>
-      <header className="column-header">
-        <span className="column-stage-icon" aria-hidden="true"><StageIcon size={15} /></span>
-        <strong>{column.name}</strong>
-        <Badge label={String(tasks.length)} variant="neutral" />
-      </header>
-      <div className="column-rule" />
-      <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-        <div className="column-tasks">
-          {tasks.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task}
-              taskType={taskTypes.find((type) => type.id === task.task_type_id)}
-              assignees={assignees}
-              checklistItems={checklistItems}
-              profiles={profiles}
-              isReadOnly={isReadOnly}
-              onOpen={onOpenTask}
-            />
-          ))}
-          {tasks.length === 0 ? (
-            <div className="empty-column">
-              <span className="empty-column-icon"><StageIcon size={18} /></span>
-              <span>No tasks</span>
-              <small>Drop work here to move it into {column.name}.</small>
-            </div>
-          ) : null}
-        </div>
-      </SortableContext>
-    </section>
-  )
+  return <section className={highlighted ? `kanban-column over ${stageClass}` : `kanban-column ${stageClass}`} data-stage={status.category} ref={setNodeRef}>
+    <header className="column-header"><span className="column-stage-icon" aria-hidden="true"><StatusIcon size={15} /></span><strong>{status.name}</strong><Badge label={String(tasks.length)} variant="neutral" /></header>
+    <div className="column-rule" />
+    <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}><div className="column-tasks">
+      {tasks.map((task) => <TaskCard key={task.id} task={task} taskType={taskTypes.find((type) => type.id === task.task_type_id)} assignees={assignees} checklistItems={checklistItems} profiles={profiles} isReadOnly={isReadOnly} onOpen={onOpenTask} />)}
+      {!tasks.length ? <div className="empty-column"><span className="empty-column-icon"><StatusIcon size={18} /></span><span>No tasks</span><small>Drop work here to move it into {status.name}.</small></div> : null}
+    </div></SortableContext>
+  </section>
 }
