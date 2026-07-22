@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Button } from '@astryxdesign/core/Button'
+import { Button } from '@/components/ui/Button'
 import { AlertTriangle, ArrowRightLeft, Bell, CalendarClock, CheckCheck, FilePlus2, MessageSquare, PencilLine, Trash2, UserPlus, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Notification, NotificationType } from '../../types/domain'

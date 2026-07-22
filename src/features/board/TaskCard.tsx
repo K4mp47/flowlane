@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Badge } from '@astryxdesign/core/Badge'
+import { Badge } from '@/components/ui/Badge'
 import { CalendarDays, CheckSquare2, GripVertical, LockKeyhole } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { ChecklistItem, Profile, Task, TaskAssignee, TaskPriority, TaskType } from '../../types/domain'

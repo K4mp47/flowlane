@@ -1,8 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import '@astryxdesign/core/reset.css'
-import '@astryxdesign/core/astryx.css'
 import './index.css'
 import './kanban-fixes.css'
 import './astryx-controls.css'
@@ -14,6 +12,8 @@ import './sidebar-alignment.css'
 import './interaction-polish.css'
 import './palette.css'
 import './product-v2.css'
+import './design-system.css'
+import './phase6-compat.css'
 import App from './App'
 
 const queryClient = new QueryClient({
