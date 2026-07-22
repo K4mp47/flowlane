@@ -1,0 +1,204 @@
+/* Focused cleanup after the Astryx migration. */
+
+/* -------------------------------------------------------------------------- */
+/* Sidebar rail geometry                                                       */
+/* -------------------------------------------------------------------------- */
+
+:root {
+  --fl-sidebar-rail: 56px;
+}
+
+.sidebar-hover-shell {
+  width: var(--fl-sidebar-rail) !important;
+  min-width: var(--fl-sidebar-rail) !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav {
+  width: var(--fl-sidebar-rail) !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='stickyTop'],
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'],
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='stickyBottom'] {
+  box-sizing: border-box;
+  width: 100% !important;
+  padding-inline: 8px !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand {
+  width: 40px;
+  margin-inline: auto;
+  justify-content: center;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-logo {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  margin-inline: auto;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav button[aria-label],
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav a[aria-label] {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  margin-inline: auto !important;
+  padding-inline: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-footer-stack,
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row,
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+  width: 100%;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row {
+  padding-inline: 0;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-avatar {
+  margin-inline: auto;
+}
+
+.sidebar-hover-shell.expanded .flowlane-side-nav [class*='stickyTop'],
+.sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'],
+.sidebar-hover-shell.expanded .flowlane-side-nav [class*='stickyBottom'] {
+  padding-inline: 10px !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Astryx fields: remove legacy CSS leaking into the library internals         */
+/* -------------------------------------------------------------------------- */
+
+.task-form-modal input,
+.task-form-modal textarea,
+.task-detail-panel input,
+.task-detail-panel textarea,
+.search-control input,
+.invite-card input,
+.project-create-card input,
+.project-rename-field input {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+  color: inherit !important;
+}
+
+.task-form-modal input:focus,
+.task-form-modal textarea:focus,
+.task-detail-panel input:focus,
+.task-detail-panel textarea:focus,
+.search-control input:focus,
+.invite-card input:focus,
+.project-create-card input:focus,
+.project-rename-field input:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+.task-form-modal input::placeholder,
+.task-form-modal textarea::placeholder,
+.task-detail-panel input::placeholder,
+.task-detail-panel textarea::placeholder,
+.search-control input::placeholder,
+.invite-card input::placeholder,
+.project-create-card input::placeholder,
+.project-rename-field input::placeholder {
+  color: var(--fl-input-placeholder) !important;
+}
+
+/* Let Astryx field wrappers provide the actual surface. */
+.task-form-modal [data-astryx-component='field'],
+.task-detail-panel [data-astryx-component='field'] {
+  max-width: 100%;
+}
+
+.task-form-modal {
+  gap: 16px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Assignee chips                                                              */
+/* -------------------------------------------------------------------------- */
+
+.assignee-chip {
+  border-color: var(--fl-border) !important;
+  background: var(--fl-surface-soft) !important;
+  color: var(--fl-text) !important;
+}
+
+.assignee-chip > span:not(.mini-avatar) {
+  color: var(--fl-text) !important;
+}
+
+.assignee-chip .mini-avatar {
+  border-color: var(--fl-border-strong) !important;
+  background: var(--fl-surface-muted) !important;
+  color: var(--fl-text) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Projects                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.project-row.active {
+  border-color: var(--fl-border) !important;
+  background: var(--fl-surface) !important;
+  box-shadow: none !important;
+}
+
+.project-row.active:hover {
+  border-color: var(--fl-border-strong) !important;
+  background: color-mix(in srgb, var(--fl-surface-soft) 46%, var(--fl-surface)) !important;
+}
+
+.project-row.active::after {
+  display: none !important;
+  content: none !important;
+}
+
+.project-row-copy strong,
+.project-row-copy > span {
+  position: static;
+}
+
+.default-board-pill {
+  white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Toolbar project selector                                                    */
+/* -------------------------------------------------------------------------- */
+
+.board-switcher.astryx-toolbar-control {
+  min-width: 170px;
+}
+
+/* Hide only the custom leading folder glyph; keep Astryx's dropdown affordance. */
+.board-switcher button svg:first-of-type:not(:last-of-type) {
+  display: none !important;
+}
+
+.board-switcher button {
+  gap: 8px !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                  */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 620px) {
+  :root {
+    --fl-sidebar-rail: 54px;
+  }
+
+  .kanban-grid {
+    grid-template-columns: repeat(5, calc(100vw - var(--fl-sidebar-rail) - 28px));
+  }
+}

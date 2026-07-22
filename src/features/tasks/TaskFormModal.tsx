@@ -111,6 +111,7 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
           onChange={setTitle}
           placeholder="Fix WebSocket synchronization on MondoT"
           isRequired
+          width="100%"
         />
         <TextArea
           label="Context"
@@ -119,6 +120,7 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
           onChange={setContext}
           rows={4}
           isOptional
+          width="100%"
         />
         <TextArea
           label="Expected result"
@@ -127,6 +129,7 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
           onChange={setExpectedResult}
           rows={4}
           isOptional
+          width="100%"
         />
         <TextArea
           label="Additional information"
@@ -135,6 +138,7 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
           onChange={setAdditionalInformation}
           rows={3}
           isOptional
+          width="100%"
         />
 
         <div className="form-grid-3 astryx-form-grid">
@@ -161,11 +165,6 @@ export function TaskFormModal({ workspaceId, boardId, creatorId, backlogColumn, 
             hasClear
             width="100%"
           />
-        </div>
-
-        <div className="definition-callout">
-          <strong>Flexible workflow</strong>
-          <p>Tasks can move between columns even when optional fields are empty. Add details only when they are useful to your team.</p>
         </div>
 
         {error ? <div className="inline-alert error-alert">{error}</div> : null}
