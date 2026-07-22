@@ -19,9 +19,11 @@ interface AuthContextValue {
   role: WorkspaceRole | null
   isLoading: boolean
   isPasswordRecovery: boolean
+  isInviteOnboarding: boolean
   refreshMembership: () => Promise<void>
   signOut: () => Promise<void>
   completePasswordRecovery: (password: string) => Promise<void>
+  completeInviteOnboarding: (password: string, displayName: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -122,6 +124,43 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setIsPasswordRecovery(false)
   }, [])
 
+  const completeInviteOnboarding = useCallback(async (password: string, displayName: string) => {
+    if (!session?.user) throw new Error('Invitation session is no longer available. Open the invitation email again.')
+
+    const { error: authError } = await supabase.auth.updateUser({
+      password,
+      data: {
+        ...session.user.user_metadata,
+        onboarding_required: false,
+      },
+    })
+    if (authError) throw authError
+
+    const cleanName = displayName.trim()
+    if (cleanName) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ display_name: cleanName })
+        .eq('id', session.user.id)
+      if (profileError) throw profileError
+    }
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('flowlane_invite')
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
+    }
+
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession()
+    if (refreshError) throw refreshError
+    await hydrateUser(refreshed.session)
+  }, [hydrateUser, session])
+
+  const isInviteOnboarding = Boolean(
+    session?.user?.user_metadata?.onboarding_required === true ||
+    (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('flowlane_invite') === '1'),
+  )
+
   const value = useMemo<AuthContextValue>(() => ({
     session,
     user: session?.user ?? null,
@@ -130,10 +169,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     role: membership?.role ?? null,
     isLoading,
     isPasswordRecovery,
+    isInviteOnboarding,
     refreshMembership,
     signOut,
     completePasswordRecovery,
-  }), [session, profile, membership, isLoading, isPasswordRecovery, refreshMembership, signOut, completePasswordRecovery])
+    completeInviteOnboarding,
+  }), [session, profile, membership, isLoading, isPasswordRecovery, isInviteOnboarding, refreshMembership, signOut, completePasswordRecovery, completeInviteOnboarding])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
