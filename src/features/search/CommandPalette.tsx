@@ -1,27 +1,23 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Search, KanbanSquare, ListChecks, Users, BarChart3, Bell, FolderKanban, ArrowRight } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import type { Board, Profile, Task } from '../../types/domain'
-
-type ViewName = 'board' | 'mine' | 'projects' | 'team' | 'analytics'
+import type { Board, Profile, Task, WorkspaceRole } from '../../types/domain'
+import type { AppView } from '../../components/AppSidebar'
 
 interface CommandPaletteProps {
   isOpen: boolean
   workspaceId: string
+  role: WorkspaceRole | null
   onClose: () => void
   onOpenTask: (task: Task) => void
   onSelectBoard: (boardId: string) => void
-  onChangeView: (view: ViewName) => void
+  onChangeView: (view: AppView) => void
   onOpenNotifications: () => void
 }
 
-interface SearchData {
-  tasks: Task[]
-  boards: Board[]
-  profiles: Profile[]
-}
+interface SearchData { tasks: Task[]; boards: Board[]; profiles: Profile[] }
 
-export function CommandPalette({ isOpen, workspaceId, onClose, onOpenTask, onSelectBoard, onChangeView, onOpenNotifications }: CommandPaletteProps) {
+export function CommandPalette({ isOpen, workspaceId, role, onClose, onOpenTask, onSelectBoard, onChangeView, onOpenNotifications }: CommandPaletteProps) {
   const [query, setQuery] = useState('')
   const [data, setData] = useState<SearchData>({ tasks: [], boards: [], profiles: [] })
   const [isLoading, setIsLoading] = useState(false)
@@ -46,11 +42,8 @@ export function CommandPalette({ isOpen, workspaceId, onClose, onOpenTask, onSel
         const profilesResult = await supabase.from('profiles').select('id,email,display_name,avatar_url').in('id', memberIds)
         profiles = (profilesResult.data ?? []) as Profile[]
       }
-      setData({
-        tasks: (tasksResult.data ?? []) as Task[],
-        boards: (boardsResult.data ?? []) as Board[],
-        profiles,
-      })
+      if (!active) return
+      setData({ tasks: (tasksResult.data ?? []) as Task[], boards: (boardsResult.data ?? []) as Board[], profiles })
       setIsLoading(false)
     }
     void load()
@@ -59,9 +52,7 @@ export function CommandPalette({ isOpen, workspaceId, onClose, onOpenTask, onSel
 
   useEffect(() => {
     if (!isOpen) return
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose()
-    }
+    function onKeyDown(event: KeyboardEvent) { if (event.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [isOpen, onClose])
@@ -74,27 +65,23 @@ export function CommandPalette({ isOpen, workspaceId, onClose, onOpenTask, onSel
   if (!isOpen) return null
 
   const commands = [
-    { label: 'Go to board', icon: <KanbanSquare size={16} />, action: () => onChangeView('board') },
-    { label: 'Open my tasks', icon: <ListChecks size={16} />, action: () => onChangeView('mine') },
-    { label: 'Open analytics', icon: <BarChart3 size={16} />, action: () => onChangeView('analytics') },
-    { label: 'Open notifications', icon: <Bell size={16} />, action: onOpenNotifications },
-    { label: 'Manage projects', icon: <FolderKanban size={16} />, action: () => onChangeView('projects') },
-    { label: 'Manage team', icon: <Users size={16} />, action: () => onChangeView('team') },
-  ].filter((command) => !normalized || command.label.toLowerCase().includes(normalized))
+    { label: 'Go to board', icon: <KanbanSquare size={16} />, action: () => onChangeView('board'), visible: true },
+    { label: 'Open my tasks', icon: <ListChecks size={16} />, action: () => onChangeView('mine'), visible: role !== 'VIEWER' },
+    { label: 'Open analytics', icon: <BarChart3 size={16} />, action: () => onChangeView('analytics'), visible: true },
+    { label: 'Open notifications', icon: <Bell size={16} />, action: onOpenNotifications, visible: role !== 'VIEWER' },
+    { label: 'Manage projects', icon: <FolderKanban size={16} />, action: () => onChangeView('projects'), visible: role === 'ADMIN' },
+    { label: 'Manage team', icon: <Users size={16} />, action: () => onChangeView('team'), visible: role === 'ADMIN' },
+  ].filter((command) => command.visible && (!normalized || command.label.toLowerCase().includes(normalized)))
 
   return (
     <div className="command-palette-backdrop" onMouseDown={onClose}>
       <section className="command-palette" onMouseDown={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-label="Global search and commands">
-        <div className="command-search-row">
-          <Search size={18} />
-          <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks, projects, people or commands…" />
-          <kbd>Esc</kbd>
-        </div>
+        <div className="command-search-row"><Search size={18} /><input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks, projects, people or commands…" /><kbd>Esc</kbd></div>
         <div className="command-results">
           {commands.length ? <CommandSection title="Commands">{commands.map((command) => <CommandRow key={command.label} icon={command.icon} title={command.label} onClick={() => { command.action(); onClose() }} />)}</CommandSection> : null}
           {taskResults.length ? <CommandSection title="Tasks">{taskResults.map((task) => <CommandRow key={task.id} icon={<ListChecks size={16} />} title={task.title} meta={`FL-${task.task_number}`} onClick={() => { onOpenTask(task); onClose() }} />)}</CommandSection> : null}
           {boardResults.length ? <CommandSection title="Projects">{boardResults.map((board) => <CommandRow key={board.id} icon={<FolderKanban size={16} />} title={board.name} onClick={() => { onSelectBoard(board.id); onClose() }} />)}</CommandSection> : null}
-          {peopleResults.length ? <CommandSection title="People">{peopleResults.map((profile) => <CommandRow key={profile.id} icon={<Users size={16} />} title={profile.display_name || profile.email} meta={profile.display_name ? profile.email : undefined} onClick={() => { setQuery(profile.display_name || profile.email) }} />)}</CommandSection> : null}
+          {peopleResults.length ? <CommandSection title="People">{peopleResults.map((profile) => <CommandRow key={profile.id} icon={<Users size={16} />} title={profile.display_name || profile.email} meta={profile.display_name ? profile.email : undefined} onClick={() => setQuery(profile.display_name || profile.email)} />)}</CommandSection> : null}
           {!isLoading && !commands.length && !taskResults.length && !boardResults.length && !peopleResults.length ? <div className="command-empty">No matching tasks, projects, people or commands.</div> : null}
           {isLoading ? <div className="command-empty">Searching workspace…</div> : null}
         </div>
@@ -104,10 +91,5 @@ export function CommandPalette({ isOpen, workspaceId, onClose, onOpenTask, onSel
   )
 }
 
-function CommandSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="command-section"><span className="command-section-title">{title}</span><div>{children}</div></div>
-}
-
-function CommandRow({ icon, title, meta, onClick }: { icon: React.ReactNode; title: string; meta?: string; onClick: () => void }) {
-  return <button className="command-row" type="button" onClick={onClick}><span className="command-row-icon">{icon}</span><span className="command-row-copy"><strong>{title}</strong>{meta ? <small>{meta}</small> : null}</span><ArrowRight size={14} /></button>
-}
+function CommandSection({ title, children }: { title: string; children: ReactNode }) { return <div className="command-section"><span className="command-section-title">{title}</span><div>{children}</div></div> }
+function CommandRow({ icon, title, meta, onClick }: { icon: ReactNode; title: string; meta?: string; onClick: () => void }) { return <button className="command-row" type="button" onClick={onClick}><span className="command-row-icon">{icon}</span><span className="command-row-copy"><strong>{title}</strong>{meta ? <small>{meta}</small> : null}</span><ArrowRight size={14} /></button> }
