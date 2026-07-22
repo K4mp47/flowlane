@@ -1,0 +1,351 @@
+/* Theme-aware polish loaded last: no fixed light surfaces, quieter borders, stable sidebar geometry. */
+
+:root {
+  --fl-stage-backlog: color-mix(in oklch, var(--fl-text-muted) 86%, var(--fl-text));
+  --fl-stage-unstarted: oklch(.67 .16 255);
+  --fl-stage-started: oklch(.66 .18 300);
+  --fl-stage-review: oklch(.73 .15 76);
+  --fl-stage-completed: oklch(.68 .15 154);
+  --fl-stage-canceled: color-mix(in oklch, var(--fl-text-muted) 78%, var(--fl-text));
+}
+
+/* General theme correctness ------------------------------------------------ */
+body,
+.board-main,
+.workspace-task-page,
+.calendar-page {
+  background: var(--fl-bg);
+  color: var(--fl-text);
+}
+
+.board-toolbar {
+  background: color-mix(in oklch, var(--fl-bg) 92%, transparent) !important;
+  border-bottom-color: var(--fl-border) !important;
+}
+
+.eyebrow { color: var(--fl-text-muted) !important; }
+.muted { color: var(--fl-text-muted) !important; }
+
+/* Repository-owned controls: use borders only where they communicate state. */
+.fl-button-secondary,
+.fl-icon-button-secondary {
+  border-color: var(--fl-border);
+  background: color-mix(in oklch, var(--fl-surface) 94%, transparent);
+}
+
+.fl-button-secondary:hover:not(:disabled),
+.fl-icon-button-secondary:hover:not(:disabled) {
+  border-color: color-mix(in oklch, var(--fl-primary) 22%, var(--fl-border));
+  background: var(--fl-surface-soft);
+}
+
+.fl-input,
+.fl-textarea,
+.fl-select-trigger {
+  border-color: color-mix(in oklch, var(--fl-text) 12%, var(--fl-border));
+  background: color-mix(in oklch, var(--fl-input-bg) 95%, transparent);
+}
+
+/* Sidebar ------------------------------------------------------------------ */
+.sidebar-hover-shell .flowlane-side-nav {
+  background: var(--sidebar) !important;
+  color: var(--sidebar-foreground);
+  border-right: 0 !important;
+}
+
+.sidebar-hover-shell::after {
+  background: var(--sidebar-border) !important;
+  opacity: .8;
+}
+
+.fl-side-nav-header {
+  padding: 8px 8px 5px;
+}
+
+.fl-side-nav-body {
+  padding: 4px 8px 8px !important;
+  gap: 2px;
+}
+
+.fl-side-nav-footer {
+  padding: 8px !important;
+  border-top: 0 !important;
+}
+
+.sidebar-brand {
+  height: 40px !important;
+  padding: 0 !important;
+  gap: 10px !important;
+}
+
+.sidebar-logo {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+  border-radius: 10px;
+  background: color-mix(in oklch, var(--fl-text) 94%, var(--fl-bg));
+  color: var(--fl-bg);
+  transform: none !important;
+}
+
+.sidebar-logo svg { width: 18px; height: 18px; }
+
+.fl-nav-item {
+  height: 38px;
+  min-height: 38px;
+  padding: 0 10px !important;
+  gap: 10px;
+  border: 0 !important;
+  border-radius: 9px;
+  color: var(--fl-text-muted);
+}
+
+.fl-nav-icon {
+  width: 20px;
+  min-width: 20px;
+  color: currentColor;
+}
+
+.fl-nav-item:hover {
+  color: var(--fl-text);
+  background: var(--sidebar-accent);
+}
+
+.fl-nav-item.is-selected {
+  color: var(--fl-primary);
+  background: color-mix(in oklch, var(--fl-primary) 11%, var(--sidebar));
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--fl-primary) 8%, transparent);
+}
+
+.sidebar-section-label {
+  height: 28px;
+  padding: 12px 10px 5px !important;
+  color: var(--fl-text-subtle) !important;
+  font-size: 9px !important;
+  line-height: 1;
+  opacity: 1;
+  transition: opacity 90ms ease;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-section-label,
+.sidebar-hover-shell:not(.expanded) .fl-nav-label,
+.sidebar-hover-shell:not(.expanded) .sidebar-brand-copy,
+.sidebar-hover-shell:not(.expanded) .sidebar-user-copy {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sidebar-hover-shell:not(.expanded) .fl-nav-item {
+  justify-content: flex-start !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .fl-nav-icon,
+.sidebar-hover-shell:not(.expanded) .sidebar-logo,
+.sidebar-hover-shell:not(.expanded) .sidebar-avatar,
+.sidebar-hover-shell:not(.expanded) .fl-icon-button {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.sidebar-footer-stack { display: grid; gap: 8px; }
+.sidebar-utility-row { display: flex; align-items: center; gap: 4px; }
+.sidebar-user { min-height: 38px; padding: 4px 3px !important; gap: 9px; }
+.sidebar-avatar { border: 0 !important; background: var(--fl-surface-soft); }
+
+/* Board status identity ---------------------------------------------------- */
+.kanban-column[data-stage='BACKLOG'] { --stage-color: var(--fl-stage-backlog); }
+.kanban-column[data-stage='UNSTARTED'] { --stage-color: var(--fl-stage-unstarted); }
+.kanban-column[data-stage='STARTED'] { --stage-color: var(--fl-stage-started); }
+.kanban-column[data-stage='COMPLETED'] { --stage-color: var(--fl-stage-completed); }
+.kanban-column[data-stage='CANCELED'] { --stage-color: var(--fl-stage-canceled); }
+
+.column-stage-icon {
+  color: var(--stage-color) !important;
+  background: color-mix(in oklch, var(--stage-color) 12%, transparent) !important;
+}
+
+.column-rule {
+  height: 2px !important;
+  background: linear-gradient(90deg, var(--stage-color), color-mix(in oklch, var(--stage-color) 20%, transparent) 58%, transparent) !important;
+  opacity: .8;
+}
+
+.kanban-column {
+  border: 0 !important;
+}
+
+.empty-column {
+  border-color: color-mix(in oklch, var(--fl-text) 15%, transparent) !important;
+  background: color-mix(in oklch, var(--fl-surface) 60%, transparent) !important;
+}
+
+.empty-column-icon { color: var(--stage-color) !important; background: color-mix(in oklch, var(--stage-color) 10%, transparent) !important; }
+
+/* Task cards --------------------------------------------------------------- */
+.task-card {
+  border-color: color-mix(in oklch, var(--fl-text) 13%, var(--fl-border)) !important;
+  background: var(--fl-surface) !important;
+  color: var(--fl-text);
+}
+.task-card:hover {
+  border-color: color-mix(in oklch, var(--fl-primary) 24%, var(--fl-border)) !important;
+  background: color-mix(in oklch, var(--fl-primary) 2%, var(--fl-surface)) !important;
+}
+.task-card h3 { color: var(--fl-text); }
+.task-context,.task-reference,.task-due { color: var(--fl-text-muted) !important; }
+.task-card-footer { border-top-color: var(--fl-border) !important; background: var(--fl-surface-soft) !important; }
+
+/* Workspace task lists ---------------------------------------------------- */
+.workspace-task-heading p,
+.calendar-heading p { color: var(--fl-text-muted) !important; }
+
+.workspace-task-count {
+  border: 0 !important;
+  background: var(--fl-surface-soft);
+  color: var(--fl-text);
+}
+.workspace-task-count span { color: var(--fl-text-muted) !important; }
+
+.workspace-task-table {
+  border: 1px solid var(--fl-border) !important;
+  background: var(--fl-surface) !important;
+}
+.workspace-task-row {
+  color: var(--fl-text) !important;
+  border-bottom-color: var(--fl-border) !important;
+}
+.workspace-task-row:last-child { border-bottom: 0; }
+.workspace-task-table-head { color: var(--fl-text-muted) !important; }
+.workspace-task-row:not(.workspace-task-table-head):hover { background: var(--fl-surface-soft) !important; }
+.workspace-task-row svg { color: var(--fl-text-muted); }
+.workspace-task-primary strong { color: var(--fl-text); }
+
+/* Modal and details ------------------------------------------------------- */
+.modal-backdrop,
+.task-peek-backdrop {
+  background: color-mix(in oklch, black 48%, transparent) !important;
+}
+
+.task-form-modal,
+.task-peek,
+.task-detail-panel,
+.notification-panel {
+  background: var(--fl-surface) !important;
+  color: var(--fl-text) !important;
+  border-color: var(--fl-border) !important;
+}
+
+.task-form-modal {
+  gap: 16px !important;
+  padding: 24px !important;
+}
+
+.task-form-modal .fl-textarea { min-height: 92px; }
+.form-grid-2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.modal-actions { padding-top: 4px; }
+
+/* Calendar ---------------------------------------------------------------- */
+.calendar-page {
+  max-width: 1500px;
+  padding: 24px 28px 32px !important;
+}
+
+.calendar-heading { margin-bottom: 18px !important; }
+.calendar-heading h2 { color: var(--fl-text); }
+
+.calendar-filter-bar {
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+}
+
+.calendar-period-bar {
+  min-height: 42px;
+  padding: 4px;
+  margin-bottom: 12px !important;
+  border-radius: 11px;
+  background: var(--fl-surface-soft);
+}
+.calendar-period-bar strong { color: var(--fl-text); }
+
+.calendar-grid {
+  border: 1px solid var(--fl-border) !important;
+  border-radius: 14px;
+  background: var(--fl-surface) !important;
+  overflow: hidden;
+}
+
+.calendar-day {
+  min-height: 132px !important;
+  padding: 9px !important;
+  border-right: 1px solid var(--fl-border) !important;
+  border-bottom: 1px solid var(--fl-border) !important;
+  background: var(--fl-surface) !important;
+  color: var(--fl-text);
+}
+.calendar-day:nth-child(7n) { border-right: 0 !important; }
+.calendar-grid.month .calendar-day:nth-last-child(-n+7) { border-bottom: 0 !important; }
+.calendar-day.outside { opacity: .42; background: color-mix(in oklch, var(--fl-bg) 60%, var(--fl-surface)) !important; }
+.calendar-day.today { box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--fl-primary) 60%, var(--fl-border)) !important; }
+.calendar-day.today > header strong { color: var(--fl-primary) !important; }
+.calendar-day > header { color: var(--fl-text-muted) !important; }
+.calendar-day > header strong { color: var(--fl-text) !important; }
+.calendar-day-tasks { gap: 5px !important; }
+
+.calendar-task {
+  position: relative;
+  min-height: 34px;
+  display: grid !important;
+  grid-template-columns: auto minmax(0,1fr);
+  align-items: center;
+  gap: 7px !important;
+  padding: 7px 8px 7px 10px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: color-mix(in oklch, var(--fl-primary) 9%, var(--fl-surface-soft)) !important;
+  color: var(--fl-text) !important;
+  box-shadow: inset 2px 0 0 var(--fl-primary);
+}
+.calendar-task:hover {
+  background: color-mix(in oklch, var(--fl-primary) 14%, var(--fl-surface-soft)) !important;
+  box-shadow: inset 3px 0 0 var(--fl-primary);
+}
+.calendar-task.complete {
+  opacity: .68;
+  box-shadow: inset 2px 0 0 var(--fl-stage-completed);
+}
+.calendar-task-ref {
+  color: var(--fl-primary) !important;
+  font-size: 9px !important;
+  letter-spacing: .04em;
+}
+.calendar-task > span:last-child {
+  color: var(--fl-text) !important;
+  font-weight: 600;
+}
+
+.calendar-agenda > section {
+  border: 1px solid var(--fl-border) !important;
+  background: var(--fl-surface) !important;
+}
+.calendar-agenda > section > header {
+  background: var(--fl-surface-soft) !important;
+  border-bottom-color: var(--fl-border) !important;
+  color: var(--fl-text);
+}
+.calendar-agenda-row {
+  border-bottom-color: var(--fl-border) !important;
+  color: var(--fl-text);
+}
+.calendar-agenda-row > span { color: var(--fl-text-muted); }
+
+@media (max-width: 900px) {
+  .calendar-page { padding: 16px !important; }
+  .form-grid-2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 620px) {
+  .fl-side-nav-header,
+  .fl-side-nav-body,
+  .fl-side-nav-footer { padding-left: 8px !important; padding-right: 8px !important; }
+}
