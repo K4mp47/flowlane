@@ -13,6 +13,7 @@ import './collaboration.css'
 import './sidebar-alignment.css'
 import './interaction-polish.css'
 import './palette.css'
+import './product-v2.css'
 import App from './App'
 
 const queryClient = new QueryClient({
