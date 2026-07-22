@@ -1,6 +1,9 @@
 name: Validate domain calendar branch
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - agent/domain-navigation-calendar
