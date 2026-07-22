@@ -95,7 +95,7 @@
 .presence-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #36a269; box-shadow: 0 0 0 3px color-mix(in srgb, #36a269 14%, transparent); }
 .presence-count { color: var(--fl-text); font-weight: 700; }
 
-/* Keep idle Kanban columns on the exact same surface as the board canvas. */
+/* Idle columns use the same canvas surface as the board. Drag targets remain highlighted by the existing .over rules. */
 .kanban-column,
 :root[data-theme='dark'] .kanban-column {
   background: transparent !important;

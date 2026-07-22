@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -47,6 +47,7 @@ export function BoardPage() {
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => window.localStorage.getItem(`flowlane-board-${workspaceId}`))
   const boardQuery = useBoardData(workspaceId, role, selectedBoardId)
   const queryClient = useQueryClient()
+  const boardRealtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [view, setView] = useState<AppView>('board')
   const [search, setSearch] = useState('')
   const [priority, setPriority] = useState<TaskPriority | 'ALL'>('ALL')
@@ -85,7 +86,7 @@ export function BoardPage() {
   useEffect(() => {
     const invalidateBoard = () => void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
     const channel = supabase
-      .channel(`flowlane-board-${workspaceId}`)
+      .channel(`flowlane-board-${workspaceId}`, { config: { broadcast: { self: false } } })
       .on('broadcast', { event: 'board_changed' }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `workspace_id=eq.${workspaceId}` }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'task_assignees' }, invalidateBoard)
@@ -93,9 +94,14 @@ export function BoardPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_members', filter: `workspace_id=eq.${workspaceId}` }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'boards', filter: `workspace_id=eq.${workspaceId}` }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'board_columns' }, invalidateBoard)
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') boardRealtimeChannelRef.current = channel
+      })
 
-    return () => { void supabase.removeChannel(channel) }
+    return () => {
+      if (boardRealtimeChannelRef.current === channel) boardRealtimeChannelRef.current = null
+      void supabase.removeChannel(channel)
+    }
   }, [queryClient, workspaceId])
 
   useEffect(() => {
@@ -166,15 +172,14 @@ export function BoardPage() {
   }, [role, user?.id, workspaceId])
 
   async function broadcastBoardChanged(boardId?: string | null) {
-    try {
-      await supabase.channel(`flowlane-board-${workspaceId}`).send({
-        type: 'broadcast',
-        event: 'board_changed',
-        payload: { board_id: boardId ?? null, sent_at: new Date().toISOString() },
-      })
-    } catch (error) {
-      console.warn('Unable to broadcast board update', error)
-    }
+    const channel = boardRealtimeChannelRef.current
+    if (!channel) return
+    const result = await channel.send({
+      type: 'broadcast',
+      event: 'board_changed',
+      payload: { board_id: boardId ?? null, sent_at: new Date().toISOString() },
+    })
+    if (result !== 'ok') console.warn('Unable to broadcast board update', result)
   }
 
   function resolvePreviewPosition(tasks: Task[], activeId: string, overId: string, activeTop?: number, overTop?: number, overHeight?: number) {
