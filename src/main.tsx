@@ -8,6 +8,7 @@ import './kanban-fixes.css'
 import './astryx-controls.css'
 import './ui-polish.css'
 import './sidebar-polish.css'
+import './final-fixes.css'
 import App from './App'
 
 const queryClient = new QueryClient({
