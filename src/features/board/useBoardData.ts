@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import type {
   Board,
   BoardColumn,
+  ChecklistItem,
   Profile,
   Task,
   TaskAssignee,
@@ -17,6 +18,7 @@ export interface BoardData {
   tasks: Task[]
   taskTypes: TaskType[]
   assignees: TaskAssignee[]
+  checklistItems: ChecklistItem[]
   profiles: Profile[]
   members: Array<{ user_id: string; role: WorkspaceRole }>
 }
@@ -72,6 +74,7 @@ async function fetchBoardData(workspaceId: string, requestedBoardId?: string | n
       tasks: [],
       taskTypes: (taskTypesResult.data ?? []) as TaskType[],
       assignees: [],
+      checklistItems: [],
       profiles,
       members: memberRows.map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
     }
@@ -96,13 +99,23 @@ async function fetchBoardData(workspaceId: string, requestedBoardId?: string | n
   const tasks = (tasksResult.data ?? []) as Task[]
   const taskIds = tasks.map((task) => task.id)
   let assignees: TaskAssignee[] = []
+  let checklistItems: ChecklistItem[] = []
   if (taskIds.length > 0) {
-    const { data, error } = await supabase
-      .from('task_assignees')
-      .select('task_id,user_id,assigned_by,assigned_at')
-      .in('task_id', taskIds)
-    if (error) throw error
-    assignees = (data ?? []) as TaskAssignee[]
+    const [assigneesResult, checklistResult] = await Promise.all([
+      supabase
+        .from('task_assignees')
+        .select('task_id,user_id,assigned_by,assigned_at')
+        .in('task_id', taskIds),
+      supabase
+        .from('checklist_items')
+        .select('id,task_id,content,is_completed,position,created_by')
+        .in('task_id', taskIds)
+        .order('position', { ascending: true }),
+    ])
+    if (assigneesResult.error) throw assigneesResult.error
+    if (checklistResult.error) throw checklistResult.error
+    assignees = (assigneesResult.data ?? []) as TaskAssignee[]
+    checklistItems = (checklistResult.data ?? []) as ChecklistItem[]
   }
 
   return {
@@ -112,6 +125,7 @@ async function fetchBoardData(workspaceId: string, requestedBoardId?: string | n
     tasks,
     taskTypes: (taskTypesResult.data ?? []) as TaskType[],
     assignees,
+    checklistItems,
     profiles,
     members: memberRows.map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
   }
