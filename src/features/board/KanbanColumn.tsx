@@ -25,16 +25,26 @@ const categoryIcon = {
   CANCELED: Ban,
 } as const
 
+function statusTone(status: WorkflowStatus) {
+  const normalized = status.name.trim().toLowerCase()
+  if (normalized.includes('review')) return 'review'
+  if (status.category === 'BACKLOG') return 'backlog'
+  if (status.category === 'UNSTARTED') return 'unstarted'
+  if (status.category === 'STARTED') return 'started'
+  if (status.category === 'COMPLETED') return 'completed'
+  return 'canceled'
+}
+
 export function KanbanColumn({ column, status, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: 'column', columnId: column.id, statusId: status.id } })
   const { active, over } = useDndContext()
   const StatusIcon = categoryIcon[status.category]
-  const stageClass = `stage-${status.category.toLowerCase()}`
+  const tone = statusTone(status)
   const overData = over?.data.current as { type?: string; statusId?: string; task?: Task } | undefined
   const overStatusId = overData?.type === 'task' ? overData.task?.status_id : overData?.statusId
   const highlighted = Boolean(active) && (isOver || overStatusId === status.id)
 
-  return <section className={highlighted ? `kanban-column over ${stageClass}` : `kanban-column ${stageClass}`} data-stage={status.category} ref={setNodeRef}>
+  return <section className={highlighted ? 'kanban-column over' : 'kanban-column'} data-stage={status.category} data-stage-tone={tone} ref={setNodeRef}>
     <header className="column-header"><span className="column-stage-icon" aria-hidden="true"><StatusIcon size={15} /></span><strong>{status.name}</strong><Badge label={String(tasks.length)} variant="neutral" /></header>
     <div className="column-rule" />
     <SortableContext items={tasks.map((task) => task.id)} strategy={verticalListSortingStrategy}><div className="column-tasks">
