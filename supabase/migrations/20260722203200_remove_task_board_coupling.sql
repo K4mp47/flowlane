@@ -25,6 +25,7 @@ drop trigger if exists tasks_01_prepare_domain on public.tasks;
 create trigger tasks_01_prepare_domain before insert or update on public.tasks for each row execute function app_private.prepare_task_domain();
 drop function if exists app_private.sync_task_domain_fields();
 drop function if exists app_private.validate_task_transition();
+drop function if exists app_private.notify_task_status_change();
 
 -- Rewrite project creation so board columns are only visual mappings to workflow statuses.
 create or replace function public.create_project(_workspace_id uuid, _name text)
