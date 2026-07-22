@@ -162,9 +162,7 @@
 }
 
 .task-card,
-.task-card > *,
 .task-card-topline,
-.task-card-footer,
 .task-card-meta-left {
   min-width: 0;
   max-width: 100%;
@@ -173,6 +171,23 @@
 .task-card {
   width: 100%;
   overflow: hidden;
+}
+
+/* Keep the footer edge-to-edge inside the padded card. Do not constrain it to
+   max-width:100%, because its negative inline margins intentionally reclaim the
+   card padding. */
+.task-card-footer {
+  box-sizing: border-box;
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  margin: 12px -13px -12px;
+  padding: 8px 13px;
+  border-radius: 0 0 10px 10px;
+}
+
+.task-card-footer > * {
+  min-width: 0;
 }
 
 .task-card h3 {
@@ -342,6 +357,11 @@
 
   .kanban-grid {
     grid-template-columns: repeat(5, calc(100vw - var(--fl-sidebar-rail) - 28px));
+  }
+
+  .task-card-footer {
+    margin: 12px -13px -13px;
+    padding-inline: 13px;
   }
 }
 
