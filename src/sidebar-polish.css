@@ -8,8 +8,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--fl-border);
 }
 
 .sidebar-hover-shell:not(.expanded) .sidebar-footer-stack {
@@ -22,7 +20,6 @@
   flex-direction: column;
   justify-content: center;
   gap: 3px;
-  padding-bottom: 7px;
 }
 
 .sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
