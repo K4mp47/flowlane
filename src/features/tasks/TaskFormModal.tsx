@@ -10,16 +10,7 @@ import { X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Task, TaskPriority, TaskType, WorkflowStatus } from '../../types/domain'
 
-interface TaskFormModalProps {
-  projectId: string
-  creatorId: string
-  initialStatus: WorkflowStatus
-  statuses: WorkflowStatus[]
-  taskTypes: TaskType[]
-  task?: Task | null
-  onClose: () => void
-  onSaved: () => Promise<void> | void
-}
+interface TaskFormModalProps { projectId: string; creatorId: string; initialStatus: WorkflowStatus; statuses: WorkflowStatus[]; taskTypes: TaskType[]; task?: Task | null; onClose: () => void; onSaved: () => Promise<void> | void }
 
 const priorities: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
 const toIso = (value?: ISODateString) => value ? new Date(`${value}T12:00:00`).toISOString() : null
@@ -37,17 +28,7 @@ export function TaskFormModal({ projectId, creatorId, initialStatus, statuses, t
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
-  useEffect(() => {
-    setTitle(task?.title ?? '')
-    setContext(task?.context ?? '')
-    setExpectedResult(task?.expected_result ?? '')
-    setAdditionalInformation(task?.additional_information ?? '')
-    setTaskTypeId(task?.task_type_id ?? '')
-    setPriority(task?.priority ?? '')
-    setStatusId(task?.status_id ?? initialStatus.id)
-    setStartDate(task?.start_date ? task.start_date.slice(0, 10) as ISODateString : undefined)
-    setDueDate(task?.due_date ? task.due_date.slice(0, 10) as ISODateString : undefined)
-  }, [initialStatus.id, task])
+  useEffect(() => { setTitle(task?.title ?? ''); setContext(task?.context ?? ''); setExpectedResult(task?.expected_result ?? ''); setAdditionalInformation(task?.additional_information ?? ''); setTaskTypeId(task?.task_type_id ?? ''); setPriority(task?.priority ?? ''); setStatusId(task?.status_id ?? initialStatus.id); setStartDate(task?.start_date ? task.start_date.slice(0, 10) as ISODateString : undefined); setDueDate(task?.due_date ? task.due_date.slice(0, 10) as ISODateString : undefined) }, [initialStatus.id, task])
 
   const isEditing = Boolean(task)
   const canSave = useMemo(() => title.trim().length > 0 && Boolean(statusId), [statusId, title])
@@ -56,17 +37,9 @@ export function TaskFormModal({ projectId, creatorId, initialStatus, statuses, t
   const statusOptions = useMemo(() => statuses.map((status) => ({ value: status.id, label: status.name })), [statuses])
 
   async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (!canSave) return
-    setError(null); setIsSaving(true)
-    const payload = {
-      title: title.trim(), context: context.trim() || null, expected_result: expectedResult.trim() || null,
-      additional_information: additionalInformation.trim() || null, task_type_id: taskTypeId || null,
-      priority: priority || null, status_id: statusId, start_date: toIso(startDate), due_date: toIso(dueDate),
-    }
-    const result = isEditing && task
-      ? await supabase.from('tasks').update(payload).eq('id', task.id)
-      : await supabase.from('tasks').insert({ ...payload, project_id: projectId, creator_id: creatorId, position: Date.now() })
+    event.preventDefault(); if (!canSave) return; setError(null); setIsSaving(true)
+    const payload = { title: title.trim(), context: context.trim() || null, expected_result: expectedResult.trim() || null, additional_information: additionalInformation.trim() || null, task_type_id: taskTypeId || null, priority: priority || null, status_id: statusId, start_date: toIso(startDate), due_date: toIso(dueDate) }
+    const result = isEditing && task ? await supabase.from('tasks').update(payload).eq('id', task.id) : await supabase.from('tasks').insert({ ...payload, project_id: projectId, creator_id: creatorId, position: Date.now() })
     if (result.error) { setError(result.error.message); setIsSaving(false); return }
     await onSaved(); setIsSaving(false); onClose()
   }
@@ -78,7 +51,7 @@ export function TaskFormModal({ projectId, creatorId, initialStatus, statuses, t
     <TextArea label="Expected result" description="What should be true when this task is complete?" value={expectedResult} onChange={setExpectedResult} rows={4} isOptional width="100%" />
     <TextArea label="Additional information" description="Logs, links, devices, versions or other useful details." value={additionalInformation} onChange={setAdditionalInformation} rows={3} isOptional width="100%" />
     <div className="form-grid-3 ui-form-grid"><Selector label="Status" options={statusOptions} value={statusId} onChange={setStatusId} size="md" width="100%" /><Selector label="Type" options={typeOptions} value={taskTypeId} onChange={setTaskTypeId} size="md" width="100%" /><Selector label="Priority" options={priorityOptions} value={priority} onChange={(value) => setPriority(value as TaskPriority | '')} size="md" width="100%" /></div>
-    <div className="form-grid-2 ui-form-grid"><DateInput label="Start date" value={startDate} onChange={setStartDate} hasClear width="100%" /><DateInput label="Due date" value={dueDate} onChange={setDueDate} hasClear width="100%" /></div>
+    <div className="form-grid-2 ui-form-grid task-date-grid"><DateInput label="Start date" value={startDate} onChange={setStartDate} width="100%" /><DateInput label="Due date" value={dueDate} onChange={setDueDate} width="100%" /></div>
     {error ? <div className="inline-alert error-alert">{error}</div> : null}<div className="modal-actions"><Button label="Cancel" variant="secondary" type="button" onClick={onClose} /><Button label={isEditing ? 'Save changes' : 'Create task'} variant="primary" type="submit" isLoading={isSaving} isDisabled={!canSave} /></div>
   </form></div>
 }
