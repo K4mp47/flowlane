@@ -10,6 +10,7 @@ import './ui-polish.css'
 import './sidebar-polish.css'
 import './final-fixes.css'
 import './collaboration.css'
+import './sidebar-alignment.css'
 import App from './App'
 
 const queryClient = new QueryClient({

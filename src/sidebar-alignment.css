@@ -1,0 +1,206 @@
+/*
+ * Sidebar geometry normalization.
+ *
+ * The collapsed rail is the reference layout. Expanding the sidebar should only
+ * reveal labels; it must not move the icon column. Keep every primary icon on
+ * the same 28px centerline in both states.
+ */
+
+:root {
+  --fl-sidebar-rail: 56px;
+  --fl-sidebar-expanded: 226px;
+  --fl-sidebar-gutter: 8px;
+  --fl-sidebar-row: 36px;
+  --fl-sidebar-icon-center: 28px;
+}
+
+/* Keep the physical rail stable while the fixed SideNav grows over the page. */
+.sidebar-hover-shell {
+  width: var(--fl-sidebar-rail) !important;
+  min-width: var(--fl-sidebar-rail) !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav {
+  width: var(--fl-sidebar-rail) !important;
+}
+
+.sidebar-hover-shell.expanded .flowlane-side-nav {
+  width: var(--fl-sidebar-expanded) !important;
+}
+
+/* Header, navigation list and footer all use the same horizontal inset. */
+.flowlane-side-nav [class*='stickyTop'],
+.flowlane-side-nav [class*='scrollable'],
+.flowlane-side-nav [class*='stickyBottom'] {
+  box-sizing: border-box;
+  padding-inline: var(--fl-sidebar-gutter) !important;
+}
+
+/* Do not let the component library introduce state-specific vertical rhythm. */
+.flowlane-side-nav [class*='stickyTop'] {
+  padding-top: 8px !important;
+  padding-bottom: 5px !important;
+}
+
+.flowlane-side-nav [class*='scrollable'] {
+  gap: 0 !important;
+  padding-top: 0 !important;
+}
+
+.flowlane-side-nav [class*='stickyBottom'] {
+  padding-bottom: 8px !important;
+}
+
+/* Brand ------------------------------------------------------------------- */
+.sidebar-astryx-brand {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.sidebar-astryx-logo {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+  margin: 0 !important;
+  display: grid;
+  place-items: center;
+  transform: none !important;
+}
+
+/*
+ * Expanded: sticky section starts at x=8, then 2px before a 36px logo box.
+ * 8 + 2 + 18 = 28px, exactly matching the collapsed rail centerline.
+ */
+.sidebar-hover-shell.expanded .sidebar-astryx-brand {
+  justify-content: flex-start !important;
+  padding-inline: 2px 0 !important;
+}
+
+/* Collapsed: 40px remains after the 8px side gutters; center the 36px box in it. */
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand {
+  justify-content: center !important;
+  padding: 0 !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-logo {
+  margin-inline: auto !important;
+}
+
+/* Navigation --------------------------------------------------------------- */
+/*
+ * Astryx changes the item padding when SideNav collapses. Override both states
+ * so row height and icon position are deterministic.
+ */
+.flowlane-side-nav [class*='scrollable'] button,
+.flowlane-side-nav [class*='scrollable'] [role='button'] {
+  box-sizing: border-box !important;
+  min-height: var(--fl-sidebar-row) !important;
+  height: var(--fl-sidebar-row) !important;
+  flex-shrink: 0;
+}
+
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] button,
+.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] [role='button'] {
+  width: 36px !important;
+  min-width: 36px !important;
+  margin-inline: auto !important;
+  padding-inline: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+}
+
+/*
+ * Expanded item icon center:
+ * 8px section gutter + 11px item padding + 9px half of an 18px icon = 28px.
+ */
+.sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] button,
+.sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] [role='button'] {
+  width: 100% !important;
+  margin-inline: 0 !important;
+  padding-left: 11px !important;
+  padding-right: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+}
+
+/* Prevent SVG baseline/inline layout from introducing a 1–2px visual drift. */
+.flowlane-side-nav [class*='scrollable'] button svg,
+.flowlane-side-nav [class*='scrollable'] [role='button'] svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+/* Footer ------------------------------------------------------------------- */
+.sidebar-footer-stack {
+  width: 100%;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-footer-stack,
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row,
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+  width: 100%;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row {
+  padding-inline: 0 !important;
+  align-items: center;
+}
+
+.sidebar-hover-shell.expanded .sidebar-utility-row {
+  padding-left: 2px !important;
+  padding-right: 0 !important;
+  align-items: center;
+}
+
+/* Avatar follows the same 28px centerline as the brand and nav icons. */
+.sidebar-hover-shell.expanded .sidebar-astryx-user {
+  box-sizing: border-box;
+  padding-left: 5px !important;
+  padding-right: 0 !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding-inline: 0 !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-avatar {
+  margin-inline: auto !important;
+}
+
+/* Keep labels from affecting icon geometry while the width is animating. */
+.sidebar-astryx-brand-copy,
+.sidebar-astryx-user-copy {
+  min-width: 0;
+}
+
+@media (max-width: 620px) {
+  :root {
+    --fl-sidebar-rail: 54px;
+    --fl-sidebar-icon-center: 27px;
+  }
+
+  /* 8 + 1 + 18 = 27px on the slightly narrower mobile rail. */
+  .sidebar-hover-shell.expanded .sidebar-astryx-brand {
+    padding-left: 1px !important;
+  }
+
+  .sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] button,
+  .sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] [role='button'] {
+    padding-left: 10px !important;
+  }
+
+  .sidebar-hover-shell.expanded .sidebar-astryx-user {
+    padding-left: 4px !important;
+  }
+}
