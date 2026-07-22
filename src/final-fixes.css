@@ -180,8 +180,8 @@
   min-width: 170px;
 }
 
-/* Hide only the custom leading folder glyph; keep Astryx's dropdown affordance. */
-.board-switcher button svg:first-of-type:not(:last-of-type) {
+/* Remove only FlowLane's custom FolderKanban glyph. Astryx keeps its own caret. */
+.board-switcher .lucide-folder-kanban {
   display: none !important;
 }
 
