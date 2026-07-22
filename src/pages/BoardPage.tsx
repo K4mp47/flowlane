@@ -184,21 +184,23 @@ export function BoardPage() {
   }
 
   async function handleDragEnd(event: DragEndEvent) {
-    if (isReadOnly || !boardQuery.data?.board || !event.over) {
+    const data = boardQuery.data
+    const board = data?.board
+    if (isReadOnly || !data || !board || !event.over) {
       resetDrag()
       return
     }
 
     const activeId = String(event.active.id)
-    const originalTask = boardQuery.data.tasks.find((task) => task.id === activeId)
+    const originalTask = data.tasks.find((task) => task.id === activeId)
     const previewTask = dragTasks?.find((task) => task.id === activeId)
     if (!originalTask || !previewTask) {
       resetDrag()
       return
     }
 
-    const previousData = boardQuery.data
-    const boardId = previousData.board.id
+    const previousData = data
+    const boardId = board.id
     const nextTasks = previousData.tasks.map((task) => task.id === activeId ? previewTask : task)
     queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId, boardId), { ...previousData, tasks: nextTasks })
     resetDrag()
@@ -226,7 +228,7 @@ export function BoardPage() {
 
   const activeBoard = boardQuery.data.board
   const activeTask = activeTaskId ? (dragTasks ?? boardQuery.data.tasks).find((task) => task.id === activeTaskId) ?? null : null
-  const boardOptions = boardQuery.data.boards.map((board) => ({ value: board.id, label: board.name }))
+  const boardOptions = boardQuery.data.boards.map((boardEntry) => ({ value: boardEntry.id, label: boardEntry.name }))
   const workspaceOptions = memberships.map((entry) => ({ value: entry.workspace_id, label: entry.workspace.name }))
   const hasBoard = Boolean(activeBoard)
 
