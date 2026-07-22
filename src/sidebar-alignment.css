@@ -1,9 +1,9 @@
 /*
- * Sidebar geometry normalization.
+ * Sidebar geometry + reveal animation.
  *
- * The collapsed rail is the reference layout. Expanding the sidebar should only
- * reveal labels; it must not move the icon column. Keep every primary icon on
- * the same 28px centerline in both states.
+ * The reference sidebar does not resize/reflow its contents while expanding.
+ * It is laid out at full width and a mask reveals the extra area. FlowLane uses
+ * the same model here so the icon rail remains completely stationary.
  */
 
 :root {
@@ -12,23 +12,64 @@
   --fl-sidebar-gutter: 8px;
   --fl-sidebar-row: 36px;
   --fl-sidebar-icon-center: 28px;
+  --fl-sidebar-reveal-ease: cubic-bezier(.2, .8, .2, 1);
 }
 
-/* Keep the physical rail stable while the fixed SideNav grows over the page. */
+/* The application layout always reserves only the compact rail. */
 .sidebar-hover-shell {
   width: var(--fl-sidebar-rail) !important;
   min-width: var(--fl-sidebar-rail) !important;
+  overflow: visible;
 }
 
-.sidebar-hover-shell:not(.expanded) .flowlane-side-nav {
-  width: var(--fl-sidebar-rail) !important;
+/*
+ * Keep SideNav at its final expanded width in both states. Expansion is only a
+ * clip-path reveal, so its children never have to recalculate their x position.
+ */
+.sidebar-hover-shell .flowlane-side-nav {
+  width: var(--fl-sidebar-expanded) !important;
+  min-width: var(--fl-sidebar-expanded) !important;
+  max-width: var(--fl-sidebar-expanded) !important;
+  box-shadow: none !important;
+  will-change: clip-path;
+  clip-path: inset(0 calc(var(--fl-sidebar-expanded) - var(--fl-sidebar-rail)) 0 0);
+  transition:
+    clip-path 180ms var(--fl-sidebar-reveal-ease),
+    background-color 140ms ease !important;
 }
 
 .sidebar-hover-shell.expanded .flowlane-side-nav {
-  width: var(--fl-sidebar-expanded) !important;
+  clip-path: inset(0 0 0 0);
+  box-shadow: none !important;
 }
 
-/* Header, navigation list and footer all use the same horizontal inset. */
+:root[data-theme='dark'] .sidebar-hover-shell.expanded .flowlane-side-nav {
+  box-shadow: none !important;
+}
+
+/*
+ * While collapsed the SideNav's real right border is outside the clipping mask.
+ * Draw a rail-edge divider separately, then fade it when the full panel opens.
+ */
+.sidebar-hover-shell::after {
+  content: '';
+  position: fixed;
+  z-index: 101;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--fl-sidebar-rail) - 1px);
+  width: 1px;
+  pointer-events: none;
+  background: var(--fl-border);
+  opacity: 1;
+  transition: opacity 70ms linear;
+}
+
+.sidebar-hover-shell.expanded::after {
+  opacity: 0;
+}
+
+/* Header, navigation list and footer share exactly the same horizontal inset. */
 .flowlane-side-nav [class*='stickyTop'],
 .flowlane-side-nav [class*='scrollable'],
 .flowlane-side-nav [class*='stickyBottom'] {
@@ -36,7 +77,6 @@
   padding-inline: var(--fl-sidebar-gutter) !important;
 }
 
-/* Do not let the component library introduce state-specific vertical rhythm. */
 .flowlane-side-nav [class*='stickyTop'] {
   padding-top: 8px !important;
   padding-bottom: 5px !important;
@@ -57,8 +97,12 @@
   width: 100%;
   height: 40px;
   min-width: 0;
+  display: flex;
   align-items: center;
+  justify-content: flex-start !important;
   gap: 10px;
+  padding-inline: 2px 0 !important;
+  overflow: hidden;
 }
 
 .sidebar-astryx-logo {
@@ -71,57 +115,44 @@
   transform: none !important;
 }
 
-/*
- * Expanded: sticky section starts at x=8, then 2px before a 36px logo box.
- * 8 + 2 + 18 = 28px, exactly matching the collapsed rail centerline.
- */
-.sidebar-hover-shell.expanded .sidebar-astryx-brand {
-  justify-content: flex-start !important;
-  padding-inline: 2px 0 !important;
+.sidebar-astryx-logo svg {
+  display: block;
 }
 
-/* Collapsed: 40px remains after the 8px side gutters; center the 36px box in it. */
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand {
-  justify-content: center !important;
-  padding: 0 !important;
+/* Text appears quickly after the reveal starts, matching the reference timing. */
+.sidebar-astryx-brand-copy,
+.sidebar-astryx-user-copy {
+  min-width: 0;
+  max-width: 160px !important;
+  opacity: 1;
+  transform: translateX(0) !important;
+  transition:
+    opacity 105ms ease 35ms,
+    transform 140ms var(--fl-sidebar-reveal-ease) 20ms !important;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-logo {
-  margin-inline: auto !important;
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand-copy,
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user-copy {
+  opacity: 0;
+  transform: translateX(-3px) !important;
+  transition:
+    opacity 65ms linear,
+    transform 90ms ease !important;
+  pointer-events: none;
 }
 
 /* Navigation --------------------------------------------------------------- */
 /*
- * Astryx changes the item padding when SideNav collapses. Override both states
- * so row height and icon position are deterministic.
+ * Critically, item geometry is identical in both states. Astryx may hide/show
+ * its labels based on its collapsed state, but the row and icon never reflow.
  */
 .flowlane-side-nav [class*='scrollable'] button,
 .flowlane-side-nav [class*='scrollable'] [role='button'] {
   box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
   min-height: var(--fl-sidebar-row) !important;
   height: var(--fl-sidebar-row) !important;
-  flex-shrink: 0;
-}
-
-.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] button,
-.sidebar-hover-shell:not(.expanded) .flowlane-side-nav [class*='scrollable'] [role='button'] {
-  width: 36px !important;
-  min-width: 36px !important;
-  margin-inline: auto !important;
-  padding-inline: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 0 !important;
-}
-
-/*
- * Expanded item icon center:
- * 8px section gutter + 11px item padding + 9px half of an 18px icon = 28px.
- */
-.sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] button,
-.sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] [role='button'] {
-  width: 100% !important;
   margin-inline: 0 !important;
   padding-left: 11px !important;
   padding-right: 10px !important;
@@ -129,9 +160,9 @@
   align-items: center !important;
   justify-content: flex-start !important;
   gap: 10px !important;
+  flex-shrink: 0;
 }
 
-/* Prevent SVG baseline/inline layout from introducing a 1–2px visual drift. */
 .flowlane-side-nav [class*='scrollable'] button svg,
 .flowlane-side-nav [class*='scrollable'] [role='button'] svg {
   display: block;
@@ -143,64 +174,62 @@
   width: 100%;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-footer-stack,
-.sidebar-hover-shell:not(.expanded) .sidebar-utility-row,
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+.sidebar-utility-row {
   width: 100%;
-}
-
-.sidebar-hover-shell:not(.expanded) .sidebar-utility-row {
-  padding-inline: 0 !important;
-  align-items: center;
-}
-
-.sidebar-hover-shell.expanded .sidebar-utility-row {
   padding-left: 2px !important;
   padding-right: 0 !important;
   align-items: center;
+  justify-content: flex-start !important;
 }
 
-/* Avatar follows the same 28px centerline as the brand and nav icons. */
-.sidebar-hover-shell.expanded .sidebar-astryx-user {
+.sidebar-astryx-user {
   box-sizing: border-box;
+  width: 100%;
   padding-left: 5px !important;
   padding-right: 0 !important;
+  display: flex !important;
+  align-items: center;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
-  width: 100%;
-  display: grid;
-  place-items: center;
-  padding-inline: 0 !important;
+.sidebar-astryx-avatar {
+  margin: 0 !important;
+  flex: 0 0 30px;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-avatar {
-  margin-inline: auto !important;
+/*
+ * In compact mode, extra footer content is simply outside the reveal mask. Keep
+ * sign-out hidden as before so it cannot receive focus while clipped.
+ */
+.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user > button {
+  display: none;
 }
 
-/* Keep labels from affecting icon geometry while the width is animating. */
-.sidebar-astryx-brand-copy,
-.sidebar-astryx-user-copy {
-  min-width: 0;
-}
-
+/* Keep the reveal snappy on smaller screens as well. */
 @media (max-width: 620px) {
   :root {
     --fl-sidebar-rail: 54px;
     --fl-sidebar-icon-center: 27px;
   }
 
-  /* 8 + 1 + 18 = 27px on the slightly narrower mobile rail. */
-  .sidebar-hover-shell.expanded .sidebar-astryx-brand {
+  .sidebar-astryx-brand {
     padding-left: 1px !important;
   }
 
-  .sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] button,
-  .sidebar-hover-shell.expanded .flowlane-side-nav [class*='scrollable'] [role='button'] {
+  .flowlane-side-nav [class*='scrollable'] button,
+  .flowlane-side-nav [class*='scrollable'] [role='button'] {
     padding-left: 10px !important;
   }
 
-  .sidebar-hover-shell.expanded .sidebar-astryx-user {
+  .sidebar-astryx-user {
     padding-left: 4px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-hover-shell .flowlane-side-nav,
+  .sidebar-hover-shell::after,
+  .sidebar-astryx-brand-copy,
+  .sidebar-astryx-user-copy {
+    transition: none !important;
   }
 }
