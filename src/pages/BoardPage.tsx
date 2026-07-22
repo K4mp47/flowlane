@@ -16,7 +16,7 @@ import { Badge } from '@astryxdesign/core/Badge'
 import { Selector } from '@astryxdesign/core/Selector'
 import { TextInput } from '@astryxdesign/core/TextInput'
 import { useQueryClient } from '@tanstack/react-query'
-import { FolderKanban, Plus, Search, SlidersHorizontal } from 'lucide-react'
+import { Building2, FolderKanban, Plus, Search, SlidersHorizontal } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { can } from '../auth/permissions'
 import { AppSidebar } from '../components/AppSidebar'
@@ -40,7 +40,7 @@ const priorityOptions = [
 ]
 
 export function BoardPage() {
-  const { membership, role, user } = useAuth()
+  const { membership, memberships, selectWorkspace, role, user } = useAuth()
   const workspaceId = membership!.workspace_id
   const [selectedBoardId, setSelectedBoardId] = useState<string | null>(() => window.localStorage.getItem(`flowlane-board-${workspaceId}`))
   const boardQuery = useBoardData(workspaceId, role, selectedBoardId)
@@ -64,10 +64,18 @@ export function BoardPage() {
   const isReadOnly = !can(role, 'task:move')
 
   useEffect(() => {
-    if (!boardQuery.data?.board.id) return
-    window.localStorage.setItem(`flowlane-board-${workspaceId}`, boardQuery.data.board.id)
-    if (selectedBoardId !== boardQuery.data.board.id) setSelectedBoardId(boardQuery.data.board.id)
-  }, [boardQuery.data?.board.id, selectedBoardId, workspaceId])
+    setSelectedBoardId(window.localStorage.getItem(`flowlane-board-${workspaceId}`))
+    setSelectedTask(null)
+    setEditingTask(null)
+    setIsTaskFormOpen(false)
+  }, [workspaceId])
+
+  useEffect(() => {
+    const boardId = boardQuery.data?.board?.id
+    if (!boardId) return
+    window.localStorage.setItem(`flowlane-board-${workspaceId}`, boardId)
+    if (selectedBoardId !== boardId) setSelectedBoardId(boardId)
+  }, [boardQuery.data?.board?.id, selectedBoardId, workspaceId])
 
   useEffect(() => {
     const channel = supabase
@@ -78,11 +86,12 @@ export function BoardPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'task_assignees' }, () => {
         void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_members' }, () => {
+        void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
+      })
       .subscribe()
 
-    return () => {
-      void supabase.removeChannel(channel)
-    }
+    return () => { void supabase.removeChannel(channel) }
   }, [queryClient, workspaceId])
 
   const visibleTasks = useMemo(() => {
@@ -90,9 +99,7 @@ export function BoardPage() {
     if (!data) return []
     const tasks = dragTasks ?? data.tasks
     const normalizedSearch = search.trim().toLowerCase()
-    const myTaskIds = new Set(
-      data.assignees.filter((entry) => entry.user_id === user?.id).map((entry) => entry.task_id),
-    )
+    const myTaskIds = new Set(data.assignees.filter((entry) => entry.user_id === user?.id).map((entry) => entry.task_id))
 
     return tasks.filter((task) => {
       if (view === 'mine' && !myTaskIds.has(task.id)) return false
@@ -109,19 +116,20 @@ export function BoardPage() {
         .from('notifications')
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user!.id)
+        .eq('workspace_id', workspaceId)
         .is('read_at', null)
       setUnreadCount(count ?? 0)
     }
     void loadUnreadCount()
     const channel = supabase
-      .channel(`notification-count-${user!.id}`)
+      .channel(`notification-count-${user!.id}-${workspaceId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user!.id}` }, () => void loadUnreadCount())
       .subscribe()
     return () => { void supabase.removeChannel(channel) }
-  }, [role, user])
+  }, [role, user, workspaceId])
 
   function resolvePreviewPosition(tasks: Task[], activeId: string, overId: string, activeTop?: number, overTop?: number, overHeight?: number) {
-    if (!boardQuery.data) return null
+    if (!boardQuery.data?.board) return null
     const targetTask = tasks.find((task) => task.id === overId)
     const targetColumn = boardQuery.data.columns.find((column) => column.id === overId)
     const columnId = targetTask?.column_id ?? targetColumn?.id
@@ -132,10 +140,7 @@ export function BoardPage() {
       .sort((a, b) => a.position - b.position)
 
     if (!targetTask) {
-      return {
-        columnId,
-        position: columnTasks.length ? columnTasks[columnTasks.length - 1].position + 1000 : 1000,
-      }
+      return { columnId, position: columnTasks.length ? columnTasks[columnTasks.length - 1].position + 1000 : 1000 }
     }
 
     const targetIndex = columnTasks.findIndex((task) => task.id === targetTask.id)
@@ -152,7 +157,7 @@ export function BoardPage() {
   }
 
   function handleDragStart(event: DragStartEvent) {
-    if (isReadOnly || !boardQuery.data) return
+    if (isReadOnly || !boardQuery.data?.board) return
     setActiveTaskId(String(event.active.id))
     setDragTasks(boardQuery.data.tasks)
     setBoardError(null)
@@ -169,9 +174,7 @@ export function BoardPage() {
       const activeTop = event.active.rect.current.translated?.top
       const resolved = resolvePreviewPosition(current, activeId, overId, activeTop, event.over?.rect.top, event.over?.rect.height)
       if (!resolved) return current
-      return current.map((task) => task.id === activeId
-        ? { ...task, column_id: resolved.columnId, position: resolved.position }
-        : task)
+      return current.map((task) => task.id === activeId ? { ...task, column_id: resolved.columnId, position: resolved.position } : task)
     })
   }
 
@@ -181,33 +184,32 @@ export function BoardPage() {
   }
 
   async function handleDragEnd(event: DragEndEvent) {
-    if (isReadOnly || !boardQuery.data || !event.over) {
+    const data = boardQuery.data
+    const board = data?.board
+    if (isReadOnly || !data || !board || !event.over) {
       resetDrag()
       return
     }
 
     const activeId = String(event.active.id)
-    const originalTask = boardQuery.data.tasks.find((task) => task.id === activeId)
+    const originalTask = data.tasks.find((task) => task.id === activeId)
     const previewTask = dragTasks?.find((task) => task.id === activeId)
     if (!originalTask || !previewTask) {
       resetDrag()
       return
     }
 
-    const previousData = boardQuery.data
+    const previousData = data
+    const boardId = board.id
     const nextTasks = previousData.tasks.map((task) => task.id === activeId ? previewTask : task)
-    queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId, previousData.board.id), { ...previousData, tasks: nextTasks })
+    queryClient.setQueryData<BoardData>(boardQueryKey(workspaceId, boardId), { ...previousData, tasks: nextTasks })
     resetDrag()
 
     if (originalTask.column_id === previewTask.column_id && originalTask.position === previewTask.position) return
 
-    const { error } = await supabase
-      .from('tasks')
-      .update({ column_id: previewTask.column_id, position: previewTask.position })
-      .eq('id', activeId)
-
+    const { error } = await supabase.from('tasks').update({ column_id: previewTask.column_id, position: previewTask.position }).eq('id', activeId)
     if (error) {
-      queryClient.setQueryData(boardQueryKey(workspaceId, previousData.board.id), previousData)
+      queryClient.setQueryData(boardQueryKey(workspaceId, boardId), previousData)
       setBoardError(error.message)
       return
     }
@@ -215,8 +217,8 @@ export function BoardPage() {
     void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
   }
 
-  if (boardQuery.isLoading) return <main className="board-loading">Loading board…</main>
-  if (boardQuery.error || !boardQuery.data) return <main className="board-loading">Unable to load the board.</main>
+  if (boardQuery.isLoading) return <main className="board-loading">Loading workspace…</main>
+  if (boardQuery.error || !boardQuery.data) return <main className="board-loading">Unable to load the workspace.</main>
 
   function openTaskFromNotification(taskId: string) {
     const task = boardQuery.data?.tasks.find((entry) => entry.id === taskId) ?? null
@@ -224,8 +226,11 @@ export function BoardPage() {
     setIsNotificationsOpen(false)
   }
 
+  const activeBoard = boardQuery.data.board
   const activeTask = activeTaskId ? (dragTasks ?? boardQuery.data.tasks).find((task) => task.id === activeTaskId) ?? null : null
-  const boardOptions = boardQuery.data.boards.map((board) => ({ value: board.id, label: board.name }))
+  const boardOptions = boardQuery.data.boards.map((boardEntry) => ({ value: boardEntry.id, label: boardEntry.name }))
+  const workspaceOptions = memberships.map((entry) => ({ value: entry.workspace_id, label: entry.workspace.name }))
+  const hasBoard = Boolean(activeBoard)
 
   return (
     <div className="app-frame">
@@ -234,84 +239,85 @@ export function BoardPage() {
         <header className="board-toolbar">
           <div className="board-heading">
             <div className="board-title-line">
-              <h1>{boardQuery.data.board.name}</h1>
+              <h1>{activeBoard?.name ?? membership!.workspace.name}</h1>
               <Badge label={role ?? 'MEMBER'} variant={role === 'VIEWER' ? 'neutral' : 'blue'} />
             </div>
-            <p>{view === 'mine' ? 'Tasks assigned to you' : view === 'projects' ? 'Project boards and workflow spaces' : view === 'team' ? 'Workspace members and access' : 'Department workflow'}</p>
+            <p>{view === 'mine' ? 'Tasks assigned to you' : view === 'projects' ? 'Project boards and workflow spaces' : view === 'team' ? 'Workspace members and access' : hasBoard ? 'Department workflow' : 'Workspace ready · no project required'}</p>
           </div>
-          {view !== 'team' && view !== 'projects' ? <div className="toolbar-actions">
-            {boardQuery.data.boards.length > 1 ? (
-              <div className="board-switcher astryx-toolbar-control">
+
+          <div className="toolbar-actions">
+            {memberships.length > 1 ? (
+              <div className="workspace-switcher astryx-toolbar-control">
                 <Selector
-                  label="Project board"
+                  label="Workspace"
                   isLabelHidden
-                  options={boardOptions}
-                  value={boardQuery.data.board.id}
-                  onChange={(value) => { setSelectedBoardId(value); setView('board') }}
-                  startIcon={<FolderKanban size={15} />}
+                  options={workspaceOptions}
+                  value={workspaceId}
+                  onChange={(value) => { selectWorkspace(value); setView('board') }}
+                  startIcon={<Building2 size={15} />}
                   width="100%"
                 />
               </div>
             ) : null}
-            <div className="search-control">
-              <TextInput
-                label="Search tasks"
-                isLabelHidden
-                value={search}
-                onChange={setSearch}
-                placeholder="Search tasks…"
-                startIcon={Search}
-                hasClear
-              />
-            </div>
-            <div className="priority-selector astryx-toolbar-control">
-              <Selector
-                label="Priority"
-                isLabelHidden
-                options={priorityOptions}
-                value={priority}
-                onChange={(value) => setPriority(value as TaskPriority | 'ALL')}
-                startIcon={<SlidersHorizontal size={15} />}
-                width="100%"
-              />
-            </div>
-            {can(role, 'task:create') ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}
-          </div> : null}
+
+            {view !== 'team' && view !== 'projects' && hasBoard ? (
+              <>
+                {boardQuery.data.boards.length > 1 ? (
+                  <div className="board-switcher astryx-toolbar-control">
+                    <Selector
+                      label="Project board"
+                      isLabelHidden
+                      options={boardOptions}
+                      value={activeBoard!.id}
+                      onChange={(value) => { setSelectedBoardId(value); setView('board') }}
+                      startIcon={<FolderKanban size={15} />}
+                      width="100%"
+                    />
+                  </div>
+                ) : null}
+                <div className="search-control">
+                  <TextInput label="Search tasks" isLabelHidden value={search} onChange={setSearch} placeholder="Search tasks…" startIcon={Search} hasClear />
+                </div>
+                <div className="priority-selector astryx-toolbar-control">
+                  <Selector label="Priority" isLabelHidden options={priorityOptions} value={priority} onChange={(value) => setPriority(value as TaskPriority | 'ALL')} startIcon={<SlidersHorizontal size={15} />} width="100%" />
+                </div>
+                {can(role, 'task:create') ? <Button label="New task" variant="primary" icon={<Plus size={17} />} onClick={() => { setEditingTask(null); setIsTaskFormOpen(true) }} /> : null}
+              </>
+            ) : null}
+          </div>
         </header>
 
-        {role === 'VIEWER' ? (
-          <div className="viewer-banner">Read-only Viewer mode · You can inspect the live Kanban board but cannot modify workflow data.</div>
-        ) : null}
+        {role === 'VIEWER' && hasBoard ? <div className="viewer-banner">Read-only Viewer mode · You can inspect the live Kanban board but cannot modify workflow data.</div> : null}
         {boardError ? <div className="board-error">{boardError}</div> : null}
 
         {view === 'team' && role === 'ADMIN' ? (
           <div className="kanban-scroll">
-            <TeamPanel
-              workspaceId={workspaceId}
-              profiles={boardQuery.data.profiles}
-              members={boardQuery.data.members}
-              onInvited={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }}
-            />
+            <TeamPanel workspaceId={workspaceId} profiles={boardQuery.data.profiles} members={boardQuery.data.members} onInvited={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }} />
           </div>
         ) : view === 'projects' && role === 'ADMIN' ? (
           <div className="kanban-scroll">
             <ProjectsPanel
               workspaceId={workspaceId}
               boards={boardQuery.data.boards}
-              activeBoardId={boardQuery.data.board.id}
+              activeBoardId={activeBoard?.id}
               onSelectBoard={(boardId) => { setSelectedBoardId(boardId); setView('board') }}
               onChanged={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }}
             />
           </div>
+        ) : !hasBoard ? (
+          <div className="workspace-empty-shell">
+            <div className="workspace-empty-card">
+              <span className="workspace-empty-icon"><FolderKanban size={24} /></span>
+              <div>
+                <p className="eyebrow">Workspace ready</p>
+                <h2>No projects yet</h2>
+                <p>Your account and team are fully usable without a project. Create a Kanban project only when you need one.</p>
+              </div>
+              {role === 'ADMIN' ? <Button label="Create first project" variant="primary" icon={<Plus size={17} />} onClick={() => setView('projects')} /> : <span className="muted">An admin can create the first shared project whenever the team is ready.</span>}
+            </div>
+          </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCorners}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragCancel={resetDrag}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragCancel={resetDrag} onDragEnd={handleDragEnd}>
             <div className="kanban-scroll">
               <div className="kanban-grid">
                 {boardQuery.data.columns.map((column) => (
@@ -329,14 +335,7 @@ export function BoardPage() {
               </div>
             </div>
             <DragOverlay dropAnimation={{ duration: 180, easing: 'cubic-bezier(.2,.8,.2,1)' }}>
-              {activeTask ? (
-                <TaskCardOverlay
-                  task={activeTask}
-                  taskType={boardQuery.data.taskTypes.find((type) => type.id === activeTask.task_type_id)}
-                  assignees={boardQuery.data.assignees}
-                  profiles={boardQuery.data.profiles}
-                />
-              ) : null}
+              {activeTask ? <TaskCardOverlay task={activeTask} taskType={boardQuery.data.taskTypes.find((type) => type.id === activeTask.task_type_id)} assignees={boardQuery.data.assignees} profiles={boardQuery.data.profiles} /> : null}
             </DragOverlay>
           </DndContext>
         )}
@@ -354,16 +353,16 @@ export function BoardPage() {
             onEdit={() => { setEditingTask(selectedTask); setSelectedTask(null); setIsTaskFormOpen(true) }}
             onChanged={async () => {
               await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
-              const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId, boardQuery.data?.board.id))
+              const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId, activeBoard?.id))
               if (fresh) setSelectedTask(fresh.tasks.find((task) => task.id === selectedTask.id) ?? null)
             }}
           />
         ) : null}
 
-        {isTaskFormOpen ? (
+        {isTaskFormOpen && activeBoard ? (
           <TaskFormModal
             workspaceId={workspaceId}
-            boardId={boardQuery.data.board.id}
+            boardId={activeBoard.id}
             creatorId={user!.id}
             backlogColumn={boardQuery.data.columns.find((column) => column.workflow_stage === 'BACKLOG')!}
             taskTypes={boardQuery.data.taskTypes}
@@ -374,13 +373,7 @@ export function BoardPage() {
         ) : null}
 
         {isNotificationsOpen && role !== 'VIEWER' ? (
-          <NotificationsPanel
-            userId={user!.id}
-            workspaceId={workspaceId}
-            onClose={() => setIsNotificationsOpen(false)}
-            onOpenTask={openTaskFromNotification}
-            onUnreadCountChange={setUnreadCount}
-          />
+          <NotificationsPanel userId={user!.id} workspaceId={workspaceId} onClose={() => setIsNotificationsOpen(false)} onOpenTask={openTaskFromNotification} onUnreadCountChange={setUnreadCount} />
         ) : null}
       </main>
     </div>

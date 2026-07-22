@@ -16,11 +16,13 @@ interface AuthContextValue {
   user: User | null
   profile: Profile | null
   membership: WorkspaceMembership | null
+  memberships: WorkspaceMembership[]
   role: WorkspaceRole | null
   isLoading: boolean
   isPasswordRecovery: boolean
   isInviteOnboarding: boolean
   refreshMembership: () => Promise<void>
+  selectWorkspace: (workspaceId: string) => void
   signOut: () => Promise<void>
   completePasswordRecovery: (password: string) => Promise<void>
   completeInviteOnboarding: (password: string, displayName: string) => Promise<void>
@@ -28,58 +30,73 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-async function fetchWorkspaceMembership(userId: string): Promise<WorkspaceMembership | null> {
+async function fetchWorkspaceMemberships(userId: string): Promise<WorkspaceMembership[]> {
   const { data: membershipRows, error: membershipError } = await supabase
     .from('workspace_members')
-    .select('workspace_id,user_id,role')
+    .select('workspace_id,user_id,role,joined_at')
     .eq('user_id', userId)
     .order('joined_at', { ascending: true })
-    .limit(1)
 
   if (membershipError) throw membershipError
-  const membership = membershipRows?.[0]
-  if (!membership) return null
+  if (!membershipRows?.length) return []
 
-  const { data: workspace, error: workspaceError } = await supabase
+  const workspaceIds = membershipRows.map((row) => row.workspace_id)
+  const { data: workspaceRows, error: workspaceError } = await supabase
     .from('workspaces')
     .select('id,name,created_by')
-    .eq('id', membership.workspace_id)
-    .single()
+    .in('id', workspaceIds)
 
   if (workspaceError) throw workspaceError
+  const workspaces = new Map((workspaceRows ?? []).map((workspace) => [workspace.id, workspace as Workspace]))
 
-  return {
-    workspace_id: membership.workspace_id,
-    user_id: membership.user_id,
-    role: membership.role as WorkspaceRole,
-    workspace: workspace as Workspace,
-  }
+  return membershipRows.flatMap((row) => {
+    const workspace = workspaces.get(row.workspace_id)
+    if (!workspace) return []
+    return [{
+      workspace_id: row.workspace_id,
+      user_id: row.user_id,
+      role: row.role as WorkspaceRole,
+      workspace,
+    }]
+  })
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [membership, setMembership] = useState<WorkspaceMembership | null>(null)
+  const [memberships, setMemberships] = useState<WorkspaceMembership[]>([])
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(() => window.localStorage.getItem('flowlane-active-workspace'))
   const [isLoading, setIsLoading] = useState(true)
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
+
+  const membership = useMemo(() => {
+    if (!memberships.length) return null
+    return memberships.find((item) => item.workspace_id === activeWorkspaceId) ?? memberships[0]
+  }, [activeWorkspaceId, memberships])
+
+  useEffect(() => {
+    if (!membership) return
+    if (activeWorkspaceId !== membership.workspace_id) setActiveWorkspaceId(membership.workspace_id)
+    window.localStorage.setItem('flowlane-active-workspace', membership.workspace_id)
+  }, [activeWorkspaceId, membership])
 
   const hydrateUser = useCallback(async (nextSession: Session | null) => {
     setSession(nextSession)
     if (!nextSession?.user) {
       setProfile(null)
-      setMembership(null)
+      setMemberships([])
       return
     }
 
     const userId = nextSession.user.id
     const [{ data: profileData, error: profileError }, membershipData] = await Promise.all([
       supabase.from('profiles').select('id,email,display_name,avatar_url').eq('id', userId).maybeSingle(),
-      fetchWorkspaceMembership(userId),
+      fetchWorkspaceMemberships(userId),
     ])
 
     if (profileError) throw profileError
     setProfile((profileData as Profile | null) ?? null)
-    setMembership(membershipData)
+    setMemberships(membershipData)
   }, [])
 
   useEffect(() => {
@@ -110,9 +127,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const refreshMembership = useCallback(async () => {
     if (!session?.user) return
-    const nextMembership = await fetchWorkspaceMembership(session.user.id)
-    setMembership(nextMembership)
+    setMemberships(await fetchWorkspaceMemberships(session.user.id))
   }, [session?.user])
+
+  const selectWorkspace = useCallback((workspaceId: string) => {
+    if (!memberships.some((item) => item.workspace_id === workspaceId)) return
+    setActiveWorkspaceId(workspaceId)
+    window.localStorage.setItem('flowlane-active-workspace', workspaceId)
+  }, [memberships])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
@@ -129,19 +151,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     const { error: authError } = await supabase.auth.updateUser({
       password,
-      data: {
-        ...session.user.user_metadata,
-        onboarding_required: false,
-      },
+      data: { ...session.user.user_metadata, onboarding_required: false },
     })
     if (authError) throw authError
 
     const cleanName = displayName.trim()
     if (cleanName) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ display_name: cleanName })
-        .eq('id', session.user.id)
+      const { error: profileError } = await supabase.from('profiles').update({ display_name: cleanName }).eq('id', session.user.id)
       if (profileError) throw profileError
     }
 
@@ -166,15 +182,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
     user: session?.user ?? null,
     profile,
     membership,
+    memberships,
     role: membership?.role ?? null,
     isLoading,
     isPasswordRecovery,
     isInviteOnboarding,
     refreshMembership,
+    selectWorkspace,
     signOut,
     completePasswordRecovery,
     completeInviteOnboarding,
-  }), [session, profile, membership, isLoading, isPasswordRecovery, isInviteOnboarding, refreshMembership, signOut, completePasswordRecovery, completeInviteOnboarding])
+  }), [session, profile, membership, memberships, isLoading, isPasswordRecovery, isInviteOnboarding, refreshMembership, selectWorkspace, signOut, completePasswordRecovery, completeInviteOnboarding])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

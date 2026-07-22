@@ -11,7 +11,7 @@ import type {
 } from '../../types/domain'
 
 export interface BoardData {
-  board: Board
+  board: Board | null
   boards: Board[]
   columns: BoardColumn[]
   tasks: Task[]
@@ -35,52 +35,25 @@ async function fetchBoardData(workspaceId: string, requestedBoardId?: string | n
   const board = boards.find((entry) => entry.id === requestedBoardId)
     ?? boards.find((entry) => entry.is_default)
     ?? boards[0]
+    ?? null
 
-  if (!board) throw new Error('This workspace does not have a board yet.')
-
-  const [columnsResult, tasksResult, taskTypesResult] = await Promise.all([
-    supabase
-      .from('board_columns')
-      .select('id,board_id,name,workflow_stage,position')
-      .eq('board_id', board.id)
-      .order('position', { ascending: true }),
-    supabase
-      .from('tasks')
-      .select('*')
-      .eq('board_id', board.id)
-      .order('position', { ascending: true }),
+  const [taskTypesResult, membersResult] = await Promise.all([
     supabase
       .from('task_types')
       .select('id,workspace_id,name,description')
       .eq('workspace_id', workspaceId)
       .order('name', { ascending: true }),
+    supabase
+      .from('workspace_members')
+      .select('user_id,role')
+      .eq('workspace_id', workspaceId),
   ])
 
-  if (columnsResult.error) throw columnsResult.error
-  if (tasksResult.error) throw tasksResult.error
   if (taskTypesResult.error) throw taskTypesResult.error
+  if (membersResult.error) throw membersResult.error
 
-  const tasks = (tasksResult.data ?? []) as Task[]
-  const taskIds = tasks.map((task) => task.id)
-
-  let assignees: TaskAssignee[] = []
-  if (taskIds.length > 0) {
-    const { data, error } = await supabase
-      .from('task_assignees')
-      .select('task_id,user_id,assigned_by,assigned_at')
-      .in('task_id', taskIds)
-    if (error) throw error
-    assignees = (data ?? []) as TaskAssignee[]
-  }
-
-  const { data: memberRows, error: membersError } = await supabase
-    .from('workspace_members')
-    .select('user_id,role')
-    .eq('workspace_id', workspaceId)
-
-  if (membersError) throw membersError
-
-  const memberIds = (memberRows ?? []).map((row) => row.user_id)
+  const memberRows = membersResult.data ?? []
+  const memberIds = memberRows.map((row) => row.user_id)
   let profiles: Profile[] = []
   if (memberIds.length > 0) {
     const { data, error } = await supabase
@@ -91,6 +64,47 @@ async function fetchBoardData(workspaceId: string, requestedBoardId?: string | n
     profiles = (data ?? []) as Profile[]
   }
 
+  if (!board) {
+    return {
+      board: null,
+      boards,
+      columns: [],
+      tasks: [],
+      taskTypes: (taskTypesResult.data ?? []) as TaskType[],
+      assignees: [],
+      profiles,
+      members: memberRows.map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
+    }
+  }
+
+  const [columnsResult, tasksResult] = await Promise.all([
+    supabase
+      .from('board_columns')
+      .select('id,board_id,name,workflow_stage,position')
+      .eq('board_id', board.id)
+      .order('position', { ascending: true }),
+    supabase
+      .from('tasks')
+      .select('*')
+      .eq('board_id', board.id)
+      .order('position', { ascending: true }),
+  ])
+
+  if (columnsResult.error) throw columnsResult.error
+  if (tasksResult.error) throw tasksResult.error
+
+  const tasks = (tasksResult.data ?? []) as Task[]
+  const taskIds = tasks.map((task) => task.id)
+  let assignees: TaskAssignee[] = []
+  if (taskIds.length > 0) {
+    const { data, error } = await supabase
+      .from('task_assignees')
+      .select('task_id,user_id,assigned_by,assigned_at')
+      .in('task_id', taskIds)
+    if (error) throw error
+    assignees = (data ?? []) as TaskAssignee[]
+  }
+
   return {
     board,
     boards,
@@ -99,7 +113,7 @@ async function fetchBoardData(workspaceId: string, requestedBoardId?: string | n
     taskTypes: (taskTypesResult.data ?? []) as TaskType[],
     assignees,
     profiles,
-    members: (memberRows ?? []).map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
+    members: memberRows.map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
   }
 }
 

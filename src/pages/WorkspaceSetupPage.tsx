@@ -8,7 +8,7 @@ import { FloatingThemeToggle } from '../components/FloatingThemeToggle'
 
 export function WorkspaceSetupPage() {
   const { user, refreshMembership, signOut } = useAuth()
-  const [name, setName] = useState('KanBan Tutondo')
+  const [name, setName] = useState('My workspace')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -35,19 +35,19 @@ export function WorkspaceSetupPage() {
     <>
       <FloatingThemeToggle />
       <main className="centered-page">
-      <form className="surface-card compact-form" onSubmit={createWorkspace}>
-        <div className="brand-mark"><Building2 size={20} /></div>
-        <div>
-          <p className="eyebrow">First-time setup</p>
-          <h2>Create the FlowLane workspace</h2>
-          <p className="muted">The first workspace creator becomes its Admin. FlowLane will create the standard Kanban columns and task types automatically.</p>
-        </div>
-        <TextInput label="Workspace name" value={name} onChange={setName} isRequired />
-        {error ? <div className="inline-alert error-alert">{error}</div> : null}
-        <Button label="Create workspace" variant="primary" type="submit" width="100%" isLoading={isLoading} />
-        <button className="text-button" type="button" onClick={() => void signOut()}>Sign out</button>
-      </form>
-    </main>
+        <form className="surface-card compact-form" onSubmit={createWorkspace}>
+          <div className="brand-mark"><Building2 size={20} /></div>
+          <div>
+            <p className="eyebrow">First-time setup</p>
+            <h2>Create your FlowLane workspace</h2>
+            <p className="muted">A workspace is your team space. Projects are optional: you can invite teammates and use FlowLane before creating any Kanban board.</p>
+          </div>
+          <TextInput label="Workspace name" value={name} onChange={setName} isRequired />
+          {error ? <div className="inline-alert error-alert">{error}</div> : null}
+          <Button label="Create workspace" variant="primary" type="submit" width="100%" isLoading={isLoading} />
+          <button className="text-button" type="button" onClick={() => void signOut()}>Sign out</button>
+        </form>
+      </main>
     </>
   )
 }
