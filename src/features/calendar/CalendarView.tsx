@@ -64,7 +64,7 @@ export function CalendarView({ workspaceId, userId, role, onOpenTask }: Calendar
   async function reschedule(taskId: string, date: Date) {
     if (role === 'VIEWER') return
     setError(null)
-    const task = data.tasks.find((entry) => entry.id === taskId)
+    const task = query.data?.tasks.find((entry) => entry.id === taskId)
     const { error: updateError } = await supabase.from('tasks').update({ due_date: isoForDate(date) }).eq('id', taskId)
     if (updateError) { setError(updateError.message); return }
     await Promise.all([
