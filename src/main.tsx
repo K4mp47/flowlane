@@ -11,6 +11,7 @@ import './sidebar-polish.css'
 import './final-fixes.css'
 import './collaboration.css'
 import './sidebar-alignment.css'
+import './interaction-polish.css'
 import App from './App'
 
 const queryClient = new QueryClient({
