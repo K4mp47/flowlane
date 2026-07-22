@@ -13,6 +13,7 @@ interface KanbanColumnProps {
   checklistItems: ChecklistItem[]
   profiles: Profile[]
   isReadOnly: boolean
+  isDragTarget?: boolean
   onOpenTask: (task: Task) => void
 }
 
@@ -24,13 +25,14 @@ const stageIcon = {
   DONE: CircleCheckBig,
 } as const
 
-export function KanbanColumn({ column, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
+export function KanbanColumn({ column, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, isDragTarget = false, onOpenTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: 'column', columnId: column.id } })
   const StageIcon = stageIcon[column.workflow_stage]
   const stageClass = `stage-${column.workflow_stage.toLowerCase().replace('_', '-')}`
+  const highlighted = isOver || isDragTarget
 
   return (
-    <section className={isOver ? `kanban-column over ${stageClass}` : `kanban-column ${stageClass}`} data-stage={column.workflow_stage} ref={setNodeRef}>
+    <section className={highlighted ? `kanban-column over ${stageClass}` : `kanban-column ${stageClass}`} data-stage={column.workflow_stage} ref={setNodeRef}>
       <header className="column-header">
         <span className="column-stage-icon" aria-hidden="true"><StageIcon size={15} /></span>
         <strong>{column.name}</strong>
