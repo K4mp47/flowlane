@@ -34,7 +34,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
     >
       <SideNav
         className="flowlane-side-nav"
-        collapsible={{ isCollapsed: !isHovered, onCollapsedChange: (collapsed) => setIsHovered(!collapsed), hasButton: false }}
+        collapsible={{ isCollapsed: false, onCollapsedChange: () => undefined, hasButton: false }}
         header={(
           <div className="sidebar-astryx-brand">
             <span className="sidebar-astryx-logo" aria-hidden="true"><PocketKnife size={19} strokeWidth={2} /></span>

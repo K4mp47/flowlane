@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { AlertTriangle, ArrowRightLeft, Bell, CalendarClock, CheckCheck, FilePlus2, MessageSquare, PencilLine, Trash2, UserPlus, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
@@ -23,6 +23,8 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
   const [filter, setFilter] = useState<NotificationFilter>('ALL')
   const [error, setError] = useState<string | null>(null)
   const [isClearingAll, setIsClearingAll] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const closeTimerRef = useRef<number | null>(null)
 
   const loadNotifications = useCallback(async () => {
     const { data, error: queryError } = await supabase
@@ -53,11 +55,24 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
     return () => { void supabase.removeChannel(channel) }
   }, [loadNotifications, userId, workspaceId])
 
+  useEffect(() => () => {
+    if (closeTimerRef.current !== null) window.clearTimeout(closeTimerRef.current)
+  }, [])
+
   const visibleNotifications = useMemo(
     () => filter === 'UNREAD' ? notifications.filter((notification) => !notification.read_at) : notifications,
     [filter, notifications],
   )
   const unreadCount = notifications.filter((notification) => !notification.read_at).length
+
+  function beginClose(afterClose: () => void = onClose) {
+    if (isClosing) return
+    setIsClosing(true)
+    closeTimerRef.current = window.setTimeout(() => {
+      closeTimerRef.current = null
+      afterClose()
+    }, 190)
+  }
 
   async function markRead(notification: Notification) {
     if (!notification.read_at) {
@@ -67,7 +82,7 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
       setNotifications((current) => current.map((item) => item.id === notification.id ? { ...item, read_at: readAt } : item))
       onUnreadCountChange(Math.max(0, unreadCount - 1))
     }
-    if (notification.task_id) onOpenTask(notification.task_id)
+    if (notification.task_id) beginClose(() => onOpenTask(notification.task_id!))
   }
 
   async function markAllRead() {
@@ -116,15 +131,15 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
   }
 
   return (
-    <div className="task-peek-backdrop" onMouseDown={onClose}>
-      <aside className="notification-panel" onMouseDown={(event) => event.stopPropagation()}>
+    <div className={isClosing ? 'task-peek-backdrop notification-backdrop closing' : 'task-peek-backdrop notification-backdrop'} onMouseDown={() => beginClose()}>
+      <aside className={isClosing ? 'notification-panel closing' : 'notification-panel'} onMouseDown={(event) => event.stopPropagation()}>
         <header className="notification-header">
           <div>
             <p className="eyebrow">FlowLane</p>
             <h2>Notifications</h2>
             <p>{unreadCount ? `${unreadCount} unread update${unreadCount === 1 ? '' : 's'}` : 'You are all caught up'}</p>
           </div>
-          <button className="icon-plain" onClick={onClose} aria-label="Close notifications"><X size={18} /></button>
+          <button className="icon-plain" onClick={() => beginClose()} aria-label="Close notifications"><X size={18} /></button>
         </header>
 
         <div className="notification-toolbar">
