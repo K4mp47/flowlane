@@ -1,6 +1,9 @@
 name: Phase 6 UI codemod
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - refactor/phase-6-ui-system
