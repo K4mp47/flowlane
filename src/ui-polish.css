@@ -108,23 +108,23 @@
   width: 100%;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand {
+.sidebar-hover-shell:not(.expanded) .sidebar-brand {
   justify-content: center;
   padding-inline: 0;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-logo {
+.sidebar-hover-shell:not(.expanded) .sidebar-logo {
   width: 34px;
   height: 34px;
   flex-basis: 34px;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+.sidebar-hover-shell:not(.expanded) .sidebar-user {
   justify-content: center;
   width: 100%;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-avatar {
+.sidebar-hover-shell:not(.expanded) .sidebar-avatar {
   width: 30px;
   height: 30px;
   flex-basis: 30px;

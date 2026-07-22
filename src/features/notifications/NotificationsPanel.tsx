@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/Button'
 import { AlertTriangle, ArrowRightLeft, Bell, CalendarClock, CheckCheck, FilePlus2, MessageSquare, PencilLine, Trash2, UserPlus, X } from 'lucide-react'
+import { motion } from 'motion/react'
 import { supabase } from '../../lib/supabase'
 import type { Notification, NotificationType } from '../../types/domain'
 
@@ -131,8 +132,20 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
   }
 
   return (
-    <div className={isClosing ? 'task-peek-backdrop notification-backdrop closing' : 'task-peek-backdrop notification-backdrop'} onMouseDown={() => beginClose()}>
-      <aside className={isClosing ? 'notification-panel closing' : 'notification-panel'} onMouseDown={(event) => event.stopPropagation()}>
+    <motion.div
+      className="task-peek-backdrop notification-backdrop"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isClosing ? 0 : 1 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
+      onMouseDown={() => beginClose()}
+    >
+      <motion.aside
+        className="notification-panel"
+        initial={{ x: '100%', opacity: 0.7 }}
+        animate={{ x: isClosing ? '100%' : 0, opacity: isClosing ? 0.7 : 1 }}
+        transition={{ duration: 0.19, ease: [0.2, 0.8, 0.2, 1] }}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <header className="notification-header">
           <div>
             <p className="eyebrow">FlowLane</p>
@@ -173,7 +186,7 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
           ))}
           {!visibleNotifications.length ? <div className="notification-empty">{filter === 'UNREAD' ? 'No unread notifications.' : 'No notifications yet.'}</div> : null}
         </div>
-      </aside>
-    </div>
+      </motion.aside>
+    </motion.div>
   )
 }

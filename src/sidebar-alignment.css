@@ -92,7 +92,7 @@
 }
 
 /* Brand ------------------------------------------------------------------- */
-.sidebar-astryx-brand {
+.sidebar-brand {
   box-sizing: border-box;
   width: 100%;
   height: 40px;
@@ -105,7 +105,7 @@
   overflow: hidden;
 }
 
-.sidebar-astryx-logo {
+.sidebar-logo {
   width: 36px !important;
   height: 36px !important;
   flex: 0 0 36px !important;
@@ -115,13 +115,13 @@
   transform: none !important;
 }
 
-.sidebar-astryx-logo svg {
+.sidebar-logo svg {
   display: block;
 }
 
 /* Text appears quickly after the reveal starts, matching the reference timing. */
-.sidebar-astryx-brand-copy,
-.sidebar-astryx-user-copy {
+.sidebar-brand-copy,
+.sidebar-user-copy {
   min-width: 0;
   max-width: 160px !important;
   opacity: 1;
@@ -131,8 +131,8 @@
     transform 140ms var(--fl-sidebar-reveal-ease) 20ms !important;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-brand-copy,
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user-copy {
+.sidebar-hover-shell:not(.expanded) .sidebar-brand-copy,
+.sidebar-hover-shell:not(.expanded) .sidebar-user-copy {
   opacity: 0;
   transform: translateX(-3px) !important;
   transition:
@@ -182,7 +182,7 @@
   justify-content: flex-start !important;
 }
 
-.sidebar-astryx-user {
+.sidebar-user {
   box-sizing: border-box;
   width: 100%;
   padding-left: 5px !important;
@@ -191,7 +191,7 @@
   align-items: center;
 }
 
-.sidebar-astryx-avatar {
+.sidebar-avatar {
   margin: 0 !important;
   flex: 0 0 30px;
 }
@@ -200,7 +200,7 @@
  * In compact mode, extra footer content is simply outside the reveal mask. Keep
  * sign-out hidden as before so it cannot receive focus while clipped.
  */
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user > button {
+.sidebar-hover-shell:not(.expanded) .sidebar-user > button {
   display: none;
 }
 
@@ -211,7 +211,7 @@
     --fl-sidebar-icon-center: 27px;
   }
 
-  .sidebar-astryx-brand {
+  .sidebar-brand {
     padding-left: 1px !important;
   }
 
@@ -220,7 +220,7 @@
     padding-left: 10px !important;
   }
 
-  .sidebar-astryx-user {
+  .sidebar-user {
     padding-left: 4px !important;
   }
 }
@@ -228,8 +228,8 @@
 @media (prefers-reduced-motion: reduce) {
   .sidebar-hover-shell .flowlane-side-nav,
   .sidebar-hover-shell::after,
-  .sidebar-astryx-brand-copy,
-  .sidebar-astryx-user-copy {
+  .sidebar-brand-copy,
+  .sidebar-user-copy {
     transition: none !important;
   }
 }
