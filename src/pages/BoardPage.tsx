@@ -139,15 +139,30 @@ export function BoardPage() {
   }, [boardQuery.data, dragTasks, priority, search, user?.id, view])
 
   useEffect(() => {
-    if (role === 'VIEWER' || !user) return
+    const userId = user?.id
+    if (role === 'VIEWER' || !userId) {
+      setUnreadCount(0)
+      return
+    }
+
     async function loadUnreadCount() {
-      const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('workspace_id', workspaceId).is('read_at', null)
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('workspace_id', workspaceId)
+        .is('read_at', null)
       setUnreadCount(count ?? 0)
     }
+
     void loadUnreadCount()
-    const channel = supabase.channel(`notification-count-${user.id}-${workspaceId}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => void loadUnreadCount()).subscribe()
+    const channel = supabase
+      .channel(`notification-count-${userId}-${workspaceId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => void loadUnreadCount())
+      .subscribe()
+
     return () => { void supabase.removeChannel(channel) }
-  }, [role, user, workspaceId])
+  }, [role, user?.id, workspaceId])
 
   function resolvePreviewPosition(tasks: Task[], activeId: string, overId: string, activeTop?: number, overTop?: number, overHeight?: number) {
     if (!boardQuery.data?.board) return null
