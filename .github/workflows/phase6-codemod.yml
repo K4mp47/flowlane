@@ -25,31 +25,59 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Redirect Astryx imports to FlowLane UI
+      - name: Remove Astryx implementation vocabulary
         run: |
           python - <<'PY'
           from pathlib import Path
+
+          replacements = {
+              '@astryxdesign/core/': '@/components/ui/',
+              'sidebar-astryx-brand-copy': 'sidebar-brand-copy',
+              'sidebar-astryx-brand': 'sidebar-brand',
+              'sidebar-astryx-logo': 'sidebar-logo',
+              'sidebar-astryx-user-copy': 'sidebar-user-copy',
+              'sidebar-astryx-user': 'sidebar-user',
+              'sidebar-astryx-avatar': 'sidebar-avatar',
+              'astryx-toolbar-control': 'ui-toolbar-control',
+              'astryx-form-grid': 'ui-form-grid',
+              'astryx-inline-editor': 'ui-inline-editor',
+              'astryx-checklist-list': 'ui-checklist-list',
+              'astryx-checklist-item': 'ui-checklist-item',
+              'Astryx semantic tokens': 'FlowLane semantic tokens',
+              'Astryx field surfaces': 'FlowLane field surfaces',
+              'Astryx controls + hover-expanding navigation rail.': 'FlowLane controls + hover-expanding navigation rail.',
+          }
+
           for path in Path('src').rglob('*'):
-              if path.suffix not in {'.ts', '.tsx'}:
+              if path.suffix not in {'.ts', '.tsx', '.css'}:
                   continue
               text = path.read_text()
-              text = text.replace("@astryxdesign/core/", "@/components/ui/")
+              for old, new in replacements.items():
+                  text = text.replace(old, new)
               path.write_text(text)
 
           main = Path('src/main.tsx')
           text = main.read_text()
+          text = text.replace("import '@/components/ui/reset.css'\n", '')
+          text = text.replace("import '@/components/ui/astryx.css'\n", '')
           text = text.replace("import '@astryxdesign/core/reset.css'\n", '')
           text = text.replace("import '@astryxdesign/core/astryx.css'\n", '')
+          text = text.replace("import './astryx-controls.css'", "import './ui-controls.css'")
           if "import './design-system.css'" not in text:
               text = text.replace("import './product-v2.css'\n", "import './product-v2.css'\nimport './design-system.css'\n")
           main.write_text(text)
+
+          old = Path('src/astryx-controls.css')
+          new = Path('src/ui-controls.css')
+          if old.exists() and not new.exists():
+              old.rename(new)
           PY
       - run: npm uninstall @astryxdesign/core @astryxdesign/theme-neutral
       - name: Commit migration
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src package.json package-lock.json
+          git add -A src package.json package-lock.json
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Migrate app imports to FlowLane UI"
+          git commit -m "Remove legacy Astryx UI vocabulary"
           git push origin HEAD:refactor/phase-6-ui-system
