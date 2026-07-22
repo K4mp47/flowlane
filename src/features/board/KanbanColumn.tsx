@@ -1,4 +1,4 @@
-import { useDroppable } from '@dnd-kit/core'
+import { useDndContext, useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Badge } from '@astryxdesign/core/Badge'
 import { CircleCheckBig, CircleDotDashed, Clock3, LoaderCircle, ScanSearch } from 'lucide-react'
@@ -13,7 +13,6 @@ interface KanbanColumnProps {
   checklistItems: ChecklistItem[]
   profiles: Profile[]
   isReadOnly: boolean
-  isDragTarget?: boolean
   onOpenTask: (task: Task) => void
 }
 
@@ -25,11 +24,14 @@ const stageIcon = {
   DONE: CircleCheckBig,
 } as const
 
-export function KanbanColumn({ column, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, isDragTarget = false, onOpenTask }: KanbanColumnProps) {
+export function KanbanColumn({ column, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: 'column', columnId: column.id } })
+  const { active, over } = useDndContext()
   const StageIcon = stageIcon[column.workflow_stage]
   const stageClass = `stage-${column.workflow_stage.toLowerCase().replace('_', '-')}`
-  const highlighted = isOver || isDragTarget
+  const overData = over?.data.current as { type?: string; columnId?: string; task?: Task } | undefined
+  const overColumnId = overData?.type === 'task' ? overData.task?.column_id : overData?.columnId
+  const highlighted = Boolean(active) && (isOver || overColumnId === column.id)
 
   return (
     <section className={highlighted ? `kanban-column over ${stageClass}` : `kanban-column ${stageClass}`} data-stage={column.workflow_stage} ref={setNodeRef}>
