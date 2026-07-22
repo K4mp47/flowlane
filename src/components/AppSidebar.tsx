@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Badge } from '@astryxdesign/core/Badge'
 import { IconButton } from '@astryxdesign/core/IconButton'
 import { SideNav, SideNavItem } from '@astryxdesign/core/SideNav'
-import { BarChart3, Bell, CalendarDays, Check, FolderKanban, ListChecks, LogOut, Moon, Palette as PaletteIcon, PocketKnife, Sun, UserRoundCheck, Users } from 'lucide-react'
+import { BarChart3, Bell, CalendarDays, Check, FolderKanban, KanbanSquare, ListChecks, LogOut, Moon, Palette as PaletteIcon, PocketKnife, Sun, UserRoundCheck, Users } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useTheme, type Palette } from '../theme'
 
@@ -45,7 +45,8 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
         {!isViewer ? <SideNavItem label={navLabel('My tasks')} icon={<UserRoundCheck size={18} />} isSelected={view === 'mine'} onClick={() => onViewChange('mine')} /> : null}
         <SideNavItem label={navLabel('Calendar')} icon={<CalendarDays size={18} />} isSelected={view === 'calendar'} onClick={() => onViewChange('calendar')} />
         {section('Workspace')}
-        <SideNavItem label={navLabel('Projects')} icon={<FolderKanban size={18} />} isSelected={view === 'projects' || view === 'board'} onClick={() => onViewChange('projects')} />
+        <SideNavItem label={navLabel('Board')} icon={<KanbanSquare size={18} />} isSelected={view === 'board'} onClick={() => onViewChange('board')} />
+        <SideNavItem label={navLabel('Projects')} icon={<FolderKanban size={18} />} isSelected={view === 'projects'} onClick={() => onViewChange('projects')} />
         <SideNavItem label={navLabel('All tasks')} icon={<ListChecks size={18} />} isSelected={view === 'all'} onClick={() => onViewChange('all')} />
         {section('Insights')}
         <SideNavItem label={navLabel('Analytics')} icon={<BarChart3 size={18} />} isSelected={view === 'analytics'} onClick={() => onViewChange('analytics')} />
