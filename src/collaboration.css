@@ -110,7 +110,7 @@
 .checklist-section-heading strong { display: inline-flex; align-items: center; gap: 5px; color: var(--fl-text-muted); font-size: 10px; }
 .checklist-progress-track { height: 5px; margin: 8px 0 12px; overflow: hidden; border-radius: 999px; background: var(--fl-surface-soft); }
 .checklist-progress-track span { display: block; height: 100%; border-radius: inherit; background: #4d8f63; transition: width .2s ease; }
-.astryx-checklist-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
+.ui-checklist-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 6px; }
 
 .command-palette-backdrop {
   position: fixed;

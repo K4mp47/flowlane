@@ -22,13 +22,13 @@
   gap: 3px;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user {
+.sidebar-hover-shell:not(.expanded) .sidebar-user {
   display: grid;
   place-items: center;
 }
 
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user-copy,
-.sidebar-hover-shell:not(.expanded) .sidebar-astryx-user > button {
+.sidebar-hover-shell:not(.expanded) .sidebar-user-copy,
+.sidebar-hover-shell:not(.expanded) .sidebar-user > button {
   display: none;
 }
 
@@ -36,7 +36,7 @@
   justify-content: flex-start;
 }
 
-.sidebar-hover-shell.expanded .sidebar-astryx-user {
+.sidebar-hover-shell.expanded .sidebar-user {
   padding-top: 2px;
 }
 

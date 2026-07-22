@@ -9,5 +9,5 @@
 .fl-checkbox.is-readonly{cursor:default;opacity:.7}
 
 /* Keep legacy layout hooks while the old implementation-specific names are retired. */
-.astryx-inline-editor .fl-field,.astryx-form-grid .fl-field{min-width:0}
-.astryx-checklist-item .fl-checkbox{flex:1}
+.ui-inline-editor .fl-field,.ui-form-grid .fl-field{min-width:0}
+.ui-checklist-item .fl-checkbox{flex:1}

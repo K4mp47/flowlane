@@ -132,7 +132,7 @@
   --sidebar-primary-foreground: var(--fl-primary-foreground);
   --sidebar-ring: var(--fl-ring);
 
-  /* Astryx semantic tokens: keep the design-system components in sync. */
+  /* FlowLane semantic tokens: keep the design-system components in sync. */
   --color-accent: var(--fl-primary);
   --color-on-accent: var(--fl-primary-foreground);
   --color-accent-muted: color-mix(in oklch, var(--fl-primary) 12%, var(--fl-surface));
