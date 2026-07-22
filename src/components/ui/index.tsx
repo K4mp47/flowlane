@@ -1,5 +1,5 @@
-import { Select } from '@base-ui/react/select'
 import { Dialog } from '@base-ui/react/dialog'
+import { Select } from '@base-ui/react/select'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Check, ChevronDown, LoaderCircle, X } from 'lucide-react'
 import { motion } from 'motion/react'
@@ -30,8 +30,17 @@ export function Button({ label, children, icon, isLoading = false, isDisabled = 
   </button>
 }
 
-const badgeVariants = cva('fl-badge', { variants: { variant: { neutral: 'fl-badge-neutral', red: 'fl-badge-red', orange: 'fl-badge-orange', blue: 'fl-badge-blue', green: 'fl-badge-green' } }, defaultVariants: { variant: 'neutral' } })
-export function Badge({ label, variant = 'neutral', className }: { label: string; variant?: 'neutral' | 'red' | 'orange' | 'blue' | 'green'; className?: string }) {
+export type BadgeVariant = 'neutral' | 'red' | 'orange' | 'blue' | 'green' | 'teal' | 'yellow' | 'error'
+const badgeVariants = cva('fl-badge', {
+  variants: {
+    variant: {
+      neutral: 'fl-badge-neutral', red: 'fl-badge-red', orange: 'fl-badge-orange', blue: 'fl-badge-blue',
+      green: 'fl-badge-green', teal: 'fl-badge-teal', yellow: 'fl-badge-yellow', error: 'fl-badge-red',
+    },
+  },
+  defaultVariants: { variant: 'neutral' },
+})
+export function Badge({ label, variant = 'neutral', className }: { label: string; variant?: BadgeVariant; className?: string }) {
   return <span className={cn(badgeVariants({ variant }), className)}>{label}</span>
 }
 
@@ -69,13 +78,13 @@ export function TextArea({ label, description, isLabelHidden, isRequired, isOpti
 }
 
 export type SelectOption = { value: string; label: string }
-export function Selector({ label, options, value, onChange, isLabelHidden, startIcon, width, className }: { label: string; options: SelectOption[]; value: string; onChange: (value: string) => void; isLabelHidden?: boolean; startIcon?: ReactNode; width?: CSSProperties['width']; size?: 'sm' | 'md'; className?: string }) {
+export function Selector({ label, options, value, onChange, isLabelHidden, startIcon, width, className, placeholder }: { label: string; options: SelectOption[]; value: string; onChange: (value: string) => void; isLabelHidden?: boolean; startIcon?: ReactNode; width?: CSSProperties['width']; size?: 'sm' | 'md'; className?: string; placeholder?: string }) {
   return <div className={cn('fl-field', className)} style={{ width }}>
     <Select.Root items={options} value={value} onValueChange={(next) => { if (typeof next === 'string') onChange(next) }}>
       <Select.Label className={cn('fl-field-label', isLabelHidden && 'sr-only')}>{label}</Select.Label>
       <Select.Trigger className="fl-select-trigger" aria-label={isLabelHidden ? label : undefined}>
         {startIcon ? <span className="fl-select-leading">{startIcon}</span> : null}
-        <Select.Value className="fl-select-value" />
+        <Select.Value className="fl-select-value" placeholder={placeholder} />
         <Select.Icon className="fl-select-icon"><ChevronDown size={14} /></Select.Icon>
       </Select.Trigger>
       <Select.Portal>
@@ -92,6 +101,14 @@ export function Selector({ label, options, value, onChange, isLabelHidden, start
       </Select.Portal>
     </Select.Root>
   </div>
+}
+
+export function CheckboxInput({ label, value, onChange, isReadOnly = false, width }: { label: string; value: boolean; onChange: (value: boolean) => void; isReadOnly?: boolean; size?: 'sm' | 'md'; width?: CSSProperties['width'] }) {
+  return <label className={cn('fl-checkbox', isReadOnly && 'is-readonly')} style={{ width }}>
+    <input type="checkbox" checked={value} disabled={isReadOnly} onChange={(event) => onChange(event.target.checked)} />
+    <span className="fl-checkbox-box" aria-hidden="true">{value ? <Check size={12} strokeWidth={3} /> : null}</span>
+    <span className="fl-checkbox-label">{label}</span>
+  </label>
 }
 
 export type ISODateString = `${number}-${number}-${number}`
