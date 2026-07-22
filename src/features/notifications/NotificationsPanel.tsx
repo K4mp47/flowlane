@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
-import { Bell, CheckCheck, X } from 'lucide-react'
+import { AlertTriangle, ArrowRightLeft, Bell, CalendarClock, CheckCheck, MessageSquare, Trash2, UserPlus, X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
-import type { Notification } from '../../types/domain'
+import type { Notification, NotificationType } from '../../types/domain'
 
 interface NotificationsPanelProps {
   userId: string
@@ -12,24 +12,25 @@ interface NotificationsPanelProps {
   onUnreadCountChange: (count: number) => void
 }
 
+type NotificationFilter = 'ALL' | 'UNREAD'
+
+const notificationIcon: Record<NotificationType, React.ReactNode> = {
+  ASSIGNMENT: <UserPlus size={15} />,
+  MENTION: <MessageSquare size={15} />,
+  DUE_SOON: <CalendarClock size={15} />,
+  OVERDUE: <AlertTriangle size={15} />,
+  STATUS_CHANGE: <ArrowRightLeft size={15} />,
+  COMMENT: <MessageSquare size={15} />,
+}
+
 export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, onUnreadCountChange }: NotificationsPanelProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
+  const [filter, setFilter] = useState<NotificationFilter>('ALL')
   const [error, setError] = useState<string | null>(null)
 
   const loadNotifications = useCallback(async () => {
-    const { data, error: queryError } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('workspace_id', workspaceId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-
-    if (queryError) {
-      setError(queryError.message)
-      return
-    }
-
+    const { data, error: queryError } = await supabase.from('notifications').select('*').eq('user_id', userId).eq('workspace_id', workspaceId).order('created_at', { ascending: false }).limit(100)
+    if (queryError) { setError(queryError.message); return }
     const rows = (data ?? []) as Notification[]
     setNotifications(rows)
     onUnreadCountChange(rows.filter((notification) => !notification.read_at).length)
@@ -37,32 +38,21 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
 
   useEffect(() => {
     void loadNotifications()
-    const channel = supabase
-      .channel(`notifications-panel-${userId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => {
-        void loadNotifications()
-      })
-      .subscribe()
-
+    const channel = supabase.channel(`notifications-panel-${userId}-${workspaceId}`).on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` }, () => void loadNotifications()).subscribe()
     return () => { void supabase.removeChannel(channel) }
-  }, [loadNotifications, userId])
+  }, [loadNotifications, userId, workspaceId])
+
+  const visibleNotifications = useMemo(() => filter === 'UNREAD' ? notifications.filter((notification) => !notification.read_at) : notifications, [filter, notifications])
+  const unreadCount = notifications.filter((notification) => !notification.read_at).length
 
   async function markRead(notification: Notification) {
-    if (notification.read_at) {
-      if (notification.task_id) onOpenTask(notification.task_id)
-      return
+    if (!notification.read_at) {
+      const readAt = new Date().toISOString()
+      const { error: updateError } = await supabase.from('notifications').update({ read_at: readAt }).eq('id', notification.id)
+      if (updateError) return setError(updateError.message)
+      setNotifications((current) => current.map((item) => item.id === notification.id ? { ...item, read_at: readAt } : item))
+      onUnreadCountChange(Math.max(0, unreadCount - 1))
     }
-
-    const readAt = new Date().toISOString()
-    const { error: updateError } = await supabase
-      .from('notifications')
-      .update({ read_at: readAt })
-      .eq('id', notification.id)
-
-    if (updateError) return setError(updateError.message)
-    const next = notifications.map((item) => item.id === notification.id ? { ...item, read_at: readAt } : item)
-    setNotifications(next)
-    onUnreadCountChange(next.filter((item) => !item.read_at).length)
     if (notification.task_id) onOpenTask(notification.task_id)
   }
 
@@ -76,33 +66,43 @@ export function NotificationsPanel({ userId, workspaceId, onClose, onOpenTask, o
     onUnreadCountChange(0)
   }
 
+  async function dismiss(notification: Notification) {
+    const { error: deleteError } = await supabase.from('notifications').delete().eq('id', notification.id)
+    if (deleteError) return setError(deleteError.message)
+    const next = notifications.filter((item) => item.id !== notification.id)
+    setNotifications(next)
+    onUnreadCountChange(next.filter((item) => !item.read_at).length)
+  }
+
+  async function clearRead() {
+    const readIds = notifications.filter((notification) => notification.read_at).map((notification) => notification.id)
+    if (!readIds.length) return
+    const { error: deleteError } = await supabase.from('notifications').delete().in('id', readIds)
+    if (deleteError) return setError(deleteError.message)
+    setNotifications((current) => current.filter((notification) => !notification.read_at))
+  }
+
   return (
     <div className="task-peek-backdrop" onMouseDown={onClose}>
       <aside className="notification-panel" onMouseDown={(event) => event.stopPropagation()}>
-        <header className="notification-header">
-          <div>
-            <p className="eyebrow">FlowLane</p>
-            <h2>Notifications</h2>
-          </div>
-          <button className="icon-plain" onClick={onClose} aria-label="Close notifications"><X size={18} /></button>
-        </header>
-        <div className="notification-actions">
-          <Button label="Mark all read" size="sm" variant="secondary" icon={<CheckCheck size={14} />} onClick={() => void markAllRead()} />
+        <header className="notification-header"><div><p className="eyebrow">FlowLane</p><h2>Notifications</h2><p>{unreadCount ? `${unreadCount} unread update${unreadCount === 1 ? '' : 's'}` : 'You are all caught up'}</p></div><button className="icon-plain" onClick={onClose} aria-label="Close notifications"><X size={18} /></button></header>
+        <div className="notification-toolbar">
+          <div className="notification-tabs"><button className={filter === 'ALL' ? 'active' : ''} onClick={() => setFilter('ALL')}>All <span>{notifications.length}</span></button><button className={filter === 'UNREAD' ? 'active' : ''} onClick={() => setFilter('UNREAD')}>Unread <span>{unreadCount}</span></button></div>
+          <div className="notification-actions"><Button label="Mark all read" size="sm" variant="secondary" icon={<CheckCheck size={14} />} onClick={() => void markAllRead()} isDisabled={!unreadCount} /><Button label="Clear read" size="sm" variant="secondary" icon={<Trash2 size={14} />} onClick={() => void clearRead()} isDisabled={!notifications.some((notification) => notification.read_at)} /></div>
         </div>
         {error ? <div className="inline-alert error-alert">{error}</div> : null}
         <div className="notification-list">
-          {notifications.map((notification) => (
-            <button className={notification.read_at ? 'notification-row' : 'notification-row unread'} key={notification.id} onClick={() => void markRead(notification)}>
-              <span className="notification-icon"><Bell size={15} /></span>
-              <span className="notification-copy">
-                <strong>{notification.title}</strong>
-                {notification.message ? <span>{notification.message}</span> : null}
-                <small>{new Date(notification.created_at).toLocaleString()}</small>
-              </span>
-              {!notification.read_at ? <span className="unread-dot" /> : null}
-            </button>
+          {visibleNotifications.map((notification) => (
+            <div className={notification.read_at ? 'notification-row' : 'notification-row unread'} key={notification.id}>
+              <button className="notification-main-action" onClick={() => void markRead(notification)}>
+                <span className={`notification-icon type-${notification.type.toLowerCase()}`}>{notificationIcon[notification.type] ?? <Bell size={15} />}</span>
+                <span className="notification-copy"><strong>{notification.title}</strong>{notification.message ? <span>{notification.message}</span> : null}<small>{new Date(notification.created_at).toLocaleString()}</small></span>
+                {!notification.read_at ? <span className="unread-dot" /> : null}
+              </button>
+              <button className="notification-dismiss" onClick={() => void dismiss(notification)} aria-label="Dismiss notification"><X size={13} /></button>
+            </div>
           ))}
-          {!notifications.length ? <div className="notification-empty">No notifications yet.</div> : null}
+          {!visibleNotifications.length ? <div className="notification-empty">{filter === 'UNREAD' ? 'No unread notifications.' : 'No notifications yet.'}</div> : null}
         </div>
       </aside>
     </div>
