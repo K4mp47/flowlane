@@ -86,6 +86,7 @@ export function BoardPage() {
     const invalidateBoard = () => void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
     const channel = supabase
       .channel(`flowlane-board-${workspaceId}`)
+      .on('broadcast', { event: 'board_changed' }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `workspace_id=eq.${workspaceId}` }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'task_assignees' }, invalidateBoard)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist_items' }, invalidateBoard)
@@ -164,6 +165,18 @@ export function BoardPage() {
     return () => { void supabase.removeChannel(channel) }
   }, [role, user?.id, workspaceId])
 
+  async function broadcastBoardChanged(boardId?: string | null) {
+    try {
+      await supabase.channel(`flowlane-board-${workspaceId}`).send({
+        type: 'broadcast',
+        event: 'board_changed',
+        payload: { board_id: boardId ?? null, sent_at: new Date().toISOString() },
+      })
+    } catch (error) {
+      console.warn('Unable to broadcast board update', error)
+    }
+  }
+
   function resolvePreviewPosition(tasks: Task[], activeId: string, overId: string, activeTop?: number, overTop?: number, overHeight?: number) {
     if (!boardQuery.data?.board) return null
     const targetTask = tasks.find((task) => task.id === overId)
@@ -220,7 +233,8 @@ export function BoardPage() {
     if (originalTask.column_id === previewTask.column_id && originalTask.position === previewTask.position) return
     const { error } = await supabase.from('tasks').update({ column_id: previewTask.column_id, position: previewTask.position }).eq('id', activeId)
     if (error) { queryClient.setQueryData(boardQueryKey(workspaceId, board.id), previousData); setBoardError(error.message); return }
-    void queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
+    await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] })
+    await broadcastBoardChanged(board.id)
   }
 
   async function openTaskById(taskId: string) {
@@ -263,7 +277,7 @@ export function BoardPage() {
             <p>{subtitle}</p>
           </div>
           <div className="toolbar-actions">
-            <button type="button" className="presence-pill" title="People online now"><UsersRound size={15} /><span>{onlineUserIds.length} online</span></button>
+            <button type="button" className="presence-pill" title={`${onlineUserIds.length} ${onlineUserIds.length === 1 ? 'person' : 'people'} online`}><UsersRound size={15} /><span className="presence-count">{onlineUserIds.length}</span><span className="presence-label">online</span></button>
             <Button label="Search" variant="secondary" icon={<Search size={16} />} onClick={() => setIsCommandPaletteOpen(true)} />
             {memberships.length > 1 ? <div className="workspace-switcher astryx-toolbar-control"><Selector label="Workspace" isLabelHidden options={workspaceOptions} value={workspaceId} onChange={(value) => { selectWorkspace(value); setView('board') }} startIcon={<Building2 size={15} />} width="100%" /></div> : null}
             {view !== 'team' && view !== 'projects' && view !== 'analytics' && hasBoard ? (
@@ -285,7 +299,7 @@ export function BoardPage() {
         ) : view === 'team' && role === 'ADMIN' ? (
           <div className="kanban-scroll"><TeamPanel workspaceId={workspaceId} profiles={boardQuery.data.profiles} members={boardQuery.data.members} onInvited={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }} /></div>
         ) : view === 'projects' && role === 'ADMIN' ? (
-          <div className="kanban-scroll"><ProjectsPanel workspaceId={workspaceId} boards={boardQuery.data.boards} activeBoardId={activeBoard?.id} onSelectBoard={(boardId) => { setSelectedBoardId(boardId); setView('board') }} onChanged={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }} /></div>
+          <div className="kanban-scroll"><ProjectsPanel workspaceId={workspaceId} boards={boardQuery.data.boards} activeBoardId={activeBoard?.id} onSelectBoard={(boardId) => { setSelectedBoardId(boardId); setView('board') }} onChanged={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }); await broadcastBoardChanged(null) }} /></div>
         ) : !hasBoard ? (
           <div className="workspace-empty-shell"><div className="workspace-empty-card"><span className="workspace-empty-icon"><FolderKanban size={24} /></span><div><p className="eyebrow">Workspace ready</p><h2>No projects yet</h2><p>Your account and team are fully usable without a project. Create a Kanban project only when you need one.</p></div>{role === 'ADMIN' ? <Button label="Create first project" variant="primary" icon={<Plus size={17} />} onClick={() => setView('projects')} /> : <span className="muted">An admin can create the first shared project whenever the team is ready.</span>}</div></div>
         ) : (
@@ -295,9 +309,9 @@ export function BoardPage() {
           </DndContext>
         )}
 
-        {selectedTask ? <TaskDetailPanel task={selectedTask} role={role} currentUserId={user!.id} taskType={boardQuery.data.taskTypes.find((type) => type.id === selectedTask.task_type_id)} assignees={boardQuery.data.assignees} profiles={boardQuery.data.profiles} members={boardQuery.data.members} onClose={() => setSelectedTask(null)} onEdit={() => { setEditingTask(selectedTask); setSelectedTask(null); setIsTaskFormOpen(true) }} onChanged={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }); const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId, activeBoard?.id)); if (fresh) setSelectedTask(fresh.tasks.find((task) => task.id === selectedTask.id) ?? selectedTask) }} /> : null}
+        {selectedTask ? <TaskDetailPanel task={selectedTask} role={role} currentUserId={user!.id} taskType={boardQuery.data.taskTypes.find((type) => type.id === selectedTask.task_type_id)} assignees={boardQuery.data.assignees} profiles={boardQuery.data.profiles} members={boardQuery.data.members} onClose={() => setSelectedTask(null)} onEdit={() => { setEditingTask(selectedTask); setSelectedTask(null); setIsTaskFormOpen(true) }} onChanged={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }); const fresh = queryClient.getQueryData<BoardData>(boardQueryKey(workspaceId, selectedTask.board_id)); if (fresh) setSelectedTask(fresh.tasks.find((task) => task.id === selectedTask.id) ?? selectedTask); await broadcastBoardChanged(selectedTask.board_id) }} /> : null}
 
-        {isTaskFormOpen && activeBoard ? <TaskFormModal workspaceId={workspaceId} boardId={activeBoard.id} creatorId={user!.id} backlogColumn={boardQuery.data.columns.find((column) => column.workflow_stage === 'BACKLOG')!} taskTypes={boardQuery.data.taskTypes} task={editingTask} onClose={() => { setIsTaskFormOpen(false); setEditingTask(null) }} onSaved={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }} /> : null}
+        {isTaskFormOpen && activeBoard ? <TaskFormModal workspaceId={workspaceId} boardId={activeBoard.id} creatorId={user!.id} backlogColumn={boardQuery.data.columns.find((column) => column.workflow_stage === 'BACKLOG')!} taskTypes={boardQuery.data.taskTypes} task={editingTask} onClose={() => { setIsTaskFormOpen(false); setEditingTask(null) }} onSaved={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }); await broadcastBoardChanged(activeBoard.id) }} /> : null}
 
         {isNotificationsOpen && role !== 'VIEWER' ? <NotificationsPanel userId={user!.id} workspaceId={workspaceId} onClose={() => setIsNotificationsOpen(false)} onOpenTask={(taskId) => void openTaskById(taskId)} onUnreadCountChange={setUnreadCount} /> : null}
         <CommandPalette isOpen={isCommandPaletteOpen} workspaceId={workspaceId} role={role} onClose={() => setIsCommandPaletteOpen(false)} onOpenTask={openTaskFromSearch} onSelectBoard={(boardId) => { setSelectedBoardId(boardId); setView('board') }} onChangeView={setView} onOpenNotifications={() => setIsNotificationsOpen(true)} />
