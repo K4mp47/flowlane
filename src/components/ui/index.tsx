@@ -40,8 +40,8 @@ const badgeVariants = cva('fl-badge', {
   },
   defaultVariants: { variant: 'neutral' },
 })
-export function Badge({ label, variant = 'neutral', className }: { label: string; variant?: BadgeVariant; className?: string }) {
-  return <span className={cn(badgeVariants({ variant }), className)}>{label}</span>
+export function Badge({ label, variant = 'neutral', className, icon }: { label: string; variant?: BadgeVariant; className?: string; icon?: ReactNode }) {
+  return <span className={cn(badgeVariants({ variant }), className)}>{icon}{label}</span>
 }
 
 export function IconButton({ label, icon, variant = 'ghost', size = 'md', isDisabled = false, className, ...props }: Omit<ButtonProps, 'label' | 'children'> & { label: string; icon: ReactNode }) {
