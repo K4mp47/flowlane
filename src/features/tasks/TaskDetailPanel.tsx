@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button } from '@astryxdesign/core/Button'
 import { Badge } from '@astryxdesign/core/Badge'
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput'
@@ -6,7 +6,7 @@ import { IconButton } from '@astryxdesign/core/IconButton'
 import { Selector } from '@astryxdesign/core/Selector'
 import { TextArea } from '@astryxdesign/core/TextArea'
 import { TextInput } from '@astryxdesign/core/TextInput'
-import { Edit3, LockKeyhole, Plus, UserPlus, X } from 'lucide-react'
+import { CheckSquare2, Edit3, LockKeyhole, Plus, Trash2, UserPlus, X } from 'lucide-react'
 import { can } from '../../auth/permissions'
 import { supabase } from '../../lib/supabase'
 import type { ChecklistItem, Comment, Profile, Task, TaskAssignee, TaskType, WorkspaceRole } from '../../types/domain'
@@ -33,75 +33,70 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
   const [error, setError] = useState<string | null>(null)
   const isReadOnly = role === 'VIEWER'
 
-  const assignedProfiles = useMemo(() => assignees
-    .filter((item) => item.task_id === task.id)
-    .map((item) => profiles.find((profile) => profile.id === item.user_id))
-    .filter(Boolean) as Profile[], [assignees, profiles, task.id])
-
+  const assignedProfiles = useMemo(() => assignees.filter((item) => item.task_id === task.id).map((item) => profiles.find((profile) => profile.id === item.user_id)).filter(Boolean) as Profile[], [assignees, profiles, task.id])
   const assignableUserIds = useMemo(() => new Set(members.filter((member) => member.role !== 'VIEWER').map((member) => member.user_id)), [members])
-
   const availableProfiles = useMemo(() => profiles.filter((profile) => assignableUserIds.has(profile.id) && !assignedProfiles.some((assigned) => assigned.id === profile.id)), [assignableUserIds, assignedProfiles, profiles])
-  const assigneeOptions = useMemo(() => availableProfiles.map((profile) => ({
-    value: profile.id,
-    label: profile.display_name || profile.email,
-  })), [availableProfiles])
+  const assigneeOptions = useMemo(() => availableProfiles.map((profile) => ({ value: profile.id, label: profile.display_name || profile.email })), [availableProfiles])
+  const checklistCompleted = checklist.filter((item) => item.is_completed).length
+  const checklistPercent = checklist.length ? Math.round((checklistCompleted / checklist.length) * 100) : 0
+
+  const loadDetails = useCallback(async () => {
+    const [commentsResult, checklistResult] = await Promise.all([
+      supabase.from('comments').select('*').eq('task_id', task.id).order('created_at', { ascending: true }),
+      supabase.from('checklist_items').select('*').eq('task_id', task.id).order('position', { ascending: true }),
+    ])
+    if (commentsResult.error) setError(commentsResult.error.message)
+    else setComments((commentsResult.data ?? []) as Comment[])
+    if (checklistResult.error) setError(checklistResult.error.message)
+    else setChecklist((checklistResult.data ?? []) as ChecklistItem[])
+  }, [task.id])
 
   useEffect(() => {
-    let active = true
-    async function loadDetails() {
-      const [commentsResult, checklistResult] = await Promise.all([
-        supabase.from('comments').select('*').eq('task_id', task.id).order('created_at', { ascending: true }),
-        supabase.from('checklist_items').select('*').eq('task_id', task.id).order('position', { ascending: true }),
-      ])
-      if (!active) return
-      if (commentsResult.error) setError(commentsResult.error.message)
-      else setComments((commentsResult.data ?? []) as Comment[])
-      if (checklistResult.error) setError(checklistResult.error.message)
-      else setChecklist((checklistResult.data ?? []) as ChecklistItem[])
-    }
     void loadDetails()
-    return () => { active = false }
-  }, [task.id])
+    const channel = supabase
+      .channel(`task-detail-${task.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: `task_id=eq.${task.id}` }, () => void loadDetails())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'checklist_items', filter: `task_id=eq.${task.id}` }, () => void loadDetails())
+      .subscribe()
+    return () => { void supabase.removeChannel(channel) }
+  }, [loadDetails, task.id])
 
   async function addComment() {
     if (!commentText.trim()) return
     setError(null)
-    const { data, error: insertError } = await supabase.from('comments').insert({
-      task_id: task.id,
-      author_id: currentUserId,
-      content: commentText.trim(),
-    }).select().single()
+    const { error: insertError } = await supabase.from('comments').insert({ task_id: task.id, author_id: currentUserId, content: commentText.trim() })
     if (insertError) return setError(insertError.message)
-    setComments((current) => [...current, data as Comment])
     setCommentText('')
+    await loadDetails()
   }
 
   async function addChecklistItem() {
     if (!checklistText.trim()) return
-    const { data, error: insertError } = await supabase.from('checklist_items').insert({
-      task_id: task.id,
-      content: checklistText.trim(),
-      created_by: currentUserId,
-      position: Date.now(),
-    }).select().single()
+    const nextPosition = checklist.length ? Math.max(...checklist.map((item) => item.position)) + 1000 : 1000
+    const { error: insertError } = await supabase.from('checklist_items').insert({ task_id: task.id, content: checklistText.trim(), created_by: currentUserId, position: nextPosition })
     if (insertError) return setError(insertError.message)
-    setChecklist((current) => [...current, data as ChecklistItem])
     setChecklistText('')
+    await loadDetails()
+    await onChanged()
   }
 
   async function toggleChecklist(item: ChecklistItem) {
     const { error: updateError } = await supabase.from('checklist_items').update({ is_completed: !item.is_completed }).eq('id', item.id)
     if (updateError) return setError(updateError.message)
-    setChecklist((current) => current.map((entry) => entry.id === item.id ? { ...entry, is_completed: !entry.is_completed } : entry))
+    await loadDetails()
+    await onChanged()
+  }
+
+  async function deleteChecklistItem(itemId: string) {
+    const { error: deleteError } = await supabase.from('checklist_items').delete().eq('id', itemId)
+    if (deleteError) return setError(deleteError.message)
+    await loadDetails()
+    await onChanged()
   }
 
   async function addAssignee() {
     if (!selectedAssigneeId) return
-    const { error: insertError } = await supabase.from('task_assignees').insert({
-      task_id: task.id,
-      user_id: selectedAssigneeId,
-      assigned_by: currentUserId,
-    })
+    const { error: insertError } = await supabase.from('task_assignees').insert({ task_id: task.id, user_id: selectedAssigneeId, assigned_by: currentUserId })
     if (insertError) return setError(insertError.message)
     setSelectedAssigneeId('')
     await onChanged()
@@ -116,110 +111,31 @@ export function TaskDetailPanel({ task, role, currentUserId, taskType, assignees
   return (
     <div className="task-peek-backdrop" onMouseDown={onClose}>
       <aside className="task-peek task-detail-panel" onMouseDown={(event) => event.stopPropagation()}>
-        <div className="task-detail-close">
-          <IconButton label="Close task details" icon={<X size={18} />} variant="ghost" size="sm" onClick={onClose} />
-        </div>
-        <div className="task-detail-kicker">
-          <span className="task-reference">FL-{task.task_number}</span>
-          {taskType ? <Badge label={taskType.name} variant="neutral" /> : null}
-          {task.priority ? <Badge label={task.priority} variant={task.priority === 'URGENT' ? 'red' : task.priority === 'HIGH' ? 'orange' : 'neutral'} /> : null}
-        </div>
-        <div className="task-detail-heading-row">
-          <h2>{task.title}</h2>
-          {can(role, 'task:edit') ? <Button label="Edit" variant="secondary" size="sm" icon={<Edit3 size={14} />} onClick={onEdit} /> : null}
-        </div>
-
+        <div className="task-detail-close"><IconButton label="Close task details" icon={<X size={18} />} variant="ghost" size="sm" onClick={onClose} /></div>
+        <div className="task-detail-kicker"><span className="task-reference">FL-{task.task_number}</span>{taskType ? <Badge label={taskType.name} variant="neutral" /> : null}{task.priority ? <Badge label={task.priority} variant={task.priority === 'URGENT' ? 'red' : task.priority === 'HIGH' ? 'orange' : 'neutral'} /> : null}</div>
+        <div className="task-detail-heading-row"><h2>{task.title}</h2>{can(role, 'task:edit') ? <Button label="Edit" variant="secondary" size="sm" icon={<Edit3 size={14} />} onClick={onEdit} /> : null}</div>
         {task.is_blocked ? <div className="blocked-callout"><strong><LockKeyhole size={14} /> Blocked</strong><p>{task.blocked_reason}</p></div> : null}
-
         <div className="peek-section"><span>Context</span><p>{task.context || 'No context added yet.'}</p></div>
         <div className="peek-section"><span>Expected result</span><p>{task.expected_result || 'No expected result added yet.'}</p></div>
         <div className="peek-section"><span>Additional information</span><p>{task.additional_information || 'No additional information.'}</p></div>
 
         <div className="peek-section">
           <span>Assignees</span>
-          <div className="assignee-row">
-            {assignedProfiles.length ? assignedProfiles.map((profile) => (
-              <div className="assignee-chip" key={profile.id}>
-                <span className="mini-avatar">{(profile.display_name || profile.email).slice(0, 1).toUpperCase()}</span>
-                <span>{profile.display_name || profile.email}</span>
-                {can(role, 'task:assign') ? (
-                  <IconButton
-                    label={`Remove ${profile.display_name || profile.email}`}
-                    icon={<X size={12} />}
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void removeAssignee(profile.id)}
-                  />
-                ) : null}
-              </div>
-            )) : <p className="muted small-copy">No assignees.</p>}
-          </div>
-          {can(role, 'task:assign') && availableProfiles.length ? (
-            <div className="inline-editor-row astryx-inline-editor">
-              <Selector
-                label="Add assignee"
-                isLabelHidden
-                options={assigneeOptions}
-                value={selectedAssigneeId}
-                onChange={setSelectedAssigneeId}
-                placeholder="Choose member…"
-                width="100%"
-              />
-              <Button label="Assign" size="sm" variant="secondary" icon={<UserPlus size={14} />} onClick={() => void addAssignee()} isDisabled={!selectedAssigneeId} />
-            </div>
-          ) : null}
+          <div className="assignee-row">{assignedProfiles.length ? assignedProfiles.map((profile) => <div className="assignee-chip" key={profile.id}><span className="mini-avatar">{(profile.display_name || profile.email).slice(0, 1).toUpperCase()}</span><span>{profile.display_name || profile.email}</span>{can(role, 'task:assign') ? <IconButton label={`Remove ${profile.display_name || profile.email}`} icon={<X size={12} />} variant="ghost" size="sm" onClick={() => void removeAssignee(profile.id)} /> : null}</div>) : <p className="muted small-copy">No assignees.</p>}</div>
+          {can(role, 'task:assign') && availableProfiles.length ? <div className="inline-editor-row astryx-inline-editor"><Selector label="Add assignee" isLabelHidden options={assigneeOptions} value={selectedAssigneeId} onChange={setSelectedAssigneeId} placeholder="Choose member…" width="100%" /><Button label="Assign" size="sm" variant="secondary" icon={<UserPlus size={14} />} onClick={() => void addAssignee()} isDisabled={!selectedAssigneeId} /></div> : null}
         </div>
 
         <div className="peek-section">
-          <span>Checklist</span>
-          <div className="checklist-list astryx-checklist-list">
-            {checklist.map((item) => (
-              <div className={item.is_completed ? 'astryx-checklist-item completed' : 'astryx-checklist-item'} key={item.id}>
-                <CheckboxInput
-                  label={item.content}
-                  value={item.is_completed}
-                  isReadOnly={isReadOnly}
-                  size="sm"
-                  width="100%"
-                  onChange={() => void toggleChecklist(item)}
-                />
-              </div>
-            ))}
-          </div>
-          {can(role, 'checklist:edit') ? (
-            <div className="inline-editor-row astryx-inline-editor">
-              <TextInput
-                label="Checklist item"
-                isLabelHidden
-                value={checklistText}
-                onChange={setChecklistText}
-                placeholder="Add checklist item…"
-              />
-              <Button label="Add" size="sm" variant="secondary" icon={<Plus size={14} />} onClick={() => void addChecklistItem()} isDisabled={!checklistText.trim()} />
-            </div>
-          ) : null}
+          <div className="checklist-section-heading"><span>Checklist</span>{checklist.length ? <strong><CheckSquare2 size={13} /> {checklistCompleted}/{checklist.length} · {checklistPercent}%</strong> : null}</div>
+          {checklist.length ? <div className="checklist-progress-track"><span style={{ width: `${checklistPercent}%` }} /></div> : null}
+          <div className="checklist-list astryx-checklist-list">{checklist.map((item) => <div className={item.is_completed ? 'astryx-checklist-item completed' : 'astryx-checklist-item'} key={item.id}><CheckboxInput label={item.content} value={item.is_completed} isReadOnly={isReadOnly} size="sm" width="100%" onChange={() => void toggleChecklist(item)} />{can(role, 'checklist:edit') ? <IconButton label="Delete checklist item" icon={<Trash2 size={13} />} variant="ghost" size="sm" onClick={() => void deleteChecklistItem(item.id)} /> : null}</div>)}</div>
+          {can(role, 'checklist:edit') ? <div className="inline-editor-row astryx-inline-editor"><TextInput label="Checklist item" isLabelHidden value={checklistText} onChange={setChecklistText} placeholder="Add checklist item…" /><Button label="Add" size="sm" variant="secondary" icon={<Plus size={14} />} onClick={() => void addChecklistItem()} isDisabled={!checklistText.trim()} /></div> : null}
         </div>
 
         <div className="peek-section">
           <span>Comments</span>
-          <div className="comment-list">
-            {comments.map((comment) => {
-              const author = profiles.find((profile) => profile.id === comment.author_id)
-              return (
-                <div className="comment-card" key={comment.id}>
-                  <div className="comment-meta"><strong>{author?.display_name || author?.email || 'Team member'}</strong><span>{new Date(comment.created_at).toLocaleString()}</span></div>
-                  <p>{comment.content}</p>
-                </div>
-              )
-            })}
-            {!comments.length ? <p className="muted small-copy">No comments yet.</p> : null}
-          </div>
-          {can(role, 'comment:create') ? (
-            <div className="comment-composer">
-              <TextArea label="Comment" isLabelHidden value={commentText} onChange={setCommentText} rows={3} placeholder="Share an update, decision or test result…" />
-              <Button label="Add comment" variant="secondary" size="sm" onClick={() => void addComment()} isDisabled={!commentText.trim()} />
-            </div>
-          ) : null}
+          <div className="comment-list">{comments.map((comment) => { const author = profiles.find((profile) => profile.id === comment.author_id); return <div className="comment-card" key={comment.id}><div className="comment-meta"><strong>{author?.display_name || author?.email || 'Team member'}</strong><span>{new Date(comment.created_at).toLocaleString()}</span></div><p>{comment.content}</p></div> })}{!comments.length ? <p className="muted small-copy">No comments yet.</p> : null}</div>
+          {can(role, 'comment:create') ? <div className="comment-composer"><TextArea label="Comment" isLabelHidden value={commentText} onChange={setCommentText} rows={3} placeholder="Share an update, decision or test result…" /><Button label="Add comment" variant="secondary" size="sm" onClick={() => void addComment()} isDisabled={!commentText.trim()} /></div> : null}
         </div>
 
         {error ? <div className="inline-alert error-alert">{error}</div> : null}

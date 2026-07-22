@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Badge } from '@astryxdesign/core/Badge'
 import { CircleCheckBig, CircleDotDashed, Clock3, LoaderCircle, ScanSearch } from 'lucide-react'
-import type { BoardColumn, Profile, Task, TaskAssignee, TaskType } from '../../types/domain'
+import type { BoardColumn, ChecklistItem, Profile, Task, TaskAssignee, TaskType } from '../../types/domain'
 import { TaskCard } from './TaskCard'
 
 interface KanbanColumnProps {
@@ -10,6 +10,7 @@ interface KanbanColumnProps {
   tasks: Task[]
   taskTypes: TaskType[]
   assignees: TaskAssignee[]
+  checklistItems: ChecklistItem[]
   profiles: Profile[]
   isReadOnly: boolean
   onOpenTask: (task: Task) => void
@@ -23,7 +24,7 @@ const stageIcon = {
   DONE: CircleCheckBig,
 } as const
 
-export function KanbanColumn({ column, tasks, taskTypes, assignees, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
+export function KanbanColumn({ column, tasks, taskTypes, assignees, checklistItems, profiles, isReadOnly, onOpenTask }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id, data: { type: 'column', columnId: column.id } })
   const StageIcon = stageIcon[column.workflow_stage]
   const stageClass = `stage-${column.workflow_stage.toLowerCase().replace('_', '-')}`
@@ -44,6 +45,7 @@ export function KanbanColumn({ column, tasks, taskTypes, assignees, profiles, is
               task={task}
               taskType={taskTypes.find((type) => type.id === task.task_type_id)}
               assignees={assignees}
+              checklistItems={checklistItems}
               profiles={profiles}
               isReadOnly={isReadOnly}
               onOpen={onOpenTask}

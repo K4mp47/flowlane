@@ -1,7 +1,7 @@
 export type WorkspaceRole = 'ADMIN' | 'MEMBER' | 'VIEWER'
 export type WorkflowStage = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'REVIEW' | 'DONE'
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
-export type NotificationType = 'ASSIGNMENT' | 'MENTION' | 'DUE_SOON' | 'OVERDUE'
+export type NotificationType = 'ASSIGNMENT' | 'MENTION' | 'DUE_SOON' | 'OVERDUE' | 'STATUS_CHANGE' | 'COMMENT'
 
 export interface Profile {
   id: string
