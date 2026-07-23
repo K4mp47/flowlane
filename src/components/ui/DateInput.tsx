@@ -1,6 +1,6 @@
 import { Popover } from '@base-ui/react/popover'
 import { CalendarDays, X } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { Calendar, type ISODateString } from './Calendar'
 
 interface DateInputProps {
@@ -8,7 +8,7 @@ interface DateInputProps {
   value?: ISODateString
   onChange: (value: ISODateString | undefined) => void
   hasClear?: boolean
-  width?: React.CSSProperties['width']
+  width?: CSSProperties['width']
 }
 
 function parseIsoDate(value?: ISODateString) {
