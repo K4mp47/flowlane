@@ -1,0 +1,137 @@
+/* Final color cascade. Loaded last on purpose so legacy polish cannot override it. */
+
+:root {
+  --fl-priority-low: oklch(.72 .13 185);
+  --fl-priority-medium: oklch(.84 .17 88);
+  --fl-priority-high: oklch(.74 .19 52);
+  --fl-priority-urgent: oklch(.65 .23 28);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Board workflow colors are canonical.                                       */
+/* -------------------------------------------------------------------------- */
+.kanban-column[data-stage-tone='backlog'] { --stage-color: var(--fl-stage-backlog) !important; }
+.kanban-column[data-stage-tone='unstarted'] { --stage-color: var(--fl-stage-unstarted) !important; }
+.kanban-column[data-stage-tone='started'] { --stage-color: var(--fl-stage-started) !important; }
+.kanban-column[data-stage-tone='review'] { --stage-color: var(--fl-stage-review) !important; }
+.kanban-column[data-stage-tone='completed'] { --stage-color: var(--fl-stage-completed) !important; }
+.kanban-column[data-stage-tone='canceled'] { --stage-color: var(--fl-stage-canceled) !important; }
+
+/* Direct properties, not inherited custom-property mixes, so these cannot fall
+   back to the wrong status color. */
+.task-status-label.workflow-tone-backlog {
+  background: color-mix(in oklch, var(--fl-stage-backlog) 24%, var(--fl-surface)) !important;
+  color: color-mix(in oklch, var(--fl-stage-backlog) 92%, var(--fl-text)) !important;
+}
+.task-status-label.workflow-tone-unstarted {
+  background: color-mix(in oklch, var(--fl-stage-unstarted) 24%, var(--fl-surface)) !important;
+  color: color-mix(in oklch, var(--fl-stage-unstarted) 92%, var(--fl-text)) !important;
+}
+.task-status-label.workflow-tone-started {
+  background: color-mix(in oklch, var(--fl-stage-started) 24%, var(--fl-surface)) !important;
+  color: color-mix(in oklch, var(--fl-stage-started) 92%, var(--fl-text)) !important;
+}
+.task-status-label.workflow-tone-review {
+  background: color-mix(in oklch, var(--fl-stage-review) 26%, var(--fl-surface)) !important;
+  color: color-mix(in oklch, var(--fl-stage-review) 94%, var(--fl-text)) !important;
+}
+.task-status-label.workflow-tone-completed {
+  background: color-mix(in oklch, var(--fl-stage-completed) 24%, var(--fl-surface)) !important;
+  color: color-mix(in oklch, var(--fl-stage-completed) 92%, var(--fl-text)) !important;
+}
+.task-status-label.workflow-tone-canceled,
+.task-status-label.workflow-tone-neutral {
+  background: color-mix(in oklch, var(--fl-stage-canceled) 20%, var(--fl-surface)) !important;
+  color: var(--fl-text-muted) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Priority colors. Calendar bars and priority badges use exactly this scale.  */
+/* -------------------------------------------------------------------------- */
+.calendar-range-task.priority-tone-low {
+  background: color-mix(in oklch, var(--fl-priority-low) 34%, var(--fl-surface)) !important;
+  color: var(--fl-text) !important;
+}
+.calendar-range-task.priority-tone-medium {
+  background: color-mix(in oklch, var(--fl-priority-medium) 38%, var(--fl-surface)) !important;
+  color: var(--fl-text) !important;
+}
+.calendar-range-task.priority-tone-high {
+  background: color-mix(in oklch, var(--fl-priority-high) 36%, var(--fl-surface)) !important;
+  color: var(--fl-text) !important;
+}
+.calendar-range-task.priority-tone-urgent {
+  background: color-mix(in oklch, var(--fl-priority-urgent) 34%, var(--fl-surface)) !important;
+  color: var(--fl-text) !important;
+}
+.calendar-range-task.priority-tone-none {
+  background: var(--fl-surface-soft) !important;
+  color: var(--fl-text) !important;
+}
+.calendar-range-task.priority-tone-low:hover { background: color-mix(in oklch, var(--fl-priority-low) 46%, var(--fl-surface)) !important; }
+.calendar-range-task.priority-tone-medium:hover { background: color-mix(in oklch, var(--fl-priority-medium) 50%, var(--fl-surface)) !important; }
+.calendar-range-task.priority-tone-high:hover { background: color-mix(in oklch, var(--fl-priority-high) 48%, var(--fl-surface)) !important; }
+.calendar-range-task.priority-tone-urgent:hover { background: color-mix(in oklch, var(--fl-priority-urgent) 46%, var(--fl-surface)) !important; }
+.calendar-range-task.priority-tone-low .calendar-range-ref,
+.calendar-range-task.priority-tone-low .calendar-range-status { color: color-mix(in oklch, var(--fl-priority-low) 88%, var(--fl-text)) !important; }
+.calendar-range-task.priority-tone-medium .calendar-range-ref,
+.calendar-range-task.priority-tone-medium .calendar-range-status { color: color-mix(in oklch, var(--fl-priority-medium) 84%, var(--fl-text)) !important; }
+.calendar-range-task.priority-tone-high .calendar-range-ref,
+.calendar-range-task.priority-tone-high .calendar-range-status { color: color-mix(in oklch, var(--fl-priority-high) 88%, var(--fl-text)) !important; }
+.calendar-range-task.priority-tone-urgent .calendar-range-ref,
+.calendar-range-task.priority-tone-urgent .calendar-range-status { color: color-mix(in oklch, var(--fl-priority-urgent) 90%, var(--fl-text)) !important; }
+
+.fl-badge-teal { background: color-mix(in oklch, var(--fl-priority-low) 24%, transparent) !important; color: color-mix(in oklch, var(--fl-priority-low) 90%, var(--fl-text)) !important; }
+.fl-badge-yellow { background: color-mix(in oklch, var(--fl-priority-medium) 27%, transparent) !important; color: color-mix(in oklch, var(--fl-priority-medium) 88%, var(--fl-text)) !important; }
+.fl-badge-orange { background: color-mix(in oklch, var(--fl-priority-high) 26%, transparent) !important; color: color-mix(in oklch, var(--fl-priority-high) 90%, var(--fl-text)) !important; }
+.fl-badge-red { background: color-mix(in oklch, var(--fl-priority-urgent) 25%, transparent) !important; color: color-mix(in oklch, var(--fl-priority-urgent) 92%, var(--fl-text)) !important; }
+
+/* -------------------------------------------------------------------------- */
+/* Accent navigation and hover. Accent stays local; neutral surfaces stay gray. */
+/* -------------------------------------------------------------------------- */
+:root[data-palette] .fl-nav-item:hover:not(.is-selected) {
+  background: color-mix(in oklch, var(--fl-primary) 12%, transparent) !important;
+  color: var(--fl-primary) !important;
+}
+:root[data-palette] .fl-nav-item.is-selected,
+:root[data-palette] .fl-nav-item.is-selected:hover {
+  background: color-mix(in oklch, var(--fl-primary) 22%, transparent) !important;
+  color: var(--fl-primary) !important;
+  box-shadow: none !important;
+}
+:root[data-palette] .fl-nav-item .fl-nav-icon {
+  border-radius: 7px;
+  transition: color .14s ease, background-color .14s ease;
+}
+:root[data-palette] .fl-nav-item:hover:not(.is-selected) .fl-nav-icon {
+  color: var(--fl-primary) !important;
+  background: color-mix(in oklch, var(--fl-primary) 14%, transparent) !important;
+}
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon {
+  color: var(--fl-primary-foreground) !important;
+  background: var(--fl-primary) !important;
+}
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon svg,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon svg {
+  color: var(--fl-primary-foreground) !important;
+  stroke: currentColor !important;
+}
+
+/* Row hover must beat alternating-row backgrounds. */
+:root[data-palette] .workspace-task-table > button.workspace-task-row:not(.workspace-task-table-head):hover,
+:root[data-palette] .workspace-task-table > button.workspace-task-row:nth-child(even):not(.workspace-task-table-head):hover,
+:root[data-palette] .workspace-task-table > button.workspace-task-row:nth-child(odd):not(.workspace-task-table-head):hover,
+:root[data-palette] .team-table-shell > .team-row:hover,
+:root[data-palette] .team-table-shell > .team-row:nth-child(even):hover,
+:root[data-palette] .team-table-shell > .team-row:nth-child(odd):hover {
+  background: color-mix(in oklch, var(--fl-primary) 11%, transparent) !important;
+}
+
+@media (max-width:760px) {
+  :root[data-palette] .mobile-app-nav button.active,
+  :root[data-palette] .mobile-more-nav button.active {
+    background: color-mix(in oklch, var(--fl-primary) 18%, transparent) !important;
+    color: var(--fl-primary) !important;
+  }
+}
