@@ -34,7 +34,7 @@ async function fetchWorkspaceTasks(workspaceId: string): Promise<WorkspaceTasksD
       ? supabase.from('workflow_statuses').select('id,project_id,name,category,position,color,is_terminal,notify_on_enter').in('project_id', projectIds).order('position', { ascending: true })
       : Promise.resolve({ data: [], error: null }),
     projectIds.length
-      ? supabase.from('tasks').select('id,task_number,project_id,status_id,title,context,expected_result,additional_information,task_type_id,priority,creator_id,start_date,due_date,is_blocked,blocked_reason,blocked_by_task_id,position,created_at,updated_at,completed_at').in('project_id', projectIds).order('updated_at', { ascending: false })
+      ? supabase.from('tasks').select('id,task_number,project_id,board_id,status_id,title,context,expected_result,additional_information,task_type_id,priority,creator_id,start_date,due_date,is_blocked,blocked_reason,blocked_by_task_id,position,created_at,updated_at,completed_at').in('project_id', projectIds).order('updated_at', { ascending: false })
       : Promise.resolve({ data: [], error: null }),
     memberIds.length
       ? supabase.from('profiles').select('id,email,display_name,avatar_url').in('id', memberIds)

@@ -10,12 +10,12 @@ import { X } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import type { Task, TaskPriority, TaskType, WorkflowStatus } from '../../types/domain'
 
-interface TaskFormModalProps { projectId: string; creatorId: string; initialStatus: WorkflowStatus; statuses: WorkflowStatus[]; taskTypes: TaskType[]; task?: Task | null; onClose: () => void; onSaved: () => Promise<void> | void }
+interface TaskFormModalProps { projectId: string; boardId: string; creatorId: string; initialStatus: WorkflowStatus; statuses: WorkflowStatus[]; taskTypes: TaskType[]; task?: Task | null; onClose: () => void; onSaved: () => Promise<void> | void }
 
 const priorities: TaskPriority[] = ['LOW', 'MEDIUM', 'HIGH', 'URGENT']
 const toIso = (value?: ISODateString) => value ? new Date(`${value}T12:00:00`).toISOString() : null
 
-export function TaskFormModal({ projectId, creatorId, initialStatus, statuses, taskTypes, task, onClose, onSaved }: TaskFormModalProps) {
+export function TaskFormModal({ projectId, boardId, creatorId, initialStatus, statuses, taskTypes, task, onClose, onSaved }: TaskFormModalProps) {
   const [title, setTitle] = useState('')
   const [context, setContext] = useState('')
   const [expectedResult, setExpectedResult] = useState('')
@@ -39,7 +39,7 @@ export function TaskFormModal({ projectId, creatorId, initialStatus, statuses, t
   async function handleSubmit(event: FormEvent) {
     event.preventDefault(); if (!canSave) return; setError(null); setIsSaving(true)
     const payload = { title: title.trim(), context: context.trim() || null, expected_result: expectedResult.trim() || null, additional_information: additionalInformation.trim() || null, task_type_id: taskTypeId || null, priority: priority || null, status_id: statusId, start_date: toIso(startDate), due_date: toIso(dueDate) }
-    const result = isEditing && task ? await supabase.from('tasks').update(payload).eq('id', task.id) : await supabase.from('tasks').insert({ ...payload, project_id: projectId, creator_id: creatorId, position: Date.now() })
+    const result = isEditing && task ? await supabase.from('tasks').update(payload).eq('id', task.id) : await supabase.from('tasks').insert({ ...payload, project_id: projectId, board_id: boardId, creator_id: creatorId, position: Date.now() })
     if (result.error) { setError(result.error.message); setIsSaving(false); return }
     await onSaved(); setIsSaving(false); onClose()
   }
