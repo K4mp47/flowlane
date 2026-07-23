@@ -1,18 +1,44 @@
 /* Behavior + visual polish after Phase 6. Loaded last so semantic tokens win over legacy layers. */
 :root{
   --task-tone-backlog:#8b929a;
-  --task-tone-unstarted:#6d8dff;
-  --task-tone-started:#a87bf0;
-  --task-tone-review:#e7ad3a;
-  --task-tone-completed:#48b881;
+  --task-tone-unstarted:#4f86ff;
+  --task-tone-started:#9a6be8;
+  --task-tone-review:#e3a72f;
+  --task-tone-completed:#3fb57a;
   --task-tone-canceled:#8b929a;
 }
 
-/* Palette picker must remain above the application content. */
+/* Sidebar and palette picker ------------------------------------------------ */
 .sidebar-hover-shell,.flowlane-side-nav{z-index:500!important}
-.sidebar-palette-control{position:relative;z-index:1200!important}
-.palette-popover{z-index:1400!important;left:0!important;bottom:calc(100% + 8px)!important}
+.sidebar-palette-control{position:relative;z-index:501!important}
 .sidebar-hover-shell.expanded .flowlane-side-nav{overflow:visible!important}
+.palette-popover-portal{
+  position:fixed!important;
+  z-index:10000!important;
+  width:276px!important;
+  max-height:min(430px,calc(100vh - 24px));
+  overflow:auto;
+  box-shadow:0 18px 50px color-mix(in oklch,black 45%,transparent)!important;
+}
+.fl-nav-item.is-selected{
+  color:color-mix(in oklch,var(--fl-primary) 88%,white 12%)!important;
+  background:color-mix(in oklch,var(--fl-primary) 19%,var(--sidebar))!important;
+  box-shadow:none!important;
+}
+.fl-nav-item.is-selected .fl-nav-icon{color:var(--fl-primary)!important}
+.sidebar-utility-row{gap:5px!important}
+.sidebar-utility-row .fl-icon-button{
+  width:32px!important;height:32px!important;min-width:32px!important;
+  border:0!important;border-radius:8px!important;
+  background:transparent!important;color:var(--fl-text-muted)!important;
+}
+.sidebar-utility-row .fl-icon-button:hover,
+.sidebar-utility-row .fl-icon-button.is-active{
+  background:var(--sidebar-accent)!important;color:var(--fl-text)!important;
+  box-shadow:none!important;
+}
+.sidebar-notification-action{display:flex;align-items:center;position:relative}
+.sidebar-notification-action .fl-badge{position:absolute;top:-4px;right:-5px;min-width:16px;height:16px;padding:0 4px;font-size:9px;pointer-events:none}
 
 /* Task form: stronger field separation without bright white surfaces. */
 .task-form-modal .fl-input,
@@ -31,18 +57,20 @@
 .task-detail-heading-actions{display:flex;align-items:center;gap:7px;flex:none}
 .task-detail-panel{will-change:transform}
 
-/* Workflow tones used consistently outside the board. */
-.tone-backlog{--task-tone:var(--task-tone-backlog)}
-.tone-unstarted{--task-tone:var(--task-tone-unstarted)}
-.tone-started{--task-tone:var(--task-tone-started)}
-.tone-review{--task-tone:var(--task-tone-review)}
-.tone-completed{--task-tone:var(--task-tone-completed)}
-.tone-canceled{--task-tone:var(--task-tone-canceled)}
-.tone-neutral{--task-tone:var(--fl-text-muted)}
+/* Workflow tones used consistently outside the board. Names are deliberately
+   isolated from palette classes so changing the app accent cannot recolor task state. */
+.workflow-tone-backlog{--task-tone:var(--task-tone-backlog)}
+.workflow-tone-unstarted{--task-tone:var(--task-tone-unstarted)}
+.workflow-tone-started{--task-tone:var(--task-tone-started)}
+.workflow-tone-review{--task-tone:var(--task-tone-review)}
+.workflow-tone-completed{--task-tone:var(--task-tone-completed)}
+.workflow-tone-canceled{--task-tone:var(--task-tone-canceled)}
+.workflow-tone-neutral{--task-tone:var(--fl-text-muted)}
 .task-status-label{
   display:inline-flex;align-items:center;min-height:24px;padding:4px 9px;border:0;border-radius:999px;
-  background:color-mix(in oklch,var(--task-tone) 17%,var(--fl-surface));
-  color:color-mix(in oklch,var(--task-tone) 78%,var(--fl-text));font-size:11px;font-weight:700;line-height:1;
+  background:color-mix(in oklch,var(--task-tone) 20%,var(--fl-surface))!important;
+  color:color-mix(in oklch,var(--task-tone) 82%,var(--fl-text))!important;font-size:11px;font-weight:750;line-height:1;
+  box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 24%,transparent);
 }
 
 /* Calendar: neutral grid, status-filled task labels, no oversized status stripe. */
@@ -62,14 +90,14 @@
   --task-tone:var(--fl-text-muted);
   min-height:30px;padding:6px 8px!important;display:grid!important;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:6px!important;
   border:0!important;border-radius:7px!important;
-  background:color-mix(in oklch,var(--task-tone) 18%,var(--fl-surface))!important;
-  color:var(--fl-text)!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 20%,transparent);
+  background:color-mix(in oklch,var(--task-tone) 20%,var(--fl-surface))!important;
+  color:var(--fl-text)!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 24%,transparent)!important;
   transition:transform .14s ease,background .14s ease,box-shadow .14s ease!important;
 }
-.calendar-task:hover{transform:translateY(-1px);background:color-mix(in oklch,var(--task-tone) 25%,var(--fl-surface))!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 34%,transparent),0 4px 12px color-mix(in oklch,var(--task-tone) 10%,transparent)}
-.calendar-task-ref{font-size:9px!important;font-weight:800!important;color:color-mix(in oklch,var(--task-tone) 76%,var(--fl-text))!important}
+.calendar-task:hover{transform:translateY(-1px);background:color-mix(in oklch,var(--task-tone) 28%,var(--fl-surface))!important;box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--task-tone) 38%,transparent),0 4px 12px color-mix(in oklch,var(--task-tone) 10%,transparent)!important}
+.calendar-task-ref{font-size:9px!important;font-weight:800!important;color:color-mix(in oklch,var(--task-tone) 82%,var(--fl-text))!important}
 .calendar-task-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:650}
-.calendar-task-status{grid-column:1/-1;width:max-content;padding:2px 6px;border-radius:999px;background:color-mix(in oklch,var(--task-tone) 22%,transparent);color:color-mix(in oklch,var(--task-tone) 72%,var(--fl-text));font-size:9px;font-weight:700}
+.calendar-task-status{grid-column:1/-1;width:max-content;padding:2px 6px;border-radius:999px;background:color-mix(in oklch,var(--task-tone) 24%,transparent);color:color-mix(in oklch,var(--task-tone) 78%,var(--fl-text));font-size:9px;font-weight:700}
 .calendar-task.complete{opacity:.67}
 
 /* Task lists use status chips rather than low-contrast plain text. */
