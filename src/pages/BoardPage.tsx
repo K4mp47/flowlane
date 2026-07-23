@@ -159,6 +159,7 @@ export function BoardPage() {
   }
 
   function openTask(task: Task) { setSelectedProjectId(task.project_id); setView('board'); setSelectedTask(task); setIsNotificationsOpen(false) }
+  function openTaskInCurrentView(task: Task) { setSelectedProjectId(task.project_id); setSelectedTask(task); setIsNotificationsOpen(false) }
   async function openTaskById(taskId: string) { const result = await supabase.from('tasks').select('id,task_number,project_id,status_id,title,context,expected_result,additional_information,task_type_id,priority,creator_id,start_date,due_date,is_blocked,blocked_reason,blocked_by_task_id,position,created_at,updated_at,completed_at').eq('id', taskId).single(); if (result.data) openTask(result.data as Task) }
 
   if (boardQuery.isLoading) return <main className="board-loading">Loading workspace…</main>
@@ -184,7 +185,7 @@ export function BoardPage() {
       {boardError ? <div className="board-error">{boardError}</div> : null}
       {view === 'mine' ? <div className="kanban-scroll"><WorkspaceTaskList workspaceId={workspaceId} userId={user!.id} mode="mine" onOpenTask={openTask} /></div>
       : view === 'all' ? <div className="kanban-scroll"><WorkspaceTaskList workspaceId={workspaceId} userId={user!.id} mode="all" onOpenTask={openTask} /></div>
-      : view === 'calendar' ? <div className="kanban-scroll"><CalendarView workspaceId={workspaceId} userId={user!.id} role={role} onOpenTask={openTask} /></div>
+      : view === 'calendar' ? <div className="kanban-scroll"><CalendarView workspaceId={workspaceId} userId={user!.id} role={role} onOpenTask={openTaskInCurrentView} /></div>
       : view === 'analytics' ? <div className="kanban-scroll"><ProjectAnalytics workspaceId={workspaceId} /></div>
       : view === 'team' && role === 'ADMIN' ? <div className="kanban-scroll"><TeamPanel workspaceId={workspaceId} profiles={boardQuery.data.profiles} members={boardQuery.data.members} onInvited={async () => { await queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }) }} /></div>
       : view === 'projects' ? <div className="kanban-scroll"><ProjectsPanel workspaceId={workspaceId} projects={boardQuery.data.projects} activeProjectId={activeProject?.id} role={role} onSelectProject={(projectId) => { setSelectedProjectId(projectId); setView('board') }} onChanged={async () => { await Promise.all([queryClient.invalidateQueries({ queryKey: ['boardData', workspaceId] }), queryClient.invalidateQueries({ queryKey: workspaceTasksQueryKey(workspaceId) })]); await broadcastChanged(null) }} /></div>
