@@ -28,16 +28,17 @@ Deno.serve(async (req: Request) => {
   try { payload = await req.json() } catch { return json({ error: 'Invalid JSON body' }, 400) }
 
   const workspaceId = payload.workspaceId?.trim()
-  const projectId = payload.projectId?.trim()
+  const projectId = payload.projectId?.trim() || null
   const boardId = payload.boardId?.trim() || null
-  if (!workspaceId || !projectId) return json({ error: 'workspaceId and projectId are required' }, 400)
+  if (!workspaceId) return json({ error: 'workspaceId is required' }, 400)
 
   const actorId = authData.user.id
-  const [{ data: workspaceMembership }, { data: projectMembership }] = await Promise.all([
-    admin.from('workspace_members').select('role').eq('workspace_id', workspaceId).eq('user_id', actorId).maybeSingle(),
-    admin.from('project_members').select('role').eq('project_id', projectId).eq('user_id', actorId).maybeSingle(),
-  ])
-  let authorized = workspaceMembership?.role === 'ADMIN' || projectMembership?.role === 'ADMIN'
+  const { data: workspaceMembership } = await admin.from('workspace_members').select('role').eq('workspace_id', workspaceId).eq('user_id', actorId).maybeSingle()
+  let authorized = workspaceMembership?.role === 'ADMIN'
+  if (!authorized && projectId) {
+    const { data: projectMembership } = await admin.from('project_members').select('role').eq('project_id', projectId).eq('user_id', actorId).maybeSingle()
+    authorized = projectMembership?.role === 'ADMIN'
+  }
   if (!authorized && boardId) {
     const { data: boardMembership } = await admin.from('board_members').select('role').eq('board_id', boardId).eq('user_id', actorId).maybeSingle()
     authorized = boardMembership?.role === 'ADMIN'
