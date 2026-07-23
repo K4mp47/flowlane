@@ -62,13 +62,15 @@ export function TeamPanel({ workspaceId, project, boards, activeBoard, profiles,
     if (query.length < 2 || !canManage) { setResults([]); return }
     const timer = window.setTimeout(async () => {
       setIsSearching(true)
-      const { data, error: searchError } = await supabase.functions.invoke('team-directory', { body: { action: 'search', workspaceId, query } })
+      const { data, error: searchError } = await supabase.functions.invoke('team-directory', {
+        body: { action: 'search', workspaceId, projectId: project.id, boardId: scope === 'BOARD' ? boardId : null, query },
+      })
       if (searchError || data?.error) { setError(searchError?.message ?? String(data?.error)); setResults([]) }
       else setResults((data?.results ?? []) as DirectoryResult[])
       setIsSearching(false)
     }, 250)
     return () => window.clearTimeout(timer)
-  }, [canManage, email, workspaceId])
+  }, [boardId, canManage, email, project.id, scope, workspaceId])
 
   async function grantRegisteredUser(directoryUser: DirectoryResult) {
     if (!canManage) return
