@@ -8,7 +8,24 @@ type TaskListMode = 'today' | 'mine' | 'all'
 interface WorkspaceTaskListProps { workspaceId: string; userId: string; mode: TaskListMode; onOpenTask: (task: Task) => void }
 
 function dayKey(value: string | Date) { const date = typeof value === 'string' ? new Date(value) : value; return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` }
-function statusTone(status?: WorkflowStatus) { if (!status) return 'neutral'; const name = status.name.toLowerCase(); if (name.includes('review')) return 'review'; if (status.category === 'BACKLOG') return 'backlog'; if (status.category === 'UNSTARTED') return 'unstarted'; if (status.category === 'STARTED') return 'started'; if (status.category === 'COMPLETED') return 'completed'; if (status.category === 'CANCELED') return 'canceled'; return 'neutral' }
+
+function statusTone(status?: WorkflowStatus) {
+  if (!status) return 'neutral'
+  const name = status.name.trim().toLowerCase().replace(/[-_]+/g, ' ')
+  if (name.includes('backlog')) return 'backlog'
+  if (name === 'to do' || name === 'todo' || name.includes('not started')) return 'unstarted'
+  if (name.includes('review')) return 'review'
+  if (name.includes('progress') || name.includes('doing') || name.includes('started')) return 'started'
+  if (name.includes('done') || name.includes('complete')) return 'completed'
+  if (name.includes('cancel')) return 'canceled'
+  if (status.category === 'BACKLOG') return 'backlog'
+  if (status.category === 'UNSTARTED') return 'unstarted'
+  if (status.category === 'STARTED') return 'started'
+  if (status.category === 'COMPLETED') return 'completed'
+  if (status.category === 'CANCELED') return 'canceled'
+  return 'neutral'
+}
+
 function priorityVariant(priority: TaskPriority) { if (priority === 'URGENT') return 'red' as const; if (priority === 'HIGH') return 'orange' as const; if (priority === 'MEDIUM') return 'yellow' as const; return 'teal' as const }
 
 export function WorkspaceTaskList({ workspaceId, userId, mode, onOpenTask }: WorkspaceTaskListProps) {
