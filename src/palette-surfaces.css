@@ -1,0 +1,319 @@
+/*
+ * Final palette/surface pass.
+ *
+ * Accent choice now influences the application surfaces, not only buttons.
+ * Visual hierarchy comes from spacing and tonal surface changes instead of borders.
+ */
+
+:root[data-palette] {
+  --fl-bg: color-mix(in oklch, var(--background) 96.5%, var(--fl-primary) 3.5%);
+  --fl-surface: color-mix(in oklch, var(--card) 96%, var(--fl-primary) 4%);
+  --fl-surface-soft: color-mix(in oklch, var(--muted) 91%, var(--fl-primary) 9%);
+  --fl-surface-muted: color-mix(in oklch, var(--secondary) 90%, var(--fl-primary) 10%);
+  --fl-input-bg: color-mix(in oklch, var(--card) 94%, var(--fl-primary) 6%);
+  --sidebar: color-mix(in oklch, var(--background) 94%, var(--fl-primary) 6%);
+  --sidebar-accent: color-mix(in oklch, var(--muted) 84%, var(--fl-primary) 16%);
+  --color-background-body: var(--fl-bg);
+  --color-background-surface: var(--fl-surface);
+  --color-background-card: var(--fl-surface);
+  --color-background-popover: var(--fl-surface);
+  --color-background-muted: var(--fl-surface-soft);
+}
+
+:root[data-theme='dark'][data-palette] {
+  --fl-bg: color-mix(in oklch, var(--background) 94%, var(--fl-primary) 6%);
+  --fl-surface: color-mix(in oklch, var(--card) 93%, var(--fl-primary) 7%);
+  --fl-surface-soft: color-mix(in oklch, var(--muted) 88%, var(--fl-primary) 12%);
+  --fl-surface-muted: color-mix(in oklch, var(--secondary) 87%, var(--fl-primary) 13%);
+  --fl-input-bg: color-mix(in oklch, var(--background) 88%, var(--fl-primary) 12%);
+  --sidebar: color-mix(in oklch, var(--card) 92%, var(--fl-primary) 8%);
+  --sidebar-accent: color-mix(in oklch, var(--muted) 80%, var(--fl-primary) 20%);
+}
+
+html,
+body,
+#root,
+.app-frame,
+.board-main,
+.kanban-scroll,
+.workspace-task-page,
+.calendar-page,
+.projects-page,
+.team-page,
+.analytics-page {
+  background: var(--fl-bg) !important;
+}
+
+.board-toolbar {
+  background: color-mix(in oklch, var(--fl-bg) 94%, transparent) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sidebar footer: one vertical utility rail, visible in both states           */
+/* -------------------------------------------------------------------------- */
+.sidebar-footer-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+}
+
+.sidebar-utility-row {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+  width: 100% !important;
+}
+
+.sidebar-notification-action,
+.sidebar-palette-control {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: auto !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-palette-control {
+  display: flex !important;
+}
+
+.sidebar-utility-row .fl-icon-button,
+.sidebar-hover-shell:not(.expanded) .sidebar-notification-action .fl-icon-button,
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row > .fl-icon-button,
+.sidebar-hover-shell:not(.expanded) .sidebar-palette-control .fl-icon-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: var(--fl-text-muted) !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.sidebar-utility-row .fl-icon-button:hover,
+.sidebar-utility-row .fl-icon-button.is-active {
+  color: var(--fl-primary) !important;
+  background: color-mix(in oklch, var(--fl-primary) 12%, var(--sidebar)) !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row {
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 5px !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-footer-stack {
+  align-items: flex-start !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-user {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-avatar {
+  margin: 0 !important;
+}
+
+.sidebar-notification-action .fl-badge {
+  top: -4px !important;
+  left: 24px !important;
+  right: auto !important;
+}
+
+/* Selected navigation state is a fill, never an outlined box. */
+.fl-nav-item,
+.fl-nav-item.is-selected,
+.fl-nav-item.is-selected:hover {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.fl-nav-item.is-selected,
+.fl-nav-item.is-selected:hover {
+  color: var(--fl-primary) !important;
+  background: color-mix(in oklch, var(--fl-primary) 16%, var(--sidebar)) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Team avatars                                                               */
+/* -------------------------------------------------------------------------- */
+:root[data-theme='light'] .team-page .avatar-circle,
+:root[data-theme='light'] .team-page .team-person .avatar-circle,
+:root[data-theme='light'] .team-directory-result .avatar-circle {
+  background: color-mix(in oklch, var(--fl-primary) 13%, var(--fl-surface-soft)) !important;
+  color: color-mix(in oklch, var(--fl-primary) 82%, var(--fl-text)) !important;
+  box-shadow: none !important;
+}
+
+:root[data-theme='dark'] .team-page .avatar-circle,
+:root[data-theme='dark'] .team-page .team-person .avatar-circle,
+:root[data-theme='dark'] .team-directory-result .avatar-circle {
+  background: color-mix(in oklch, var(--fl-primary) 16%, var(--fl-surface-soft)) !important;
+  color: var(--fl-text) !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Borderless component language                                              */
+/* -------------------------------------------------------------------------- */
+.app-frame button,
+.app-frame input,
+.app-frame textarea,
+.app-frame select,
+.palette-popover,
+.fl-select-popup,
+.fl-dialog-popup {
+  border: 0 !important;
+}
+
+.task-card,
+.task-card-overlay,
+.empty-column,
+.workspace-task-table,
+.workspace-task-row,
+.calendar-grid,
+.calendar-day,
+.calendar-task,
+.project-create-card,
+.project-row,
+.project-empty-state,
+.invite-card,
+.team-table-shell,
+.team-table-header,
+.team-row,
+.analytics-card,
+.analytics-metric,
+.task-form-modal,
+.task-peek,
+.task-detail-panel,
+.notification-panel,
+.notification-row,
+.comment-card,
+.assignee-chip,
+.checklist-progress-track,
+.role-explainer,
+.team-directory-results,
+.team-directory-result,
+.palette-popover,
+.fl-input,
+.fl-textarea,
+.fl-select-trigger,
+.fl-button-secondary,
+.fl-icon-button-secondary,
+.presence-pill,
+.workspace-task-count,
+.project-count,
+.team-count,
+.default-board-pill,
+.role-chip,
+.fl-badge {
+  border: 0 !important;
+  outline: 0 !important;
+}
+
+/* Remove border-like inset rings inherited from older polish layers. */
+.workspace-task-table,
+.calendar-grid,
+.calendar-task,
+.project-row,
+.project-create-card,
+.invite-card,
+.team-table-shell,
+.analytics-card,
+.analytics-metric,
+.task-status-label,
+.fl-nav-item,
+.task-card,
+.task-form-modal,
+.task-peek,
+.notification-panel,
+.palette-popover {
+  box-shadow: none !important;
+}
+
+/* Use tonal separation instead of outlines. */
+.task-card,
+.workspace-task-table,
+.calendar-grid,
+.project-row,
+.project-create-card,
+.invite-card,
+.team-table-shell,
+.analytics-card,
+.analytics-metric,
+.task-form-modal,
+.task-peek,
+.notification-panel,
+.palette-popover {
+  background: var(--fl-surface) !important;
+}
+
+.workspace-task-table-head,
+.team-table-header,
+.task-card-footer,
+.calendar-filter-bar,
+.calendar-period-bar {
+  background: var(--fl-surface-soft) !important;
+}
+
+.workspace-task-row:not(.workspace-task-table-head):hover,
+.team-row:hover,
+.project-row:hover,
+.notification-row:hover {
+  background: color-mix(in oklch, var(--fl-surface-soft) 88%, var(--fl-primary) 12%) !important;
+}
+
+.fl-input,
+.fl-textarea,
+.fl-select-trigger {
+  background: var(--fl-input-bg) !important;
+  box-shadow: none !important;
+}
+
+.fl-input:focus,
+.fl-textarea:focus,
+.fl-select-trigger:focus,
+.fl-select-trigger:focus-visible,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--fl-primary) 20%, transparent) !important;
+}
+
+/* Lists/tables keep grouping through tone changes rather than separator lines. */
+.workspace-task-row,
+.team-row,
+.notification-row {
+  border-bottom: 0 !important;
+}
+
+.workspace-task-row:nth-child(even):not(.workspace-task-table-head),
+.team-row:nth-child(odd) {
+  background: color-mix(in oklch, var(--fl-surface) 94%, var(--fl-surface-soft) 6%) !important;
+}
+
+/* Keep semantic status labels filled but borderless. */
+.task-status-label,
+.role-chip,
+.fl-badge,
+.default-board-pill {
+  box-shadow: none !important;
+}
