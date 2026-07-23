@@ -22,6 +22,7 @@ import './mobile-neutral-calendar.css'
 import './mobile-app-shell.css'
 import './color-system-polish.css'
 import './final-color-cascade.css'
+import './shadcn-date-picker.css'
 import App from './App'
 
 const queryClient = new QueryClient({

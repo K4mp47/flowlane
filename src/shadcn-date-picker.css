@@ -1,0 +1,28 @@
+/* Repository-owned shadcn-style date picker built on the existing Base UI popover. */
+.fl-date-trigger-shell{position:relative;display:flex;align-items:center;width:100%}
+.fl-date-trigger{display:flex;align-items:center;gap:9px;width:100%;min-height:40px;padding:0 12px;border:0;border-radius:10px;background:var(--fl-surface-soft);color:var(--fl-text);font:inherit;text-align:left;cursor:pointer;transition:background .14s ease,box-shadow .14s ease,color .14s ease}
+.fl-date-trigger:hover{background:color-mix(in oklch,var(--fl-text) 7%,var(--fl-surface-soft))}
+.fl-date-trigger:focus-visible{outline:0;box-shadow:0 0 0 2px color-mix(in oklch,var(--fl-primary) 48%,transparent)}
+.fl-date-trigger>svg{color:var(--fl-text-muted);flex:none}.fl-date-trigger .is-placeholder{color:var(--fl-text-muted)}
+.fl-date-clear{position:absolute;right:7px;width:27px;height:27px;display:grid;place-items:center;border:0;border-radius:7px;background:transparent;color:var(--fl-text-muted);cursor:pointer}.fl-date-clear:hover{background:var(--fl-surface);color:var(--fl-text)}
+.fl-date-positioner{z-index:2200}.fl-date-popover{padding:10px;border:0;border-radius:14px;background:var(--fl-surface);color:var(--fl-text);box-shadow:0 18px 50px rgba(0,0,0,.22),0 0 0 1px color-mix(in oklch,var(--fl-text) 8%,transparent);transform-origin:var(--transform-origin);animation:fl-date-pop .14s ease-out}
+@keyframes fl-date-pop{from{opacity:0;transform:scale(.98) translateY(-3px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.fl-calendar{width:292px;padding:2px}.fl-calendar-header{height:34px;display:grid;grid-template-columns:34px 1fr 34px;align-items:center;margin-bottom:6px}.fl-calendar-header strong{text-align:center;font-size:13px;font-weight:700}.fl-calendar-nav{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:var(--fl-text-muted);cursor:pointer}.fl-calendar-nav:hover{background:var(--fl-surface-soft);color:var(--fl-text)}
+.fl-calendar-weekdays,.fl-calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}.fl-calendar-weekdays{padding:0 0 4px}.fl-calendar-weekdays span{display:grid;place-items:center;height:26px;color:var(--fl-text-muted);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}.fl-calendar-day{aspect-ratio:1;display:grid;place-items:center;border:0;border-radius:8px;background:transparent;color:var(--fl-text);font:inherit;font-size:12px;cursor:pointer;transition:background .12s ease,color .12s ease,transform .12s ease}.fl-calendar-day:hover{background:var(--fl-surface-soft)}.fl-calendar-day.is-outside{color:color-mix(in oklch,var(--fl-text-muted) 50%,transparent)}.fl-calendar-day.is-today{box-shadow:inset 0 0 0 1px color-mix(in oklch,var(--fl-primary) 52%,transparent)}.fl-calendar-day.is-selected{background:var(--fl-primary);color:var(--fl-primary-foreground);font-weight:800;box-shadow:none}.fl-calendar-day.is-selected:hover{background:var(--fl-primary)}
+
+/* Do not stack a second colored tile behind selected sidebar icons. The row is the selection surface. */
+:root[data-palette] .fl-nav-item .fl-nav-icon,
+:root[data-palette] .fl-nav-item:hover .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon{background:transparent!important;color:inherit!important}
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon svg,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon svg{color:var(--fl-primary)!important;stroke:currentColor!important}
+
+/* Sidebar tooltips are supplementary labels for the icon-only collapsed state. */
+@media (hover:hover) and (pointer:fine){
+  .sidebar-hover-shell:not(.expanded) .fl-nav-item[data-tooltip]{position:relative}
+  .sidebar-hover-shell:not(.expanded) .fl-nav-item[data-tooltip]::after{content:attr(data-tooltip);position:absolute;left:calc(100% + 10px);top:50%;transform:translateY(-50%) translateX(-3px);padding:6px 8px;border-radius:7px;background:var(--fl-text);color:var(--fl-background);font-size:11px;font-weight:650;white-space:nowrap;opacity:0;pointer-events:none;z-index:4000;box-shadow:0 8px 24px rgba(0,0,0,.22);transition:opacity .12s ease,transform .12s ease}
+  .sidebar-hover-shell:not(.expanded) .fl-nav-item[data-tooltip]:hover::after,.sidebar-hover-shell:not(.expanded) .fl-nav-item[data-tooltip]:focus-visible::after{opacity:1;transform:translateY(-50%) translateX(0)}
+}
+
+@media(max-width:620px){.fl-date-popover{max-width:calc(100vw - 24px)}.fl-calendar{width:min(292px,calc(100vw - 44px))}}
