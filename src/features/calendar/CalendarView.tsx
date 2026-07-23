@@ -4,7 +4,7 @@ import { Selector } from '@/components/ui/Selector'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../../lib/supabase'
-import type { Task, TaskPriority, WorkflowStatus, WorkspaceRole } from '../../types/domain'
+import type { Task, TaskPriority, WorkspaceRole } from '../../types/domain'
 import { boardQueryKey } from '../board/useBoardData'
 import { useWorkspaceTasks, workspaceTasksQueryKey } from '../tasks/useWorkspaceTasks'
 
@@ -54,16 +54,17 @@ function taskRange(task: Task): TaskRange | null {
   return rawStart <= rawEnd ? { start: rawStart, end: rawEnd } : { start: rawEnd, end: rawStart }
 }
 
-function statusTone(status?: WorkflowStatus) {
-  if (!status) return 'neutral'
-  const name = status.name.toLowerCase()
-  if (name.includes('review')) return 'review'
-  if (status.category === 'BACKLOG') return 'backlog'
-  if (status.category === 'UNSTARTED') return 'unstarted'
-  if (status.category === 'STARTED') return 'started'
-  if (status.category === 'COMPLETED') return 'completed'
-  if (status.category === 'CANCELED') return 'canceled'
-  return 'neutral'
+function priorityTone(priority?: TaskPriority | null) {
+  if (priority === 'URGENT') return 'urgent'
+  if (priority === 'HIGH') return 'high'
+  if (priority === 'MEDIUM') return 'medium'
+  if (priority === 'LOW') return 'low'
+  return 'none'
+}
+
+function priorityLabel(priority?: TaskPriority | null) {
+  if (!priority) return null
+  return priority.charAt(0) + priority.slice(1).toLowerCase()
 }
 
 function buildWeekSegments(tasks: Task[], weekStart: Date): { segments: WeekSegment[]; laneCount: number } {
@@ -174,7 +175,7 @@ export function CalendarView({ workspaceId, userId, role, onOpenTask }: Calendar
 
   return <section className="calendar-page calendar-range-page">
     <header className="calendar-heading">
-      <div><p className="eyebrow">Workspace schedule</p><h2>Calendar</h2><p>Tasks span from start to due date when both are available. Drag a range to move it while preserving its duration.</p></div>
+      <div><p className="eyebrow">Workspace schedule</p><h2>Calendar</h2><p>Tasks span from start to due date when both are available. Range color represents task priority.</p></div>
       <div className="calendar-mode-switch"><Button label="Month" variant={mode === 'month' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('month')} /><Button label="Week" variant={mode === 'week' ? 'primary' : 'secondary'} size="sm" onClick={() => setMode('week')} /></div>
     </header>
 
@@ -223,19 +224,20 @@ export function CalendarView({ workspaceId, userId, role, onOpenTask }: Calendar
               const status = statusById.get(segment.task.status_id)
               const range = taskRange(segment.task)
               const project = projectById.get(segment.task.project_id)
+              const priority = priorityLabel(segment.task.priority)
               return <button
                 key={`${segment.task.id}-${keyOf(rangeWeekStart)}`}
                 type="button"
                 draggable={role !== 'VIEWER'}
                 onDragStart={(event) => event.dataTransfer.setData('text/flowlane-task', segment.task.id)}
                 onClick={() => onOpenTask(segment.task)}
-                className={`calendar-range-task workflow-tone-${statusTone(status)}${status?.is_terminal ? ' complete' : ''}${segment.continuesBefore ? ' continues-before' : ''}${segment.continuesAfter ? ' continues-after' : ''}`}
+                className={`calendar-range-task priority-tone-${priorityTone(segment.task.priority)}${status?.is_terminal ? ' complete' : ''}${segment.continuesBefore ? ' continues-before' : ''}${segment.continuesAfter ? ' continues-after' : ''}`}
                 style={{ gridColumn: `${segment.startIndex + 1} / ${segment.endIndex + 2}`, gridRow: `${segment.lane + 1}` }}
-                title={`${project?.name ?? 'Project'} · ${status?.name ?? 'Status'} · ${range ? `${range.start.toLocaleDateString()} – ${range.end.toLocaleDateString()}` : ''}`}
+                title={`${project?.name ?? 'Project'} · ${status?.name ?? 'Status'}${priority ? ` · ${priority}` : ''} · ${range ? `${range.start.toLocaleDateString()} – ${range.end.toLocaleDateString()}` : ''}`}
               >
                 <span className="calendar-range-ref">FL-{segment.task.task_number}</span>
                 <strong>{segment.task.title}</strong>
-                <span className="calendar-range-status">{status?.name}</span>
+                <span className="calendar-range-status">{priority ?? status?.name}</span>
               </button>
             })}
           </div>
