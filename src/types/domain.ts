@@ -35,6 +35,14 @@ export interface Project {
   archived_at: string | null
 }
 
+export interface ProjectMembership {
+  project_id: string
+  user_id: string
+  role: WorkspaceRole
+  added_by: string | null
+  joined_at: string
+}
+
 export interface WorkflowStatus {
   id: string
   project_id: string
@@ -51,6 +59,14 @@ export interface Board {
   project_id: string
   name: string
   is_default: boolean
+}
+
+export interface BoardMembership {
+  board_id: string
+  user_id: string
+  role: WorkspaceRole
+  added_by: string | null
+  joined_at: string
 }
 
 export interface BoardColumn {
@@ -79,6 +95,7 @@ export interface Task {
   id: string
   task_number: number
   project_id: string
+  board_id: string
   status_id: string
   title: string
   context: string | null

@@ -17,6 +17,8 @@ export interface BoardData {
   project: Project | null
   projects: Project[]
   board: Board | null
+  boards: Board[]
+  accessRole: WorkspaceRole | null
   columns: BoardColumn[]
   statuses: WorkflowStatus[]
   tasks: Task[]
@@ -27,9 +29,9 @@ export interface BoardData {
   members: Array<{ user_id: string; role: WorkspaceRole }>
 }
 
-export const boardQueryKey = (workspaceId: string, projectId?: string | null) => ['boardData', workspaceId, projectId ?? 'default'] as const
+export const boardQueryKey = (workspaceId: string, projectId?: string | null, boardId?: string | null) => ['boardData', workspaceId, projectId ?? 'default', boardId ?? 'default'] as const
 
-async function fetchBoardData(workspaceId: string, requestedProjectId?: string | null): Promise<BoardData> {
+async function fetchBoardData(workspaceId: string, workspaceRole: WorkspaceRole | null, userId: string | undefined, requestedProjectId?: string | null, requestedBoardId?: string | null): Promise<BoardData> {
   const { data: projectRows, error: projectsError } = await supabase
     .from('projects')
     .select('id,workspace_id,name,description,is_default,created_by,created_at,updated_at,archived_at')
@@ -67,28 +69,35 @@ async function fetchBoardData(workspaceId: string, requestedProjectId?: string |
     profiles,
     members: memberRows.map((row) => ({ user_id: row.user_id, role: row.role as WorkspaceRole })),
   }
-  if (!project) return { ...base, board: null, columns: [], statuses: [], tasks: [], assignees: [], checklistItems: [] }
+  if (!project) return { ...base, board: null, boards: [], accessRole: null, columns: [], statuses: [], tasks: [], assignees: [], checklistItems: [] }
 
-  const [boardsResult, statusesResult, tasksResult] = await Promise.all([
+  const [boardsResult, statusesResult, projectMembershipResult] = await Promise.all([
     supabase.from('boards').select('id,project_id,name,is_default').eq('project_id', project.id).order('created_at', { ascending: true }),
     supabase.from('workflow_statuses').select('id,project_id,name,category,position,color,is_terminal,notify_on_enter').eq('project_id', project.id).order('position', { ascending: true }),
-    supabase.from('tasks').select('id,task_number,project_id,status_id,title,context,expected_result,additional_information,task_type_id,priority,creator_id,start_date,due_date,is_blocked,blocked_reason,blocked_by_task_id,position,created_at,updated_at,completed_at').eq('project_id', project.id).order('position', { ascending: true }),
+    userId ? supabase.from('project_members').select('role').eq('project_id', project.id).eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null, error: null }),
   ])
   if (boardsResult.error) throw boardsResult.error
   if (statusesResult.error) throw statusesResult.error
-  if (tasksResult.error) throw tasksResult.error
+  if (projectMembershipResult.error) throw projectMembershipResult.error
 
   const boards = (boardsResult.data ?? []) as Board[]
-  const board = boards.find((entry) => entry.is_default) ?? boards[0] ?? null
+  const board = boards.find((entry) => entry.id === requestedBoardId) ?? boards.find((entry) => entry.is_default) ?? boards[0] ?? null
   const statuses = (statusesResult.data ?? []) as WorkflowStatus[]
-  const tasks = (tasksResult.data ?? []) as Task[]
-  let columns: BoardColumn[] = []
-  if (board) {
-    const columnsResult = await supabase.from('board_columns').select('id,board_id,name,status_id,position').eq('board_id', board.id).order('position', { ascending: true })
-    if (columnsResult.error) throw columnsResult.error
-    columns = (columnsResult.data ?? []) as BoardColumn[]
-  }
+  if (!board) return { ...base, board: null, boards, accessRole: workspaceRole === 'ADMIN' ? 'ADMIN' : (projectMembershipResult.data?.role as WorkspaceRole | undefined) ?? null, columns: [], statuses, tasks: [], assignees: [], checklistItems: [] }
 
+  const [columnsResult, tasksResult, boardMembershipResult] = await Promise.all([
+    supabase.from('board_columns').select('id,board_id,name,status_id,position').eq('board_id', board.id).order('position', { ascending: true }),
+    supabase.from('tasks').select('id,task_number,project_id,board_id,status_id,title,context,expected_result,additional_information,task_type_id,priority,creator_id,start_date,due_date,is_blocked,blocked_reason,blocked_by_task_id,position,created_at,updated_at,completed_at').eq('board_id', board.id).order('position', { ascending: true }),
+    userId ? supabase.from('board_members').select('role').eq('board_id', board.id).eq('user_id', userId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+  ])
+  if (columnsResult.error) throw columnsResult.error
+  if (tasksResult.error) throw tasksResult.error
+  if (boardMembershipResult.error) throw boardMembershipResult.error
+
+  const accessRole = workspaceRole === 'ADMIN'
+    ? 'ADMIN'
+    : ((projectMembershipResult.data?.role ?? boardMembershipResult.data?.role ?? null) as WorkspaceRole | null)
+  const tasks = (tasksResult.data ?? []) as Task[]
   const taskIds = tasks.map((task) => task.id)
   let assignees: TaskAssignee[] = []
   let checklistItems: ChecklistItem[] = []
@@ -103,13 +112,13 @@ async function fetchBoardData(workspaceId: string, requestedProjectId?: string |
     checklistItems = (checklistResult.data ?? []) as ChecklistItem[]
   }
 
-  return { ...base, board, columns, statuses, tasks, assignees, checklistItems }
+  return { ...base, board, boards, accessRole, columns: (columnsResult.data ?? []) as BoardColumn[], statuses, tasks, assignees, checklistItems }
 }
 
-export function useBoardData(workspaceId: string, _role: WorkspaceRole | null, projectId?: string | null) {
+export function useBoardData(workspaceId: string, role: WorkspaceRole | null, projectId?: string | null, boardId?: string | null, userId?: string) {
   return useQuery({
-    queryKey: boardQueryKey(workspaceId, projectId),
-    queryFn: () => fetchBoardData(workspaceId, projectId),
+    queryKey: boardQueryKey(workspaceId, projectId, boardId),
+    queryFn: () => fetchBoardData(workspaceId, role, userId, projectId, boardId),
     enabled: Boolean(workspaceId),
   })
 }
