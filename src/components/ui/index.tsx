@@ -45,7 +45,7 @@ export function Badge({ label, variant = 'neutral', className, icon }: { label: 
 }
 
 export function IconButton({ label, icon, variant = 'ghost', size = 'md', isDisabled = false, className, ...props }: Omit<ButtonProps, 'label' | 'children'> & { label: string; icon: ReactNode }) {
-  return <button type="button" aria-label={label} title={label} className={cn('fl-icon-button', `fl-icon-button-${variant}`, `fl-icon-button-${size}`, className)} disabled={isDisabled} {...props}>{icon}</button>
+  return <button type="button" aria-label={label} title={label} data-tooltip={label} className={cn('fl-icon-button', `fl-icon-button-${variant}`, `fl-icon-button-${size}`, className)} disabled={isDisabled} {...props}>{icon}</button>
 }
 
 type FieldBase = { label: string; description?: string; isLabelHidden?: boolean; isRequired?: boolean; isOptional?: boolean; width?: CSSProperties['width'] }
@@ -111,22 +111,14 @@ export function CheckboxInput({ label, value, onChange, isReadOnly = false, widt
   </label>
 }
 
-export type ISODateString = `${number}-${number}-${number}`
-export function DateInput({ label, value, onChange, hasClear, width }: { label: string; value?: ISODateString; onChange: (value: ISODateString | undefined) => void; hasClear?: boolean; width?: CSSProperties['width'] }) {
-  return <label className="fl-field" style={{ width }}>
-    <span className="fl-field-label">{label}</span>
-    <span className="fl-input-shell">
-      <input className="fl-input" type="date" value={value ?? ''} onChange={(event) => onChange((event.target.value || undefined) as ISODateString | undefined)} />
-      {hasClear && value ? <button type="button" className="fl-input-clear" aria-label={`Clear ${label}`} onClick={() => onChange(undefined)}><X size={13} /></button> : null}
-    </span>
-  </label>
-}
+export { DateInput } from './DateInput'
+export type { ISODateString } from './Calendar'
 
 export function SideNav({ header, footer, children, className }: { header?: ReactNode; footer?: ReactNode; children: ReactNode; className?: string; collapsible?: unknown }) {
   return <div className={cn('fl-side-nav', className)}>{header ? <div className="fl-side-nav-header">{header}</div> : null}<nav className="fl-side-nav-body">{children}</nav>{footer ? <div className="fl-side-nav-footer">{footer}</div> : null}</div>
 }
 export function SideNavItem({ label, icon, isSelected, onClick }: { label: string; icon?: ReactNode; isSelected?: boolean; onClick?: () => void }) {
-  return <button type="button" className={cn('fl-nav-item', isSelected && 'is-selected')} onClick={onClick} aria-current={isSelected ? 'page' : undefined}>{icon ? <span className="fl-nav-icon">{icon}</span> : null}{label ? <span className="fl-nav-label">{label}</span> : null}</button>
+  return <button type="button" title={label} data-tooltip={label} aria-label={label} className={cn('fl-nav-item', isSelected && 'is-selected')} onClick={onClick} aria-current={isSelected ? 'page' : undefined}>{icon ? <span className="fl-nav-icon">{icon}</span> : null}{label ? <span className="fl-nav-label">{label}</span> : null}</button>
 }
 
 export function Modal({ open, onOpenChange, title, description, children, className }: { open: boolean; onOpenChange: (open: boolean) => void; title: string; description?: string; children: ReactNode; className?: string }) {
