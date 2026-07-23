@@ -1,10 +1,11 @@
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { Badge } from '@/components/ui/Badge'
 import { IconButton } from '@/components/ui/IconButton'
 import { SideNav, SideNavItem } from '@/components/ui/SideNav'
 import { BarChart3, CalendarDays, Check, FolderKanban, KanbanSquare, ListChecks, LogOut, Menu, MessageSquare, Moon, Palette as PaletteIcon, PocketKnife, Sun, Trash2, UserRoundCheck, Users, X } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
+import { supabase } from '../lib/supabase'
 import { useTheme, type Palette } from '../theme'
 
 export type AppView = 'mine' | 'calendar' | 'projects' | 'all' | 'board' | 'analytics' | 'team'
@@ -29,6 +30,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
   const [palettePosition, setPalettePosition] = useState({ left: 64, bottom: 72 })
   const paletteAnchorRef = useRef<HTMLDivElement | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
   const isViewer = membership?.role === 'VIEWER'
   const isAdmin = membership?.role === 'ADMIN'
   const displayName = profile?.display_name || profile?.email?.split('@')[0] || 'User'
@@ -41,6 +43,65 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
     const left = Math.min(Math.max(12, rect.left), window.innerWidth - popoverWidth - 12)
     setPalettePosition({ left, bottom: Math.max(12, window.innerHeight - rect.top + 8) })
   }, [isPaletteOpen, isHovered])
+
+  useEffect(() => {
+    if (isViewer || !profile?.id || !membership?.workspace_id) return
+
+    function ensureAudioContext() {
+      const context = audioContextRef.current ?? new AudioContext()
+      audioContextRef.current = context
+      if (context.state === 'suspended') void context.resume()
+      return context
+    }
+
+    function unlockAudio() { ensureAudioContext() }
+    window.addEventListener('pointerdown', unlockAudio, { once: true })
+    window.addEventListener('keydown', unlockAudio, { once: true })
+
+    function playNotificationChime() {
+      const context = ensureAudioContext()
+      if (context.state !== 'running') return
+
+      const now = context.currentTime
+      const gain = context.createGain()
+      gain.gain.setValueAtTime(0.0001, now)
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.015)
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42)
+      gain.connect(context.destination)
+
+      const firstTone = context.createOscillator()
+      firstTone.type = 'sine'
+      firstTone.frequency.setValueAtTime(660, now)
+      firstTone.connect(gain)
+      firstTone.start(now)
+      firstTone.stop(now + 0.2)
+
+      const secondTone = context.createOscillator()
+      secondTone.type = 'sine'
+      secondTone.frequency.setValueAtTime(880, now + 0.12)
+      secondTone.connect(gain)
+      secondTone.start(now + 0.12)
+      secondTone.stop(now + 0.42)
+    }
+
+    const channel = supabase
+      .channel(`notification-sound-${profile.id}-${membership.workspace_id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}` }, (payload) => {
+        const notification = payload.new as { workspace_id?: string }
+        if (notification.workspace_id === membership.workspace_id) playNotificationChime()
+      })
+      .subscribe()
+
+    return () => {
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('keydown', unlockAudio)
+      void supabase.removeChannel(channel)
+      if (audioContextRef.current) {
+        void audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+    }
+  }, [isViewer, membership?.workspace_id, profile?.id])
 
   function collapseSidebar() { setIsHovered(false); setIsPaletteOpen(false) }
   function choosePalette(value: Palette) { setPalette(value); setIsPaletteOpen(false) }
