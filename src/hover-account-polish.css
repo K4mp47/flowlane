@@ -1,0 +1,49 @@
+/* Loaded after palette-surfaces.css so hover and selected-icon states always win. */
+
+.workspace-task-table > .workspace-task-row:not(.workspace-task-table-head):hover,
+.workspace-task-table > .workspace-task-row:nth-child(even):not(.workspace-task-table-head):hover,
+.workspace-task-table > .workspace-task-row:nth-child(odd):not(.workspace-task-table-head):hover,
+.team-table-shell > .team-row:hover,
+.team-table-shell > .team-row:nth-child(even):hover,
+.team-table-shell > .team-row:nth-child(odd):hover {
+  background: color-mix(in oklch, var(--fl-surface-soft) 78%, var(--fl-primary) 22%) !important;
+}
+
+.fl-nav-item.is-selected,
+.fl-nav-item.is-selected:hover {
+  color: var(--fl-primary) !important;
+  background: color-mix(in oklch, var(--fl-primary) 16%, var(--sidebar)) !important;
+}
+
+.fl-nav-item.is-selected .fl-nav-icon,
+.fl-nav-item.is-selected .fl-nav-icon svg,
+.fl-nav-item.is-selected > svg,
+.fl-nav-item.is-selected svg {
+  color: var(--fl-primary) !important;
+  stroke: currentColor !important;
+}
+
+.sidebar-account-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.sidebar-account-actions .fl-icon-button {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  min-height: 30px !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.sidebar-delete-account {
+  color: var(--fl-text-muted) !important;
+}
+
+.sidebar-delete-account:hover:not(:disabled) {
+  color: var(--destructive) !important;
+  background: color-mix(in oklch, var(--destructive) 11%, transparent) !important;
+}

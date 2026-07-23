@@ -24,6 +24,7 @@ interface AuthContextValue {
   refreshMembership: () => Promise<void>
   selectWorkspace: (workspaceId: string) => void
   signOut: () => Promise<void>
+  deleteAccount: () => Promise<void>
   completePasswordRecovery: (password: string) => Promise<void>
   completeInviteOnboarding: (password: string, displayName: string) => Promise<void>
 }
@@ -140,6 +141,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await supabase.auth.signOut()
   }, [])
 
+  const deleteAccount = useCallback(async () => {
+    const { data, error } = await supabase.functions.invoke('delete-account', { body: { confirmed: true } })
+    if (error) throw error
+    if (data?.error) throw new Error(String(data.error))
+
+    window.localStorage.removeItem('flowlane-active-workspace')
+    window.localStorage.removeItem('flowlane-theme')
+    window.localStorage.removeItem('flowlane-palette')
+
+    await supabase.auth.signOut({ scope: 'local' })
+    setSession(null)
+    setProfile(null)
+    setMemberships([])
+    setActiveWorkspaceId(null)
+  }, [])
+
   const completePasswordRecovery = useCallback(async (password: string) => {
     const { error } = await supabase.auth.updateUser({ password })
     if (error) throw error
@@ -190,9 +207,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     refreshMembership,
     selectWorkspace,
     signOut,
+    deleteAccount,
     completePasswordRecovery,
     completeInviteOnboarding,
-  }), [session, profile, membership, memberships, isLoading, isPasswordRecovery, isInviteOnboarding, refreshMembership, selectWorkspace, signOut, completePasswordRecovery, completeInviteOnboarding])
+  }), [session, profile, membership, memberships, isLoading, isPasswordRecovery, isInviteOnboarding, refreshMembership, selectWorkspace, signOut, deleteAccount, completePasswordRecovery, completeInviteOnboarding])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

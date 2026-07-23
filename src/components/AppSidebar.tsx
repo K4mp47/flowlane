@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Badge } from '@/components/ui/Badge'
 import { IconButton } from '@/components/ui/IconButton'
 import { SideNav, SideNavItem } from '@/components/ui/SideNav'
-import { BarChart3, CalendarDays, Check, FolderKanban, KanbanSquare, ListChecks, LogOut, MessageSquare, Moon, Palette as PaletteIcon, PocketKnife, Sun, UserRoundCheck, Users } from 'lucide-react'
+import { BarChart3, CalendarDays, Check, FolderKanban, KanbanSquare, ListChecks, LogOut, MessageSquare, Moon, Palette as PaletteIcon, PocketKnife, Sun, Trash2, UserRoundCheck, Users } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { useTheme, type Palette } from '../theme'
 
@@ -21,10 +21,11 @@ const paletteOptions: Array<{ value: Palette; label: string }> = [
 type PalettePositionStyle = CSSProperties & { '--palette-left': string; '--palette-bottom': string }
 
 export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotifications }: AppSidebarProps) {
-  const { membership, profile, signOut } = useAuth()
+  const { membership, profile, signOut, deleteAccount } = useAuth()
   const { theme, palette, toggleTheme, setPalette } = useTheme()
   const [isHovered, setIsHovered] = useState(false)
   const [isPaletteOpen, setIsPaletteOpen] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
   const [palettePosition, setPalettePosition] = useState({ left: 64, bottom: 72 })
   const paletteAnchorRef = useRef<HTMLDivElement | null>(null)
   const isViewer = membership?.role === 'VIEWER'
@@ -42,6 +43,23 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
 
   function collapseSidebar() { setIsHovered(false); setIsPaletteOpen(false) }
   function choosePalette(value: Palette) { setPalette(value); setIsPaletteOpen(false) }
+
+  async function handleDeleteAccount() {
+    const confirmation = window.prompt(
+      'Delete your FlowLane account permanently? Tasks you created, comments, checklist items, assignments, notifications, memberships, profile data and stored attachments will be removed. Type DELETE to confirm.',
+    )
+    if (confirmation !== 'DELETE') return
+
+    setIsDeletingAccount(true)
+    try {
+      await deleteAccount()
+    } catch (error) {
+      console.error('Unable to delete account', error)
+      window.alert(error instanceof Error ? error.message : 'Unable to delete your account. Please try again.')
+      setIsDeletingAccount(false)
+    }
+  }
+
   const section = (label: string) => <div className="sidebar-section-label">{label}</div>
 
   const paletteStyle: PalettePositionStyle = {
@@ -69,7 +87,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
             <IconButton label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'} icon={theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />} variant="ghost" size="sm" onClick={toggleTheme} />
             <div className="sidebar-palette-control" ref={paletteAnchorRef}><IconButton label="Choose color palette" icon={<PaletteIcon size={17} />} variant="ghost" size="sm" className={isPaletteOpen ? 'is-active' : undefined} onClick={() => { setIsHovered(true); setIsPaletteOpen((current) => !current) }} /></div>
           </div>
-          <div className="sidebar-user"><span className="sidebar-avatar">{initial}</span><div className="sidebar-user-copy"><strong>{displayName}</strong><span>{membership?.role}</span></div>{isHovered ? <IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} /> : null}</div>
+          <div className="sidebar-user"><span className="sidebar-avatar">{initial}</span><div className="sidebar-user-copy"><strong>{displayName}</strong><span>{membership?.role}</span></div>{isHovered ? <div className="sidebar-account-actions"><IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} /><IconButton label="Delete account" icon={<Trash2 size={16} />} variant="ghost" size="sm" className="sidebar-delete-account" isDisabled={isDeletingAccount} onClick={() => void handleDeleteAccount()} /></div> : null}</div>
         </div>}>
         {section('My work')}
         {!isViewer ? <SideNavItem label="My tasks" icon={<UserRoundCheck size={18} />} isSelected={view === 'mine'} onClick={() => onViewChange('mine')} /> : null}
