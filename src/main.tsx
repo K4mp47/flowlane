@@ -17,6 +17,7 @@ import './phase6-compat.css'
 import './theme-ui-polish.css'
 import './behavior-polish.css'
 import './palette-surfaces.css'
+import './hover-account-polish.css'
 import App from './App'
 
 const queryClient = new QueryClient({
