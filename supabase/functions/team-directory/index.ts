@@ -32,6 +32,16 @@ Deno.serve(async (req: Request) => {
   const boardId = payload.boardId?.trim() || null
   if (!workspaceId) return json({ error: 'workspaceId is required' }, 400)
 
+  if (projectId) {
+    const { data: project } = await admin.from('projects').select('id').eq('id', projectId).eq('workspace_id', workspaceId).maybeSingle()
+    if (!project) return json({ error: 'Project not found' }, 404)
+  }
+  if (boardId) {
+    if (!projectId) return json({ error: 'projectId is required for board-scoped access' }, 400)
+    const { data: board } = await admin.from('boards').select('id').eq('id', boardId).eq('project_id', projectId).maybeSingle()
+    if (!board) return json({ error: 'Board does not belong to this project' }, 400)
+  }
+
   const actorId = authData.user.id
   const { data: workspaceMembership } = await admin.from('workspace_members').select('role').eq('workspace_id', workspaceId).eq('user_id', actorId).maybeSingle()
   let authorized = workspaceMembership?.role === 'ADMIN'
