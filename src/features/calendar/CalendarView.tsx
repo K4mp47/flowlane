@@ -84,7 +84,7 @@ export function CalendarView({ workspaceId, userId, role, onOpenTask }: Calendar
 
   const renderTask = (task: Task) => {
     const status = statusById.get(task.status_id)
-    return <button key={task.id} type="button" draggable={role !== 'VIEWER'} onDragStart={(event) => event.dataTransfer.setData('text/flowlane-task', task.id)} onClick={(event) => { event.stopPropagation(); onOpenTask(task) }} className={`calendar-task tone-${statusTone(status)}${status?.is_terminal ? ' complete' : ''}`} title={`${projectById.get(task.project_id)?.name ?? ''} · ${status?.name ?? ''}`}>
+    return <button key={task.id} type="button" draggable={role !== 'VIEWER'} onDragStart={(event) => event.dataTransfer.setData('text/flowlane-task', task.id)} onClick={(event) => { event.stopPropagation(); onOpenTask(task) }} className={`calendar-task workflow-tone-${statusTone(status)}${status?.is_terminal ? ' complete' : ''}`} title={`${projectById.get(task.project_id)?.name ?? ''} · ${status?.name ?? ''}`}>
       <span className="calendar-task-ref">FL-{task.task_number}</span>
       <span className="calendar-task-title">{task.title}</span>
       {mode === 'week' ? <span className="calendar-task-status">{status?.name}</span> : null}
