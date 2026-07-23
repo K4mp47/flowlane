@@ -1,0 +1,37 @@
+/* Fresh MVP hierarchy. Loaded last so legacy project styles cannot blur the model. */
+.mvp-projects-page{max-width:1180px;margin:0 auto;padding:28px 30px 56px}
+.mvp-hierarchy-heading{align-items:flex-start}
+.mvp-hierarchy-map{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr) 28px minmax(0,1fr);align-items:center;gap:10px;margin:22px 0 18px}
+.mvp-hierarchy-step{display:flex;align-items:flex-start;gap:12px;min-height:108px;padding:16px;border-radius:16px;background:var(--fl-surface-soft)}
+.mvp-hierarchy-step>span{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:10px;background:color-mix(in oklch,var(--fl-primary) 14%,transparent);color:var(--fl-primary)}
+.mvp-hierarchy-step div{min-width:0;display:grid;gap:3px}.mvp-hierarchy-step small{font-size:10px;font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--fl-text-muted)}
+.mvp-hierarchy-step strong{font-size:14px}.mvp-hierarchy-step p{margin:2px 0 0;color:var(--fl-text-muted);font-size:12px;line-height:1.45}
+.mvp-hierarchy-arrow{color:var(--fl-text-muted);justify-self:center}
+.mvp-create-card{margin-bottom:22px}
+.mvp-project-browser{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(380px,1.18fr);gap:18px;align-items:start}
+.mvp-project-list,.mvp-board-panel{border-radius:18px;background:var(--fl-surface);box-shadow:0 0 0 1px color-mix(in oklch,var(--fl-text) 7%,transparent);overflow:hidden}
+.mvp-section-label{display:flex;align-items:center;justify-content:space-between;padding:13px 15px 9px;color:var(--fl-text-muted);font-size:11px;font-weight:750;text-transform:uppercase;letter-spacing:.07em}
+.mvp-section-label small{display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--fl-surface-soft);font-size:10px}
+.mvp-project-list .project-row,.mvp-board-list .project-row{border-radius:0;margin:0;padding:4px 6px}
+.mvp-project-list .project-row+.project-row,.mvp-board-list .project-row+.project-row{box-shadow:inset 0 1px color-mix(in oklch,var(--fl-text) 6%,transparent)}
+.mvp-project-row.active,.mvp-board-row.active{background:color-mix(in oklch,var(--fl-primary) 11%,transparent)!important}
+.mvp-project-row.active .project-board-icon,.mvp-board-row.active .project-board-icon{color:var(--fl-primary)}
+.mvp-board-panel-heading{display:flex;justify-content:space-between;gap:16px;padding:17px 18px 14px;background:var(--fl-surface-soft)}
+.mvp-board-panel-heading>div{min-width:0}.mvp-section-label-text{display:block;margin-bottom:4px;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:.08em;color:var(--fl-text-muted)}
+.mvp-board-panel-heading h3{margin:0;font-size:17px}.mvp-board-panel-heading p{margin:5px 0 0;color:var(--fl-text-muted);font-size:12px}
+.mvp-path-chip{display:flex;align-items:center;align-self:flex-start;gap:5px;max-width:45%;padding:7px 9px;border-radius:999px;background:var(--fl-surface);font-size:10px;font-weight:700;color:var(--fl-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mvp-board-create{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px 14px;background:var(--fl-surface)}
+.mvp-board-list{padding-bottom:5px}.mvp-board-empty{display:grid;justify-items:center;gap:5px;padding:28px;color:var(--fl-text-muted);text-align:center}.mvp-board-empty strong{color:var(--fl-text)}.mvp-board-empty span{font-size:12px}
+.mvp-empty-projects{display:flex;align-items:center;justify-content:center;gap:14px;min-height:190px;text-align:left}.mvp-empty-projects>div{display:grid;gap:4px}.mvp-empty-projects span{max-width:460px}
+
+@media(max-width:900px){
+  .mvp-projects-page{padding:22px 18px 44px}
+  .mvp-hierarchy-map{grid-template-columns:1fr;gap:8px}.mvp-hierarchy-arrow{transform:rotate(90deg)}.mvp-hierarchy-step{min-height:0}
+  .mvp-project-browser{grid-template-columns:1fr}.mvp-path-chip{max-width:50%}
+}
+@media(max-width:620px){
+  .mvp-projects-page{padding:18px 12px 100px}
+  .mvp-board-panel-heading{display:grid}.mvp-path-chip{max-width:100%}
+  .mvp-board-create{grid-template-columns:1fr}.mvp-board-create .fl-button{width:100%}
+  .mvp-project-list .project-row,.mvp-board-list .project-row{align-items:flex-start}.mvp-project-list .project-row-actions,.mvp-board-list .project-row-actions{flex-wrap:wrap}
+}
