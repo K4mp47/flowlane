@@ -1,0 +1,98 @@
+/* Final color-system alignment. Loaded after responsive/mobile layers. */
+:root {
+  --priority-low: oklch(.70 .13 185);
+  --priority-medium: oklch(.82 .17 88);
+  --priority-high: oklch(.72 .18 52);
+  --priority-urgent: oklch(.64 .22 28);
+}
+
+/* Board workflow tones are the canonical status colors everywhere. */
+.workflow-tone-backlog { --task-tone: var(--fl-stage-backlog) !important; }
+.workflow-tone-unstarted { --task-tone: var(--fl-stage-unstarted) !important; }
+.workflow-tone-started { --task-tone: var(--fl-stage-started) !important; }
+.workflow-tone-review { --task-tone: var(--fl-stage-review) !important; }
+.workflow-tone-completed { --task-tone: var(--fl-stage-completed) !important; }
+.workflow-tone-canceled { --task-tone: var(--fl-stage-canceled) !important; }
+
+.task-status-label {
+  background: color-mix(in oklch, var(--task-tone) 22%, var(--fl-surface)) !important;
+  color: color-mix(in oklch, var(--task-tone) 84%, var(--fl-text)) !important;
+  box-shadow: none !important;
+}
+
+/* Priority colors: used consistently by calendar ranges and priority badges. */
+.priority-tone-none { --priority-tone: var(--fl-text-muted); }
+.priority-tone-low { --priority-tone: var(--priority-low); }
+.priority-tone-medium { --priority-tone: var(--priority-medium); }
+.priority-tone-high { --priority-tone: var(--priority-high); }
+.priority-tone-urgent { --priority-tone: var(--priority-urgent); }
+
+.calendar-range-task {
+  --priority-tone: var(--fl-text-muted);
+  background: color-mix(in oklch, var(--priority-tone) 26%, var(--fl-surface)) !important;
+  color: var(--fl-text) !important;
+}
+.calendar-range-task:hover {
+  background: color-mix(in oklch, var(--priority-tone) 36%, var(--fl-surface)) !important;
+}
+.calendar-range-ref,
+.calendar-range-status {
+  color: color-mix(in oklch, var(--priority-tone) 86%, var(--fl-text)) !important;
+}
+
+/* Make the existing badge variants match the requested priority scale. */
+.fl-badge-yellow,
+.priority-medium { background: color-mix(in oklch, var(--priority-medium) 24%, transparent) !important; color: color-mix(in oklch, var(--priority-medium) 88%, var(--fl-text)) !important; }
+.fl-badge-orange,
+.priority-high { background: color-mix(in oklch, var(--priority-high) 24%, transparent) !important; color: color-mix(in oklch, var(--priority-high) 88%, var(--fl-text)) !important; }
+.fl-badge-red,
+.priority-urgent { background: color-mix(in oklch, var(--priority-urgent) 24%, transparent) !important; color: color-mix(in oklch, var(--priority-urgent) 88%, var(--fl-text)) !important; }
+.fl-badge-teal,
+.priority-low { background: color-mix(in oklch, var(--priority-low) 24%, transparent) !important; color: color-mix(in oklch, var(--priority-low) 88%, var(--fl-text)) !important; }
+
+/* Accent palette must be obvious in navigation without tinting whole pages. */
+.fl-nav-item:hover {
+  color: var(--fl-primary) !important;
+  background: color-mix(in oklch, var(--fl-primary) 10%, var(--sidebar)) !important;
+}
+.fl-nav-item.is-selected,
+.fl-nav-item.is-selected:hover {
+  color: var(--fl-primary) !important;
+  background: color-mix(in oklch, var(--fl-primary) 24%, var(--sidebar)) !important;
+  box-shadow: none !important;
+}
+.fl-nav-item.is-selected .fl-nav-icon,
+.fl-nav-item.is-selected .fl-nav-icon svg,
+.fl-nav-item:hover .fl-nav-icon,
+.fl-nav-item:hover .fl-nav-icon svg {
+  color: var(--fl-primary) !important;
+  stroke: currentColor !important;
+}
+
+/* Table hover uses accent subtly, but never the old muddy mixed surface. */
+.workspace-task-table > .workspace-task-row:not(.workspace-task-table-head):hover,
+.workspace-task-table > .workspace-task-row:nth-child(even):not(.workspace-task-table-head):hover,
+.workspace-task-table > .workspace-task-row:nth-child(odd):not(.workspace-task-table-head):hover,
+.team-table-shell > .team-row:hover,
+.team-table-shell > .team-row:nth-child(even):hover,
+.team-table-shell > .team-row:nth-child(odd):hover {
+  background: color-mix(in oklch, var(--fl-primary) 9%, var(--fl-surface)) !important;
+}
+
+/* Cyan especially should read unmistakably cyan instead of gray-purple. */
+:root[data-palette='cyan'] .fl-nav-item.is-selected,
+:root[data-palette='cyan'] .fl-nav-item.is-selected:hover {
+  background: color-mix(in oklch, var(--fl-primary) 30%, var(--sidebar)) !important;
+}
+
+@media (max-width: 760px) {
+  .mobile-app-nav button.active {
+    color: var(--fl-primary) !important;
+    background: color-mix(in oklch, var(--fl-primary) 18%, transparent) !important;
+  }
+  .mobile-more-nav button.active,
+  .mobile-accent-grid button.active {
+    background: color-mix(in oklch, var(--fl-primary) 18%, var(--fl-surface-soft)) !important;
+    color: var(--fl-primary) !important;
+  }
+}
