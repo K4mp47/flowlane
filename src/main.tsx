@@ -25,6 +25,7 @@ import './final-color-cascade.css'
 import './shadcn-date-picker.css'
 import './mvp-hierarchy.css'
 import './ux-fixes-20260724.css'
+import './calendar-hover-sync'
 import App from './App'
 
 const queryClient = new QueryClient({
