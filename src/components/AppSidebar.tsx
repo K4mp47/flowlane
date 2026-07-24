@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Badge } from '@/components/ui/Badge'
 import { IconButton } from '@/components/ui/IconButton'
 import { SideNav, SideNavItem } from '@/components/ui/SideNav'
-import { BarChart3, CalendarDays, Check, FolderKanban, KanbanSquare, ListChecks, LogOut, Menu, MessageSquare, Moon, Palette as PaletteIcon, PocketKnife, Sun, Trash2, UserRoundCheck, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, Check, FolderKanban, KanbanSquare, LayoutGrid, Lightbulb, ListChecks, LogOut, Menu, MessageSquare, Moon, Palette as PaletteIcon, PocketKnife, Settings2, Sun, Trash2, UserRoundCheck, Users, X } from 'lucide-react'
 import { useAuth } from '../auth/AuthContext'
 import { supabase } from '../lib/supabase'
 import { useTheme, type Palette } from '../theme'
@@ -119,7 +119,7 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
     }
   }
 
-  const section = (label: string) => <div className="sidebar-section-label">{label}</div>
+  const section = (label: string, icon: ReactNode) => <div className="sidebar-section-label"><span className="sidebar-section-icon" aria-hidden="true">{icon}</span><span className="sidebar-section-text">{label}</span></div>
   const paletteStyle: PalettePositionStyle = { '--palette-left': `${palettePosition.left}px`, '--palette-bottom': `${palettePosition.bottom}px` }
   const paletteDialog = isPaletteOpen ? createPortal(
     <div className="palette-popover palette-popover-portal" role="dialog" aria-label="Choose color palette" style={paletteStyle} onMouseDown={(event) => event.stopPropagation()}>
@@ -150,16 +150,16 @@ export function AppSidebar({ view, onViewChange, unreadCount, onOpenNotification
       <SideNav className="flowlane-side-nav" collapsible={{ isCollapsed: false, onCollapsedChange: () => undefined, hasButton: false }}
         header={<div className="sidebar-brand"><span className="sidebar-logo" aria-hidden="true"><PocketKnife size={18} strokeWidth={2.1} /></span><div className="sidebar-brand-copy"><strong>FlowLane</strong><span>{membership?.workspace.name}</span></div></div>}
         footer={<div className="sidebar-footer-stack"><div className="sidebar-utility-row">{!isViewer ? <div className="sidebar-notification-action"><IconButton label="Notifications" icon={<MessageSquare size={17} />} variant="ghost" size="sm" onClick={onOpenNotifications} />{unreadCount > 0 ? <Badge label={String(unreadCount)} variant="red" /> : null}</div> : null}<IconButton label={theme === 'dark' ? 'Use light theme' : 'Use dark theme'} icon={theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />} variant="ghost" size="sm" onClick={toggleTheme} /><div className="sidebar-palette-control" ref={paletteAnchorRef}><IconButton label="Choose color palette" icon={<PaletteIcon size={17} />} variant="ghost" size="sm" className={isPaletteOpen ? 'is-active' : undefined} onClick={() => { setIsHovered(true); setIsPaletteOpen((current) => !current) }} /></div></div><div className="sidebar-user"><span className="sidebar-avatar">{initial}</span><div className="sidebar-user-copy"><strong>{displayName}</strong><span>{membership?.role}</span></div>{isHovered ? <div className="sidebar-account-actions"><IconButton label="Sign out" icon={<LogOut size={16} />} variant="ghost" size="sm" onClick={() => void signOut()} /><IconButton label="Delete account" icon={<Trash2 size={16} />} variant="ghost" size="sm" className="sidebar-delete-account" isDisabled={isDeletingAccount} onClick={() => void handleDeleteAccount()} /></div> : null}</div></div>}>
-        {section('My work')}
+        {section('My work', <LayoutGrid size={14} />)}
         {!isViewer ? <SideNavItem label="My tasks" icon={<UserRoundCheck size={18} />} isSelected={view === 'mine'} onClick={() => onViewChange('mine')} /> : null}
         <SideNavItem label="Calendar" icon={<CalendarDays size={18} />} isSelected={view === 'calendar'} onClick={() => onViewChange('calendar')} />
-        {section('Workspace')}
+        {section('Workspace', <FolderKanban size={14} />)}
         <SideNavItem label="Board" icon={<KanbanSquare size={18} />} isSelected={view === 'board'} onClick={() => onViewChange('board')} />
         <SideNavItem label="Projects" icon={<FolderKanban size={18} />} isSelected={view === 'projects'} onClick={() => onViewChange('projects')} />
         <SideNavItem label="All tasks" icon={<ListChecks size={18} />} isSelected={view === 'all'} onClick={() => onViewChange('all')} />
-        {section('Insights')}
+        {section('Insights', <Lightbulb size={14} />)}
         <SideNavItem label="Analytics" icon={<BarChart3 size={18} />} isSelected={view === 'analytics'} onClick={() => onViewChange('analytics')} />
-        {isAdmin ? <>{section('Manage')}<SideNavItem label="Team" icon={<Users size={18} />} isSelected={view === 'team'} onClick={() => onViewChange('team')} /></> : null}
+        {isAdmin ? <>{section('Manage', <Settings2 size={14} />)}<SideNavItem label="Team" icon={<Users size={18} />} isSelected={view === 'team'} onClick={() => onViewChange('team')} /></> : null}
       </SideNav>
     </aside>
 

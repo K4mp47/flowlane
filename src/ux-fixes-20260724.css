@@ -1,0 +1,210 @@
+/* Targeted UI corrections from the 2026-07-24 review. Loaded last. */
+
+/* Projects / boards --------------------------------------------------------- */
+.mvp-project-list,
+.mvp-board-panel,
+.mvp-board-list { min-width: 0; }
+
+.mvp-board-list { padding-bottom: 0 !important; }
+
+.mvp-project-list .project-row,
+.mvp-board-list .project-row {
+  min-height: 52px;
+  padding: 4px 6px !important;
+  border-radius: 0 !important;
+  background: transparent;
+  transition: background-color 140ms ease;
+}
+
+.mvp-project-list .project-row:hover,
+.mvp-board-list .project-row:hover,
+.mvp-project-list .project-row.active:hover,
+.mvp-board-list .project-row.active:hover {
+  background: color-mix(in oklch, var(--fl-primary) 12%, var(--fl-surface)) !important;
+}
+
+.mvp-project-list .project-open,
+.mvp-board-list .project-open {
+  align-self: stretch;
+  border-radius: 10px;
+  background: transparent !important;
+}
+
+.mvp-project-list .project-row:hover .project-open,
+.mvp-board-list .project-row:hover .project-open,
+.mvp-project-list .project-row:hover .project-row-actions,
+.mvp-board-list .project-row:hover .project-row-actions { background: transparent !important; }
+
+.mvp-project-list .project-row:hover .project-board-icon,
+.mvp-board-list .project-row:hover .project-board-icon,
+.mvp-project-list .project-row:hover .project-row-copy strong,
+.mvp-board-list .project-row:hover .project-row-copy strong { color: var(--fl-primary) !important; }
+
+.mvp-project-list .project-row-actions,
+.mvp-board-list .project-row-actions {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+.mvp-board-list .project-row:last-child {
+  border-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Sidebar ------------------------------------------------------------------ */
+.sidebar-logo,
+.fl-nav-icon,
+.sidebar-section-icon {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+}
+
+.sidebar-logo {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+  margin: 0 !important;
+}
+
+.fl-nav-icon {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  padding: 0 !important;
+  border-radius: 7px;
+  background: transparent !important;
+  transition: color .14s ease !important;
+}
+
+:root[data-palette] .fl-nav-item:hover .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon {
+  background: transparent !important;
+  color: currentColor !important;
+}
+
+.sidebar-section-label {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  padding: 8px 10px 5px !important;
+  overflow: hidden;
+}
+
+.sidebar-section-icon {
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  color: var(--fl-text-subtle);
+  opacity: .9;
+}
+
+.sidebar-section-text { white-space: nowrap; }
+
+.sidebar-hover-shell:not(.expanded) .sidebar-section-label {
+  width: 100%;
+  padding: 4px 10px !important;
+  justify-content: flex-start;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-section-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-section-icon {
+  visibility: visible !important;
+  opacity: .9 !important;
+}
+
+/* Project access ----------------------------------------------------------- */
+.team-page .team-directory-card {
+  display: grid !important;
+  grid-template-columns: 40px minmax(190px, .72fr) minmax(260px, 1.35fr) minmax(150px, .6fr) minmax(140px, .55fr) auto !important;
+  grid-template-areas: 'icon copy search scope role action';
+  align-items: center !important;
+  gap: 10px 12px !important;
+  padding: 14px !important;
+}
+
+.team-page .team-directory-card:has(.team-access-board) {
+  grid-template-columns: 40px minmax(180px, .68fr) minmax(240px, 1.2fr) minmax(130px, .5fr) minmax(150px, .6fr) minmax(130px, .5fr) auto !important;
+  grid-template-areas: 'icon copy search scope board role action';
+}
+
+.team-directory-card .invite-card-icon { grid-area: icon; align-self: center; }
+.team-directory-card .invite-copy { grid-area: copy; min-width: 0; }
+.team-directory-card .team-directory-search { grid-area: search; min-width: 0; }
+.team-directory-card .team-access-scope { grid-area: scope; }
+.team-directory-card .team-access-board { grid-area: board; }
+.team-directory-card .team-access-role { grid-area: role; }
+.team-directory-card > .fl-button { grid-area: action; min-width: 148px; }
+
+.team-directory-card .fl-field,
+.team-directory-card .fl-input-shell,
+.team-directory-card .fl-select-trigger,
+.team-directory-card .fl-button {
+  width: 100%;
+  min-width: 0;
+}
+
+.team-page .invite-copy strong,
+.team-page .invite-copy span { display: block; }
+.team-page .invite-copy span { margin-top: 2px; line-height: 1.35; }
+
+.team-page .role-explainer {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.team-page .role-explainer > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+/* Calendar ----------------------------------------------------------------- */
+.calendar-range-task {
+  transition: transform .14s ease, background-color .14s ease, filter .14s ease, box-shadow .14s ease !important;
+}
+
+.calendar-range-task[data-hovered='true'] {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--task-tone, var(--fl-primary)) 38%, transparent), 0 4px 12px color-mix(in oklch, black 18%, transparent);
+}
+
+@media (max-width: 1100px) {
+  .team-page .team-directory-card,
+  .team-page .team-directory-card:has(.team-access-board) {
+    grid-template-columns: 40px minmax(0, 1fr) minmax(180px, .85fr) !important;
+    grid-template-areas:
+      'icon copy copy'
+      '. search search'
+      '. scope role'
+      '. board action' !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .team-page .team-directory-card,
+  .team-page .team-directory-card:has(.team-access-board) {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: 'copy' 'search' 'scope' 'board' 'role' 'action' !important;
+  }
+  .team-page .team-directory-card .invite-card-icon { display: none !important; }
+  .team-page .role-explainer { grid-template-columns: 1fr; }
+}
