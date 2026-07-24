@@ -1,0 +1,103 @@
+/* Final targeted visual corrections for calendar ranges and the desktop sidebar. */
+
+/* Calendar range focus/hover ring must use the same semantic priority tone as the bar. */
+.calendar-range-task {
+  --calendar-range-tone: var(--fl-text-muted);
+  outline: 0 !important;
+  border: 0 !important;
+}
+
+.calendar-range-task.priority-tone-low { --calendar-range-tone: var(--fl-priority-low); }
+.calendar-range-task.priority-tone-medium { --calendar-range-tone: var(--fl-priority-medium); }
+.calendar-range-task.priority-tone-high { --calendar-range-tone: var(--fl-priority-high); }
+.calendar-range-task.priority-tone-urgent { --calendar-range-tone: var(--fl-priority-urgent); }
+
+.calendar-range-task:hover,
+.calendar-range-task[data-hovered='true'],
+.calendar-range-task:focus-visible {
+  outline: 0 !important;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklch, var(--calendar-range-tone) 52%, transparent),
+    0 4px 12px color-mix(in oklch, var(--calendar-range-tone) 14%, transparent) !important;
+}
+
+/* The compact sidebar keeps the exact same icon rail geometry as the expanded state. */
+.sidebar-hover-shell:not(.expanded) .fl-nav-item {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  margin: 0 !important;
+  padding: 0 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  overflow: visible !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .fl-nav-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  height: 20px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  flex: 0 0 20px !important;
+  background: transparent !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .fl-nav-icon svg {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Hover/selected color belongs to the whole row; never paint a second square behind the SVG. */
+:root[data-palette] .fl-nav-item:hover .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon {
+  color: currentColor !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:root[data-palette] .fl-nav-item:hover .fl-nav-icon svg,
+:root[data-palette] .fl-nav-item.is-selected .fl-nav-icon svg,
+:root[data-palette] .fl-nav-item.is-selected:hover .fl-nav-icon svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Align footer utilities and avatar to the same 36px rail used by the navigation icons. */
+.sidebar-utility-row,
+.sidebar-hover-shell:not(.expanded) .sidebar-utility-row,
+.sidebar-hover-shell:not(.expanded) .sidebar-footer-stack {
+  align-items: flex-start !important;
+  padding-left: 0 !important;
+}
+
+.sidebar-utility-row .fl-icon-button,
+.sidebar-notification-action,
+.sidebar-palette-control,
+.sidebar-hover-shell:not(.expanded) .sidebar-user {
+  margin-left: 0 !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-user {
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sidebar-hover-shell:not(.expanded) .sidebar-avatar {
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  margin: 0 !important;
+}
